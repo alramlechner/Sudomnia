@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nur der Cache: dort landet sudomnia-update.apk, sonst teilt die App keine Dateien. -->
+<paths>
+    <cache-path name="apk_downloads" path="." />
+</paths>

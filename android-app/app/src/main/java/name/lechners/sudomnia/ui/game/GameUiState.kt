@@ -1,0 +1,79 @@
+package name.lechners.sudomnia.ui.game
+
+import name.lechners.sudomnia.data.Settings
+import name.lechners.sudomnia.data.Stats
+import name.lechners.sudomnia.rules.Hint
+import name.lechners.sudomnia.rules.Level
+import name.lechners.sudomnia.ui.board.BoardState
+
+/**
+ * Everything on screen except the clock.
+ *
+ * `remaining` is a `List<Int>`, not an `IntArray`, so this can stay a data class:
+ * an array field would give it identity equality and break recomposition. The
+ * arrays that really have to be arrays live in [BoardState], which compares them
+ * by content.
+ */
+data class GameUiState(
+    val board: BoardState? = null,
+    val generating: Boolean = true,
+    val level: Level = Level.EASY,
+    val clueCount: Int = 0,
+    /** A cell is selected and it is not a clue -- both input rows hang off this. */
+    val selectionEditable: Boolean = false,
+    /** The digit in the selected cell, 0 if empty or nothing is selected. */
+    val selectedDigit: Int = 0,
+    /** The selected cell's pencil marks as a 9-bit mask. */
+    val selectedNotes: Int = 0,
+    val remaining: List<Int> = List(10) { 0 },
+    val canUndo: Boolean = false,
+    val canRedo: Boolean = false,
+    val solved: Boolean = false,
+    val settings: Settings = Settings(),
+    val stats: Stats = Stats.EMPTY,
+    val hint: HintState? = null,
+    /** Asked for a hint, but the entries so far can no longer lead to a solution. */
+    val hintDeadEnd: Boolean = false,
+    val hintsUsed: Int = 0,
+    /** No aid was on at any point in this game -- drives the "no aids" badge. */
+    val aidsCleanRun: Boolean = true,
+    /**
+     * Every cell filled, but the grid does not obey the rules.
+     *
+     * Only reachable with conflict marking switched off -- with it on, the offending
+     * cells are already red. It exists so that finishing a grid wrongly is not met
+     * with silence: the app says *that* something is wrong without saying *where*,
+     * which is the line the setting is about.
+     */
+    val fullButWrong: Boolean = false,
+)
+
+/** How much of a hint has been revealed so far. */
+enum class HintStage { LOCATE, REVEAL }
+
+/**
+ * A hint being shown.
+ *
+ * `Hint` is a sealed interface of data classes, so this can be a data class too --
+ * no arrays involved, unlike [BoardState].
+ */
+data class HintState(val hint: Hint, val stage: HintStage)
+
+/**
+ * The clock lives in its own flow.
+ *
+ * It ticks a few times a second. If it shared a state object with the board, every
+ * tick would recompose the 81-cell canvas -- the same reason Chessomnia keeps its
+ * chess clock out of the board state.
+ */
+data class TimerState(
+    val elapsedMs: Long = 0L,
+    val running: Boolean = false,
+) {
+    fun format(): String {
+        val total = elapsedMs / 1000
+        val m = total / 60
+        val s = total % 60
+        return if (m >= 60) "%d:%02d:%02d".format(m / 60, m % 60, s) else "%d:%02d".format(m, s)
+    }
+}

@@ -1,0 +1,483 @@
+# Sudomnia — Architektur
+
+Stand 0.4.3 (Prototyp). Schwesterprojekt zu [Chessomnia](https://github.com/alramlechner/Chessomnia);
+Build-Setup, Paketschichtung und Testphilosophie sind von dort übernommen.
+
+---
+
+## 1. Schichten
+
+```
+rules/   reines Kotlin, keine Android-Importe   -> auf der JVM testbar
+  |
+game/    laufende Partie (Eingaben, Notizen, Undo)
+  |
+data/    Einstellungen, Statistik, Spielstand (SharedPreferences)
+  |
+ui/      Compose, ein Screen, ein ViewModel
+
+update/  Update-Prüfung  -- hängt an keiner der anderen Schichten
+diag/    Fehlerprotokoll -- von überall beschreibbar, hängt an nichts
+```
+
+Ein Gradle-Modul, Namespace `name.lechners.sudomnia`, minSdk 30 / targetSdk 36, JDK 17.
+Abhängigkeiten: core-ktx, Compose BOM, activity-compose, lifecycle-viewmodel-compose, junit.
+Kein Room, kein DI-Framework, keine HTTP-Bibliothek.
+
+**Zwei Berechtigungen, beide nur für das Update** (`INTERNET`, `REQUEST_INSTALL_PACKAGES`,
+siehe §11). Das Spiel selbst kennt keinen Server: es erzeugt seine Rätsel, speichert in
+SharedPreferences und sendet nichts. `update/` ist deshalb bewusst ein eigenes Paket mit
+eigenem ViewModel und hat keine Verbindung zu `rules/`, `game/` oder `data/` — man kann es
+ersatzlos löschen, ohne das Spiel anzufassen.
+
+---
+
+## 2. Wie ein Rätsel entsteht
+
+Zufällig Zahlen hinsetzen funktioniert nicht — das ergibt fast immer ein unlösbares
+oder ein mehrdeutiges Gitter. Stattdessen wird **weggegraben**:
+
+1. `GridGenerator` erzeugt ein vollständiges gültiges Gitter. Beschleunigung: die
+   Boxen 1, 5 und 9 teilen keine Zeile, Spalte oder Box, lassen sich also vorab als
+   drei unabhängige Zufallspermutationen von 1–9 füllen. Danach backtrackt die Suche
+   praktisch nicht mehr. ~50–200 µs.
+2. `Digger` leert Felder in zufälliger Reihenfolge und nimmt jede Entfernung zurück,
+   die die Eindeutigkeit zerstört. **Eindeutigkeit ist damit konstruktiv garantiert,
+   nicht nachträglich geprüft.**
+3. `PuzzleFactory` setzt beides zusammen und liefert ein `Puzzle`.
+
+### Eindeutigkeitsprüfung
+
+`Solver` ist Constraint-Propagation (Naked + Hidden Singles) plus MRV-Backtracking,
+allokationsfrei: Kandidaten sind 9-Bit-Masken in `IntArray`s, Backtracking stellt
+einen vorab angelegten Snapshot wieder her statt einen Änderungs-Trail abzuspielen.
+
+Die eine Operation, auf der alles aufbaut:
+
+```kotlin
+fun countSolutions(givens: IntArray, limit: Int = 2, out: IntArray? = null): Int
+```
+
+`limit = 2` beantwortet „ist die Lösung eindeutig?".
+
+Der Digger fragt allerdings nicht so, sondern: *„gibt es eine Lösung mit einer anderen
+Ziffer in diesem Feld?"* — für jeden Kandidaten ein Lauf mit `limit = 1`. Fast alle
+enden nach wenigen Propagationsschritten im Widerspruch, weil das Restgitter massiv
+überbestimmt ist. Grob Faktor 3 schneller als volles Zählen.
+
+**Warum Bitmasken und nicht `Set<Int>`:** ein Rätsel kostet ~80 Solver-Aufrufe; mit
+einem `HashSet` pro Feld wären das sechsstellige Allokationszahlen pro Rätsel.
+`Integer.bitCount` und `numberOfTrailingZeros` sind unter ART einzelne ARM64-Befehle.
+
+**Warum kein Dancing Links:** DLX ist auf den härtesten Rätseln schneller, braucht aber
+~3.240 Knotenobjekte pro Lauf. Bei 80 Läufen pro Rätsel sind das ~260.000 Objekte —
+GC-Druck, während daneben eine Compose-UI zeichnet. DLX ist als *unabhängiges
+Test-Orakel* vorgesehen, nicht für die Produktion.
+
+---
+
+## 3. Schwierigkeit — und was hier noch fehlt
+
+Die Anzahl der Vorgaben ist ein schlechter Indikator. Gemessen an diesem Generator:
+
+| Stufe | Ø Vorgaben (200 Rätsel je Stufe) |
+|---|---|
+| Leicht | 36,0 |
+| Mittel | 24,5 |
+| Schwer | 24,5 |
+
+Maximal ausgegrabene Singles-Rätsel und Rätsel, die echte Techniken brauchen, landen
+**auf dieselbe Kommastelle** bei 24,5 Vorgaben. Die Zahl trennt sie überhaupt nicht.
+
+### Die vorläufige Einteilung
+
+`Digger` gräbt nicht blind und sortiert hinterher ein, sondern **hört auf, wenn eine
+Schranke reißt** — dadurch ist jede Stufe ein einziger Durchlauf ohne Verwerfen:
+
+| Stufe | Regel | Ø Vorgaben |
+|---|---|---|
+| **Leicht** | Singles genügen, und es bleiben ≥ 36 Vorgaben stehen | 36 |
+| **Mittel** | Singles genügen, maximal ausgegraben | ~24 |
+| **Schwer** | Singles genügen **nicht** | ~25 |
+
+`Digger.classify()` misst die Stufe am fertigen Rätsel nach. Die angezeigte Stufe ist
+also gemessen, nicht beabsichtigt — die Fabrik kann nicht danebenliegen.
+
+### Verworfen: „Naked Singles" vs. „Hidden Singles" als Stufengrenze
+
+Der erste Entwurf trennte Leicht (nur Naked Singles) von Mittel (Hidden Singles
+nötig). Das ist aus menschlicher Sicht **falsch herum**: ein Naked Single („dieses
+Feld hat nur noch einen Kandidaten") verlangt, alle 20 Nachbarn zu prüfen und acht
+Ziffern auszuschließen. Ein Hidden Single („in diesem Block ist nur noch ein Platz für
+die 5") findet man durch Abscannen von drei Linien — es ist die erste Technik, die
+jede Anleitung zeigt. Maschinell billig und menschlich billig laufen hier
+gegeneinander.
+
+### Was noch kommt
+
+Die echte Bewertung braucht einen Solver, der nur mit menschlichen Techniken löst und
+protokolliert, welche nötig waren (Naked/Hidden Pairs und Triples, Locked Candidates,
+X-Wing, Swordfish, XY-Wing, Simple Colouring, Unique Rectangle, Forcing Chains).
+Stufe = max(höchste benötigte Technik, Punktesumme). Als Nebenprodukt fällt die
+erklärende Hinweis-Funktion ab („Naked Pair {3,7} in Zeile 4, deshalb fällt die 3 in
+R4C8 weg") — das ist der eigentliche Grund, den Aufwand zu treiben.
+
+`SinglesSolver` ist bereits die unterste Sprosse dieser Leiter, also kein Wegwerfcode.
+
+---
+
+## 4. Die laufende Partie
+
+`SudokuGame` hält Eingaben, Notizen und die Undo-Historie.
+
+**Persistiert wird später der Startzustand plus die Bearbeitungsliste**, nicht eine
+Zustandskopie — dasselbe Prinzip wie Chessomnias Zugliste. Deshalb ist eine
+Bearbeitung (`Edit`) schon jetzt eine *Liste* von Feldänderungen: das Setzen einer
+Ziffer löscht sie zugleich aus den Notizen aller 20 Nachbarn, und Undo muss beides
+zurücknehmen.
+
+**Konflikte, keine Fehler.** Markiert wird eine Ziffer, die in Zeile, Spalte oder Block
+doppelt vorkommt — eine Aussage über die Regeln, die der Spieler selbst treffen könnte.
+Ein Abgleich mit der gespeicherten Lösung wäre etwas anderes: die App würde das Rätsel
+still mitlösen. Diese Grenze ist Absicht.
+
+`isSolved()` prüft „voll und konfliktfrei" und konsultiert die Lösung ebenfalls nicht —
+bei einem eindeutig lösbaren Rätsel ist das dasselbe.
+
+---
+
+## 5. Tipp
+
+`rules/Hint.kt` beantwortet „was jetzt?" in dieser Reihenfolge:
+
+1. `grid.load(board)` scheitert → **tot** (zwei gleiche Ziffern in einer Einheit)
+2. `solver.countSolutions(board, limit = 1) == 0` → **tot**
+3. Hidden Single → verraten **und** begründen
+4. Naked Single → verraten **und** begründen
+5. sonst `bestBranchCell()` → verraten, ohne Begründung
+
+**Warum das billig ist:** die Lösung entsteht beim Weggraben ohnehin und liegt in
+`Puzzle.solution`. Teuer wäre nur das Begründen — dafür bräuchte es eine Bibliothek
+menschlicher Lösetechniken (Locked Candidates, Subsets, X-Wing, …), die hier bewusst
+fehlt. Der Kniff ist, *welche* Zelle verraten wird: ist gerade eine zwingend, nimmt der
+Tipp die und kann sie erklären.
+
+**Hidden Single vor Naked Single**, entgegen `Grid.propagate`. Für den Solver ist Naked
+billiger, für den Menschen ist es umgekehrt — dasselbe Argument wie bei den Stufen in
+`Level.kt`.
+
+**Schritt 2 ist Vorbedingung, keine Zusatzfunktion.** Auf einem toten Brett würde Schritt 5
+eine Ziffer aus der Lösung setzen, die mit der falschen Eingabe des Spielers kollidiert; er
+sähe einen unerklärlichen Konflikt. Der Test ist exakt, nicht heuristisch: das Rätsel hat
+genau eine Lösung, also ist das Brett genau dann tot, wenn eine Eingabe abweicht. Angezeigt
+wird nur *dass*, nie *wo* — der Ausweg ist der vorhandene Rückgängig-Knopf.
+
+**Die Notizen des Spielers fließen nicht ein**, `find()` nimmt sie gar nicht entgegen.
+Notizen sind unvollständig, veralten und können falsch sein; ein Tipp, der darauf rechnet,
+wäre beweisbar falsch, und der Spieler hätte keine Chance das zu merken — für ihn ist die
+App die Autorität. Der Kandidatenstand aus `Grid.load(board)` ist dagegen kanonisch.
+
+### Wie weit das trägt (gemessen)
+
+Auf „Schwer" läuft **jedes** Rätsel mit Singles allein fest — das ist die Definition der
+Stufe. An genau diesem Punkt kann der Tipp also nur aufdecken. Aber: **je Aufdeckung
+werden im Schnitt 17 weitere Felder zwingend**, und rund zwei Aufdeckungen reichen für ein
+ganzes Rätsel (`HintTest.reportsHowFarASingleRevealCarriesOnHardPuzzles`).
+
+Die Messung ist bewusst am Feststeck-Punkt gemacht, nicht an zufälligen Stellungen: füllt
+man zufällige korrekte Ziffern ein, schaltet man Singles frei, die der Spieler nicht hätte
+herleiten können — das schönt das Ergebnis auf ~100 % begründbare Tipps. Die Technikleiter
+würde also je schwerem Rätsel etwa zwei blanke Aufdeckungen durch erklärte Schritte
+ersetzen; das ist ihr tatsächlicher Gegenwert.
+
+---
+
+## 6. Statistik und Spielstand
+
+Zählregeln in `data/Stats.kt` als **reine Funktionen** — im ViewModel wären sie ungetestet,
+weil das Projekt kein Robolectric hat.
+
+- `started` beim ersten Spielzug, nicht bei der Erzeugung: bloßes Durchblättern der Stufen
+  soll die Zahl nicht aufblähen.
+- `solved` genau einmal. Voraussetzung dafür war eine Aufräumarbeit: „gelöst" wurde vorher
+  an **zwei** Stellen unabhängig berechnet (im ViewModel und in `SudokuGame`). Jetzt ist
+  `SudokuGame.isSolved()` die einzige Definition, und `SudokuViewModel.onBoardChanged()`
+  der einzige Übergangspunkt — zusätzlich abgesichert durch `countedSolved`, damit
+  Lösen → Rückgängig → Wiederholen nicht doppelt zählt.
+- Abzeichen *ohne Hilfen*: alle vier Schalter waren die **ganze Partie** über aus.
+  `aidsCleanRun` wird unwiderruflich gelöscht, sobald eine Hilfe an war — kurz vor dem
+  letzten Feld umzuschalten erschleicht nichts.
+
+`data/GameSnapshot.kt` speichert **Vorgaben + Bearbeitungsliste**, nicht eine Zustandskopie.
+Damit kommen Ziffern, Notizen und Undo-Stack in einem Schritt zurück und können nicht
+auseinanderlaufen. `decode()` ist nullbar und wird validiert (Lösung gültig, Vorgaben passen
+dazu); bei jeder Unstimmigkeit wird der Spielstand verworfen statt halb kaputt geladen.
+Gelesen wird **synchron im ViewModel-Konstruktor**, aus demselben Grund wie die
+Einstellungen — sonst blitzt beim Start kurz ein neues Rätsel auf.
+
+`onBoardChanged()` ist der einzige Trichter für Brettänderungen und besitzt drei Dinge, die
+nicht verstreut werden dürfen: der Tipp verfällt (einer gegen ein älteres Brett gerechnet
+ist nicht bloß veraltet, er kann falsch sein), der Sieg wird gezählt, das Spiel gespeichert.
+
+---
+
+## 7. Abschaltbare Hilfen
+
+Vier Anzeigen nehmen dem Spieler Arbeit ab, und jede ist einzeln abschaltbar
+(`data/Settings.kt`): Konflikte anzeigen, gleiche Ziffer hervorheben, Zeile/Spalte/Block
+hervorheben, fertige Ziffern im Ziffernpad ausgrauen.
+
+Die erste ist die eigentliche: sie sagt sofort, ob eine Ziffer im Feld überhaupt möglich
+ist, und erledigt damit die halbe Denkarbeit. Aus heißt, dass die App schweigt.
+
+**Es gibt genau ein Gate.** Die Konflikte werden immer berechnet — die Gelöst-Erkennung
+braucht sie —, aber `SudokuViewModel.publish()` reicht dem Brett bei abgeschalteter
+Anzeige ein durchweg leeres Array; das Brett erfährt den Unterschied nie. Diese
+Entscheidung im ViewModel zu treffen statt im Zeichencode bedeutet, dass es genau eine
+Stelle gibt, an der die App die Lösung verraten könnte, statt einer pro Zeichendurchgang.
+
+Ein Nebeneffekt musste eigens behandelt werden: mit abgeschalteter Konfliktanzeige wird
+ein voll, aber falsch ausgefülltes Gitter sonst mit **gar nichts** quittiert, was sich
+wie ein Fehler der App anfühlt. `fullButWrong` blendet dann eine Zeile ein, die sagt
+*dass* etwas nicht stimmt, ohne zu sagen *wo* — genau die Grenze, um die es bei der
+Einstellung geht.
+
+Gespeichert wird über `SudomniaPrefs` in SharedPreferences, **synchron im
+ViewModel-Konstruktor** gelesen: schon der erste Frame zeigt die eigenen Einstellungen.
+Ein DataStore-Flow würde einen Frame mit den Standardwerten zeichnen und sich dann
+korrigieren — sichtbar als Flackern genau an dem Schalter, den jemand gerade umgelegt
+hat. Das Feld `settings_version` existiert, damit sich eine später geänderte Vorgabe von
+einem bewusst gesetzten Wert unterscheiden lässt.
+
+---
+
+## 8. Icon
+
+`tools/generate_app_icon.py` erzeugt Hinter-, Vordergrund- und Monochrom-Ebene aus einer
+Quelle. Das Zeichen ist ein 3×3-Block — die Box-Struktur, an der man ein Sudoku erkennt;
+das volle 9×9-Gitter wäre bei Launcher-Größe grauer Brei.
+
+Gefüllt sind die drei Zellen auf der Diagonalen. Das ist kein beliebiges Muster: die
+Boxen 1, 5 und 9 sind die einzigen drei, die keine Einheit miteinander teilen — genau
+deshalb füllt `GridGenerator` sie zuerst mit drei unabhängigen Zufallspermutationen. Das
+Icon zeigt die eine strukturelle Tatsache, auf der der Generator aufgebaut ist.
+
+Launcher-Masken geben den 72dp-Kreis um die Mitte des 108dp-Rasters frei, ein
+quadratisches Zeichen darf also höchstens 72/√2 = 50,9dp breit sein. Der Block ist 50dp.
+Die Farbe der leeren Zellen wurde **bei 48dp gerendert ausgewählt**, nicht bei voller
+Größe beurteilt: eine Stufe über dem Hintergrund löst sich klein auf, zwei Stufen
+darüber konkurrieren die leeren Zellen mit den gefüllten und die Diagonale verliert.
+
+---
+
+## 9. Oberfläche
+
+Ein Screen, kein Navigationsgraph; die Stufenwahl ist ein Dialog.
+
+### Die Eingabe hat keinen Modus
+
+Der erste Entwurf hatte ein Ziffernpad plus einen Schalter „Notizen". Das erzwingt die
+Reihenfolge *entscheiden → Feld → Ziffer*. Spieler denken andersherum: sie schauen auf ein
+Feld und wissen erst dann, ob sie die Lösung haben oder Kandidaten sammeln wollen. Und der
+teuerste Fall war der häufigste — drei Kandidaten notieren hieß umschalten, drei Taps,
+zurückschalten, und wer das Zurückschalten vergaß, trug beim nächsten Feld eine Notiz statt
+einer Ziffer ein.
+
+Jetzt stehen **zwei Reihen dauerhaft** unter dem Brett: oben die großen Ziffern, darunter
+die flachen Notiz-Tasten. Was ein Tap bedeutet, entscheidet damit *welche* Taste getroffen
+wird, nicht ein vorher gesetzter Zustand. Drei Notizen sind drei Taps.
+
+Drei Details, die daran hängen:
+
+- **Die Notiz-Tasten sind zustandsbehaftet.** Eine gefüllte Taste heißt „diese Notiz steht
+  im gewählten Feld". Die Reihe ist damit zugleich die Anzeige des Kandidatenstands, und
+  eine Notiz wieder wegzunehmen ist derselbe Tap wie sie zu setzen.
+- **Beide Reihen sind sichtbar tot, solange kein bearbeitbares Feld gewählt ist.** Vorher
+  passierte bei einem Tap ins Leere einfach nichts — das ist genau die Rückmeldung, die die
+  neue Reihenfolge nicht vermittelt. Die Notizreihe geht zusätzlich aus, sobald im Feld eine
+  Ziffer steht: `SudokuGame.toggleNote` ignoriert diesen Fall ohnehin, und stillschweigend
+  geschluckte Taps sind schlimmer als graue Tasten.
+- **Die Ziffer im gewählten Feld wird als gedrückte Taste gezeigt.** Sie nochmal zu tippen
+  löscht das Feld — dieser Toggle steckt schon in `SudokuGame.setDigit`, die Hervorhebung
+  macht ihn nur sichtbar.
+
+`SudokuGame` blieb dabei unverändert: `setDigit` / `toggleNote` / `clearCell` waren immer
+schon feldbezogen. Weg ist nur der Modus im ViewModel — der einzige Zustand, den es dafür je
+gab.
+
+- **Das Gitter ist ein einziges `Canvas`**, nicht 81 Composables. Zeichnen und
+  Antippen gehen durch dasselbe `BoardGeometry` — getrennt hergeleitet driften sie,
+  und Tipps landen am Rand ein Feld daneben.
+- Text über `nativeCanvas` mit wiederverwendeten `Paint`-Objekten statt `TextMeasurer`:
+  bis zu 81 Ziffern plus 9 Notizen je Feld pro Frame.
+- **`BoardState` schreibt `equals`/`hashCode` von Hand aus.** Als data class würden die
+  `IntArray`-Felder per Identität verglichen, Compose würde die Neuzeichnung
+  überspringen und das Brett stünde still. Genau dieser Bug ist Chessomnia einmal
+  passiert.
+- **Die Farbgebung der Hervorhebungen ist gemessen, nicht geschätzt.** Der Tint für
+  Zeile/Spalte/Block deckt 21 Felder ab, die Gleiche-Ziffer-Hervorhebung höchstens
+  neun — und Letztere ist das, wonach gesucht wird. Mit dem ursprünglichen Paar
+  (Kreuz `#E2EDF4`, Grün `#CFE6B8`) las sich das Brett als „großes blaues Kreuz" und
+  die gleichen Ziffern verschwanden darin. Ermittelt durch Nachbau des Zeichencodes
+  und Rendern echter Stellungen, nicht durch Beurteilen am Quelltext. Jetzt: Kreuz
+  schwächer (`#EDF3F8`), Grün kräftiger (`#A9D98A`).
+- **Die hervorgehobene Ziffer wird auch in den Notizen hervorgehoben** (fett, dunkelgrün).
+  Ohne das leuchten die gesetzten Ziffern auf, aber die *notierten* — meist genau die,
+  über die gerade nachgedacht wird — muss man mit dem Auge suchen.
+- **Der Timer hat einen eigenen `StateFlow`.** Läge er im Brett-Zustand, würde das
+  81-Feld-Canvas zweimal pro Sekunde neu gezeichnet.
+- Die Brettseite wird als `min(maxWidth, maxHeight)` ausgeschrieben, **nicht** als
+  `fillMaxHeight().aspectRatio(1f)` — letzteres leitet die Breite aus der Höhe ab und
+  liefert bereitwillig ein Brett breiter als der Bildschirm.
+- Die verstrichene Zeit wird aus `SystemClock.elapsedRealtime()` *abgeleitet*, nicht je
+  Tick hochgezählt — ein verspäteter Tick kann die Anzeige damit nicht verschieben.
+
+---
+
+## 10. Wie Korrektheit sichergestellt wird
+
+Nur JVM-Unit-Tests, kein Robolectric, keine Instrumented-Tests. `rules/` und `game/`
+haben keine Android-Importe.
+
+1. **Veröffentlichte Rätsel mit bekannter Lösung** (`ReferencePuzzles`): Project Euler
+   96 Nr. 1, ein 17-Vorgaben-Rätsel, AI Escargot. Die Lösungen stammen aus einem
+   unabhängigen Norvig-artigen Solver, nicht aus diesem Code — das ist die eine Stelle,
+   an der Korrektheit nicht von der eigenen Implementierung abhängt.
+2. **Eine mathematische Invariante:** fehlen zwei Ziffern vollständig aus den Vorgaben,
+   sind sie in jeder Lösung vertauschbar, es gibt also mindestens zwei Lösungen. Ein
+   Solver, der hier „eindeutig" meldet, ist kaputt — und genau dieser Fehler würde
+   unlösbare Rätsel ausliefern.
+3. **Jedes erzeugte Rätsel hat genau eine Lösung**, über alle Stufen.
+4. **Minimalität:** aus einem Schwer-Rätsel lässt sich keine weitere Vorgabe entfernen,
+   ohne die Eindeutigkeit zu verlieren.
+5. **Undo stellt Ziffern *und* Notizen exakt wieder her**, über zufällige Zugfolgen.
+6. **Mittelpunkt jedes Feldes findet sein Feld zurück** — Zeichnen und Antippen stimmen
+   überein.
+7. **Ein Tipp nennt nie die falsche Ziffer** — über viele Rätsel und viele Spielstände
+   geprüft. Fiele das je um, setzte die App auf Knopfdruck eine garantiert falsche Zahl.
+8. **Ist etwas zwingend, wird es begründet** statt blank aufgedeckt.
+9. **Eine falsche Eingabe wird als tot erkannt**, bevor irgendetwas verraten wird.
+10. **Ein Spielstand übersteht Kodieren und Zurückspielen** samt Notizen und Undo-Tiefe;
+    kaputte Daten liefern `null`, statt beim Start zu werfen.
+
+`-DsudokuDeep=1` lässt dieselben Tests mit dem Zehnfachen an Rätseln laufen: ~2.500
+erzeugte Rätsel, auf einem Raspberry Pi 5 in unter 90 Sekunden inklusive Kompilieren.
+Erzeugung ist damit klar schnell genug, um auf dem Gerät zu laufen — eine
+Vorab-Berechnung auf einem PC wird erst für die Kalibrierung des echten Graders und
+für das ausgelieferte Rätsel-Paket gebraucht.
+
+**Bekannte Lücke:** ohne das DLX-Zweitorakel prüft der Generatortest die Eindeutigkeit
+mit demselben Solver, der sie erzeugt hat — teilweise zirkulär. Abgefedert durch die
+Referenzrätsel und die Invariante aus Punkt 2; Stichproben wurden zusätzlich gegen eine
+unabhängige Python-Implementierung geprüft. Der volle Kreuzvergleich gegen Dancing
+Links steht aus.
+
+---
+
+## 11. Update
+
+Die App holt sich neue Versionen selbst vom EnergyControl-Server im Haus. Beim Start und
+danach alle 15 Minuten, `update/UpdateViewModel`.
+
+### Warum mTLS und nicht der einfache Weg
+
+Die Schwesterprojekte (Oystra, MyMoney) laden ihr APK über `http://…:8082`. Das geht hier
+nicht: das Update soll **auch von unterwegs ohne VPN** funktionieren, und von außen ist am
+Router genau ein Port offen — 8443, der mTLS-Connector. Also braucht die App ein
+Client-Zertifikat, und das kann sie sich nirgends abholen (es gibt keinen Login und kein
+Pairing wie bei MyMoney): es liegt fest in der APK, `res/raw/sudomnia_client.p12`,
+ausgestellt einmalig von der MiniCa des Servers.
+
+**Ein in der APK ausgeliefertes Schlüsselpaar ist extrahierbar** — daraus folgt der Rest des
+Entwurfs. Es steht bewusst *nicht* in MyMoneys `device`-Tabelle, denn dort eingetragen wäre
+es ein Vollzugang zur MyMoney-REST-API mit sämtlichen Finanzdaten. Stattdessen prüft auf dem
+Server ein eigener Filter (`StaticCertAuthFilter`) nur auf `/api/v1/sudomnia/*` gegen eine
+Liste zugelassener Seriennummern. Der Schlüssel öffnet damit genau eine Sache: den Download
+dieses APKs. Verlieren wir ihn, kostet das eine Zeile in einer Textdatei und einen Neustart.
+
+### Drei Dinge, die nicht verhandelbar sind
+
+- **Hostname statt IP.** Jetty prüft SNI gegen das Serverzertifikat, dessen SAN nur
+  `sudomnia.invalid` enthält. Eine IP-Adresse wird mit HTTP 400 beantwortet, bevor Filter
+  oder Servlet überhaupt laufen. Der Name löst innen wie außen auf.
+- **Der Trust-Anker ist das gepinnte Serverzertifikat** (`res/raw/server_cert.pem`), nicht
+  der System-Truststore: die CA ist privat, Android kennt sie nicht. Nebeneffekt: eine
+  kompromittierte öffentliche CA kann den Server nicht nachbauen.
+- **Die SHA-256 aus `latest.json` wird geprüft.** Oystra und MyMoney schreiben den Hash und
+  sehen ihn nie an; im LAN war das vertretbar, über das offene Internet nicht. Bei
+  Abweichung wird die Datei gelöscht, damit dem Paketinstaller nie ein halber Download
+  vorgelegt wird.
+
+### Ein leeres PKCS12-Passwort ist auf Android kein Passwort
+
+Der erste Wurf legte das Client-Zertifikat mit leerem Passwort ab — MyMoney macht das so,
+und auf der JVM funktioniert es. Auf dem Tablet scheiterte der Aktualisieren-Knopf mit
+`IllegalArgumentException: password empty`. Grund: das JDK schreibt PKCS12 seit 8u301 mit
+PBES2/PBKDF2, und Androids BouncyCastle lehnt in PBKDF2 ein Passwort der Länge 0 ab.
+MyMoney fällt das nicht auf, weil dessen P12 *auf dem Gerät* entsteht, mit dem alten
+PKCS12-Verfahren.
+
+Zwei Konsequenzen, beide in `SudomniaClientCertTool`: das Passwort ist nicht leer
+(`sudomnia` — es liegt in jeder APK und schützt nichts, die Zugangskontrolle ist die
+Seriennummern-Liste auf dem Server), und die Datei wird bewusst mit den *alten*
+PKCS12-Verfahren geschrieben (3DES/RC2-40/HmacSHA1), weil sich das hier nicht auf einem
+Gerät testen lässt und die alten Verfahren jedes Android liest. Kryptografisch kostet das
+nichts, weil die Datei ohnehin öffentlich ist.
+
+### Der Schluessel liegt nicht im Repo
+
+`sudomnia_client.p12` ist git-ignoriert. Damit uebersetzt ein frischer Clone nicht --
+bewusst: die Referenz bleibt ein normales `R.raw.sudomnia_client`, ein fehlender
+Schluessel faellt also beim Bauen auf, an einer offensichtlichen Stelle, statt auf
+irgendeinem Tablet. Die Alternative waere ein Nachschlagen zur Laufzeit gewesen; das
+haette Compile-Zeit-Sicherheit gegen Bequemlichkeit fuer Forks getauscht, die die
+Update-Funktion ohnehin nicht brauchen koennen -- der Server dahinter steht nur hier.
+Das gepinnte Serverzertifikat ist oeffentlich und bleibt im Repo.
+
+### Zustand statt Text
+
+`UpdateState` ist eine sealed interface, kein gerenderter Satz plus Busy-Flag. Oystra hatte
+Letzteres und hat dafür fünf Releases lang (1.0.53–1.0.57) Updates gemeldet, die niemand
+installieren konnte — aus einem String lässt sich der Knopf nicht ableiten. Die eine Frage,
+die die Oberfläche stellt, heißt `installableVersion`.
+
+Zwei Regeln, die aus dem Betrieb kommen und beide im Code kommentiert sind: ein
+fehlgeschlagener **Hintergrund**-Check überschreibt einen bereits gefundenen Fund nicht (das
+Tablet verliert regelmäßig das WLAN, der Knopf darf nicht unter dem Finger verschwinden),
+und vor dem Start des Paketinstallers geht der Zustand zurück auf „verfügbar" — bricht man
+dort ab, steht der Knopf wieder da.
+
+`ReleaseInfo.parse` ist die einzige testbare Stelle des Ganzen und deshalb bewusst
+freigeschnitten: reine Funktion, `org.json`, kein Android-Typ. Getestet wird nicht das
+Glückliche, sondern dass ein unvollständiges oder gar kein Manifest `null` liefert — die App
+darf auf ein Dokument, das sie nicht verstanden hat, nicht handeln.
+
+### Veröffentlichen
+
+`deploy.sh` im Repo-Wurzelverzeichnis: Version in `version.properties` hochzählen, signiertes
+Release bauen, APK nach `/var/lib/sudomnia/apk/` legen, `latest.json` schreiben. Die
+Reihenfolge (erst committen/pushen, dann bauen) ist von Oystra übernommen und hat dort einen
+konkreten Grund: so gehört zu jeder ausgelieferten APK ein Commit, den es auch im Remote
+gibt. Solange Sudomnia kein Git-Repo ist, überspringt das Skript den Block.
+
+---
+
+## 12. Wenn etwas klemmt: `diag/`
+
+Ein Tablet im Wohnzimmer hat kein Logcat. „Der Aktualisieren-Knopf sagt
+IllegalArgumentException" ist als Fehlerbericht wertlos — genau daran hat der erste
+Update-Versuch einen Tag verloren.
+
+`DiagnosticsLog` ist deshalb eine Textdatei in `filesDir` plus ein Knopf im Hilfen-Dialog,
+der sie an die Teilen-Auswahl übergibt. Abstürze landen über einen
+`UncaughtExceptionHandler` automatisch darin; der vorherige Handler wird **verkettet, nicht
+ersetzt** — ihn zu schlucken würde die App hängen lassen statt sterben, und das ist
+schlimmer als der Absturz.
+
+**Es gibt bewusst keinen Upload-Weg in dieser Klasse.** Ein Crash-Reporter wäre für ein
+Einzelspieler-Sudoku eine Netzwerkabhängigkeit und eine Datenschutzgeschichte; hier sieht
+der Spieler jedes Mal, was das Gerät verlässt, und wählt das Ziel selbst.
+
+Die Datei ist ein Ringpuffer: über 64 KB wird die ältere Hälfte verworfen. Und
+`log()` fängt seine eigenen Ausnahmen — die Diagnose darf nie das sein, was die App
+kaputtmacht.
