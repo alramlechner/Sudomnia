@@ -37,7 +37,7 @@ Neu ausstellen (auf dem Server-Host, schreibt zugleich die Seriennummer in die
 Allow-List des Servers und das gepinnte Serverzertifikat in `res/raw/`):
 
 ```bash
-cd /home/pi/EnergyControl
+cd /home/pi/projects/EnergyControl
 mvn -o -q dependency:build-classpath -Dmdep.outputFile=/tmp/ec-cp.txt
 java -cp "target/classes:$(cat /tmp/ec-cp.txt)" \
      name.lechners.energycontrol.tools.SudomniaClientCertTool
