@@ -22,6 +22,11 @@
     <string name="solved_body">%1$s · %2$s</string>
     <string name="solved_new_game">Nächstes Rätsel</string>
 
+    <!-- Pause: haelt die Uhr an und blendet das Brett aus -->
+    <string name="paused_pause">Pause</string>
+    <string name="paused_title">Pausiert</string>
+    <string name="paused_resume">Weiter</string>
+
     <!-- Zweig: ein Versuch auf Probe, wenn kein Feld mehr erzwungen ist -->
     <string name="branch_start">Zweig beginnen</string>
     <string name="branch_empty">Zweig offen – trag deinen Versuch ein</string>

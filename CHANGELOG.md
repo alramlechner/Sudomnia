@@ -3,6 +3,22 @@
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.4.5] – 2026-09-08
+
+### Neu
+- **Pause** in der Kopfzeile: haelt die Uhr an und blendet das Brett aus (es wird
+  nicht gezeichnet, kein durchscheinender Schleier). Weiter geht es mit einem Tipp
+  irgendwohin.
+
+### Behoben
+- **Die Uhr lief weiter, wenn die App nicht sichtbar war** -- Bildschirm aus,
+  App-Umschalter, Home-Taste. Angehalten wurde sie bisher nur bei "neues Spiel" und
+  "geloest"; Lebenszyklus-Ereignisse kannte das ViewModel gar nicht, und die
+  verstrichene Zeit kommt aus `elapsedRealtime()`, die auch im Tiefschlaf laeuft.
+  Jetzt entscheidet eine Stelle, ob die Uhr laufen darf. `onStop` speichert
+  zusaetzlich den Spielstand -- im Hintergrund kann der Prozess sterben, und bisher
+  ueberlebte nur die Zeit bis zur letzten Brettaenderung.
+
 ## [0.4.4] – 2026-09-08
 
 ### Neu

@@ -373,6 +373,24 @@ gab.
   über die gerade nachgedacht wird — muss man mit dem Auge suchen.
 - **Der Timer hat einen eigenen `StateFlow`.** Läge er im Brett-Zustand, würde das
   81-Feld-Canvas zweimal pro Sekunde neu gezeichnet.
+- **Ob die Uhr läuft, entscheidet genau eine Funktion** (`SudokuViewModel.syncTimer`):
+  ein Spiel ist geladen, es ist nicht gelöst, die App ist sichtbar, der Spieler hat
+  nicht pausiert. Jeder Aufrufer ändert eine dieser Tatsachen und fragt neu. Verstreute
+  `startTimer()`-Aufrufe waren genau der Fehler, aus dem die Uhr nachts auf dunklem
+  Bildschirm weiterlief — sie wurde nur bei „neues Spiel" und „gelöst" angehalten,
+  Lebenszyklus-Ereignisse kannte niemand. `startTimer()` steigt jetzt zusätzlich aus,
+  wenn die Uhr schon läuft: sonst würde `startedAt` vorrücken, während `accumulatedMs`
+  den alten Stand hält, und die Zeit dazwischen wäre weg.
+- **Zwei Gründe für eine stehende Uhr, absichtlich getrennt.** Die Pause des Spielers
+  blendet das Brett aus; „App nicht sichtbar" (`MainActivity.onStart`/`onStop`) hält
+  nur die Uhr an und löst sich beim Zurückkommen von selbst auf — eine Tippquittung
+  für jede beantwortete Benachrichtigung wäre eine Maut. `onStop` speichert außerdem:
+  im Hintergrund kann der Prozess sterben, und sonst überlebte nur die Zeit bis zur
+  letzten Brettänderung.
+- **Die Pause blendet das Brett wirklich aus**, statt es hinter einem halbdurchsichtigen
+  Schleier zu lassen: eine stehende Uhr vor einem lesbaren Gitter ist geschenkte
+  Denkzeit, und Denken ist das ganze Spiel. Verdeckt wird auch das Ziffernpad — die
+  Notizreihe ist der Kandidatenstand des gewählten Feldes.
 - Die Brettseite wird als `min(maxWidth, maxHeight)` ausgeschrieben, **nicht** als
   `fillMaxHeight().aspectRatio(1f)` — letzteres leitet die Breite aus der Höhe ab und
   liefert bereitwillig ein Brett breiter als der Bildschirm.

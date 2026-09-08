@@ -63,6 +63,17 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
     /** A hint is being computed. Guards against a double tap counting two hints. */
     private var hintPending = false
 
+    /**
+     * The two reasons the clock may stand still, kept apart on purpose.
+     *
+     * [manuallyPaused] is the player's decision and hides the grid; [visible] follows
+     * the activity's start/stop, stops the clock and changes nothing else. Returning
+     * to the app therefore just carries on -- an extra tap for every notification the
+     * player answers would be a toll, not a feature.
+     */
+    private var manuallyPaused = false
+    private var visible = true
+
     init {
         // Read synchronously so the very first frame already shows the game in
         // progress, rather than flashing a freshly generated one. Same reason the
@@ -86,7 +97,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         aidsCleanRun = !saved.aidsUsed
         accumulatedMs = saved.elapsedMs
         publish()
-        if (!g.isSolved()) startTimer()
+        syncTimer()
         return true
     }
 
@@ -106,6 +117,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
     fun newGame(level: Level) {
         _ui.value = GameUiState(generating = true, level = level, settings = settings)
         stopTimer()
+        manuallyPaused = false
         viewModelScope.launch {
             // Generation is 50-150 ms of pure computation. On the main thread that
             // would be a visible stall on every new puzzle.
@@ -120,7 +132,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             hintPending = false
             publish()
             saveGame()
-            startTimer()
+            syncTimer()
         }
     }
 
@@ -195,6 +207,44 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         val g = game ?: return
         g.discardBranch()
         onBoardChanged()
+    }
+
+    // --- Pause ---------------------------------------------------------------
+
+    /**
+     * The player stops the clock. The grid goes away with it -- a paused clock in
+     * front of a readable board is an invitation to think on for free, and thinking
+     * is the whole of the game.
+     */
+    fun onPause() {
+        val g = game ?: return
+        if (g.isSolved()) return
+        manuallyPaused = true
+        syncTimer()
+        publish()
+        saveGame()      // the accumulated time is now final until the player is back
+    }
+
+    fun onResume() {
+        manuallyPaused = false
+        syncTimer()
+        publish()
+    }
+
+    /**
+     * The activity became visible or stopped. Called from `MainActivity.onStart` /
+     * `onStop`, so it covers the screen going off, the app switcher and any other way
+     * of leaving -- without this the clock ran all night on a dark screen.
+     *
+     * Leaving also saves: the process can be killed while stopped, and only the time
+     * up to the last board change would otherwise survive.
+     */
+    fun onVisibilityChanged(nowVisible: Boolean) {
+        if (visible == nowVisible) return
+        visible = nowVisible
+        syncTimer()
+        publish()
+        if (!nowVisible) saveGame()
     }
 
     // --- Tipp ---------------------------------------------------------------
@@ -279,7 +329,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
     }
 
     private fun onSolved() {
-        stopTimer()
+        stopTimer()   // syncTimer would do it too; being explicit here costs nothing
         val g = game ?: return
         // A full, conflict-free grid is the solution, so the open attempt worked --
         // leaving it provisional would offer to discard a finished puzzle.
@@ -373,6 +423,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             selectedNotes = if (editable) g.notes[selected] else 0,
             canUndo = g.canUndo,
             canRedo = g.canRedo,
+            paused = manuallyPaused,
             inBranch = g.inBranch,
             branchCells = trial.count { it },
             solved = solved,
@@ -399,7 +450,21 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
     // Elapsed time is derived from a monotonic clock rather than counted up per
     // tick, so a missed or late tick cannot make the displayed time drift.
 
+    /**
+     * The one place that decides whether the clock runs: a game is loaded, it is not
+     * finished, the app is on screen and the player has not paused. Every caller just
+     * changes one of those facts and asks again -- scattered start/stop calls are how
+     * a clock ends up running in the background.
+     */
+    private fun syncTimer() {
+        val g = game
+        if (g != null && !g.isSolved() && visible && !manuallyPaused) startTimer() else stopTimer()
+    }
+
     private fun startTimer() {
+        // Restarting a running clock would move startedAt forward while accumulatedMs
+        // still holds the old total -- the elapsed time in between would be lost.
+        if (_timer.value.running) return
         startedAt = SystemClock.elapsedRealtime()
         val token = ++timerToken
         _timer.value = TimerState(accumulatedMs, running = true)

@@ -10,7 +10,7 @@ ausschließlich für die Update-Prüfung benutzt (siehe „Updates").
 ## Stand
 
 Spielbar: Gitter, Ziffernpad, Notizen (Bleistift-Kandidaten), Undo/Redo, Zweige
-(Versuch auf Probe), Timer, Gelöst-Erkennung, drei Schwierigkeitsstufen, App-Icon,
+(Versuch auf Probe), Timer mit Pause, Gelöst-Erkennung, drei Schwierigkeitsstufen, App-Icon,
 signierter Release-Build, Auto-Update.
 
 **Eingabe: erst das Feld, dann die Entscheidung.** Unter dem Brett stehen zwei Reihen —
@@ -34,6 +34,11 @@ sagt übrigens der Tipp: er meldet dann, dass das Rätsel nicht mehr aufgeht.
 Ziffer und — wenn möglich — den Grund („in Block 5 ist nur hier Platz für die 7"), der
 dritte trägt sie ein. Hat man sich schon verrannt, sagt die App, *dass* das Rätsel nicht
 mehr aufgeht, aber nicht wo.
+
+**Pause** in der Kopfzeile: die Uhr steht, das Brett wird ausgeblendet (kein Schleier,
+es wird nicht gezeichnet), ein Tipp irgendwohin macht weiter. Die Uhr hält außerdem
+von selbst an, sobald die App nicht mehr sichtbar ist — Bildschirm aus, App-Umschalter,
+Home-Taste —, und läuft beim Zurückkommen weiter.
 
 **Statistik** pro Stufe: gelöst, begonnen, Bestzeit, dazu die Abzeichen „ohne Hilfen" und
 „ohne Tipp".

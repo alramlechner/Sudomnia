@@ -35,6 +35,8 @@ fun TopBar(
     clueCount: Int,
     elapsed: String,
     settings: Settings,
+    canPause: Boolean,
+    onPause: () -> Unit,
     onNewGame: () -> Unit,
     onSettings: () -> Unit,
     onStats: () -> Unit,
@@ -70,7 +72,13 @@ fun TopBar(
                 fontSize = 12.sp,
             )
         }
-        Text(text = elapsed, color = TextPrimary, fontSize = 20.sp)
+        // The pause button sits on the clock, because that is what it acts on.
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = elapsed, color = TextPrimary, fontSize = 20.sp)
+            TextButton(onClick = onPause, enabled = canPause) {
+                Text(stringResource(R.string.paused_pause))
+            }
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = onStats) { Text(stringResource(R.string.stats)) }
             TextButton(onClick = onSettings) { Text(stringResource(R.string.settings)) }

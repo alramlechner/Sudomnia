@@ -28,6 +28,12 @@ data class GameUiState(
     val remaining: List<Int> = List(10) { 0 },
     val canUndo: Boolean = false,
     val canRedo: Boolean = false,
+    /**
+     * The player paused. The clock stands and the grid is not drawn -- see
+     * [SudokuViewModel.onPause]. Leaving the app stops the clock too, but that is not
+     * this flag: it changes nothing on screen and undoes itself on return.
+     */
+    val paused: Boolean = false,
     /** A trial branch is open: entries are provisional until kept or discarded. */
     val inBranch: Boolean = false,
     /** How many cells carry a trial digit -- what the branch bar counts out. */

@@ -31,6 +31,7 @@ import name.lechners.sudomnia.data.Settings
 import name.lechners.sudomnia.rules.Level
 import name.lechners.sudomnia.ui.board.SudokuBoard
 import name.lechners.sudomnia.ui.theme.AppBackground
+import name.lechners.sudomnia.ui.theme.AppSurface
 import name.lechners.sudomnia.ui.theme.InkConflict
 import name.lechners.sudomnia.update.UpdateState
 
@@ -45,6 +46,8 @@ fun GameScreen(
     onErase: () -> Unit,
     onUndo: () -> Unit,
     onRedo: () -> Unit,
+    onPause: () -> Unit,
+    onResume: () -> Unit,
     onBeginBranch: () -> Unit,
     onCommitBranch: () -> Unit,
     onDiscardBranch: () -> Unit,
@@ -72,6 +75,8 @@ fun GameScreen(
                 clueCount = state.clueCount,
                 elapsed = timer.format(),
                 settings = state.settings,
+                canPause = !state.generating && !state.solved && !state.paused,
+                onPause = onPause,
                 onNewGame = { showLevelPicker = true },
                 onSettings = { showSettings = true },
                 onStats = { showStats = true },
@@ -111,7 +116,12 @@ fun GameScreen(
                     contentAlignment = Alignment.Center,
                 ) {
                     val board = state.board
-                    if (board == null || state.generating) {
+                    if (state.paused) {
+                        // Nothing is drawn while paused -- the overlay below is opaque,
+                        // but not drawing the grid at all is the honest version of
+                        // "the board is hidden".
+                        Box(modifier = Modifier.fillMaxSize().background(AppSurface))
+                    } else if (board == null || state.generating) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator()
                             Text(
@@ -133,7 +143,7 @@ fun GameScreen(
             BranchBar(
                 inBranch = state.inBranch,
                 cells = state.branchCells,
-                enabled = !state.generating && !state.solved,
+                enabled = !state.generating && !state.solved && !state.paused,
                 onBegin = onBeginBranch,
                 onCommit = onCommitBranch,
                 onDiscard = onDiscardBranch,
@@ -142,7 +152,8 @@ fun GameScreen(
             // Two permanent rows, no mode switch: pick a cell, then decide. The
             // rows go dead without an editable cell, which is how the order is
             // taught -- see Keypad.kt.
-            val canEdit = state.selectionEditable && !state.generating && !state.solved
+            val canEdit = state.selectionEditable && !state.generating && !state.solved &&
+                !state.paused
             DigitPad(
                 remaining = state.remaining,
                 selectedDigit = state.selectedDigit,
@@ -167,7 +178,10 @@ fun GameScreen(
                 TextButton(onClick = onErase, enabled = canEdit) {
                     Text(stringResource(R.string.erase))
                 }
-                TextButton(onClick = onHint, enabled = !state.generating && !state.solved) {
+                TextButton(
+                    onClick = onHint,
+                    enabled = !state.generating && !state.solved && !state.paused,
+                ) {
                     Text(stringResource(R.string.hint))
                 }
                 TextButton(onClick = onUndo, enabled = state.canUndo) {
@@ -177,6 +191,12 @@ fun GameScreen(
                     Text(stringResource(R.string.redo))
                 }
             }
+        }
+
+        // Above everything, including the dialogs' trigger buttons: while it is up,
+        // the only thing on screen is the way back.
+        if (state.paused) {
+            PauseOverlay(level = state.level, elapsed = timer.format(), onResume = onResume)
         }
 
         if (state.solved) {

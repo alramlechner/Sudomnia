@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModelProvider
 import name.lechners.sudomnia.diag.DiagnosticsLog
 import name.lechners.sudomnia.ui.game.GameScreen
 import name.lechners.sudomnia.ui.game.SudokuViewModel
@@ -26,6 +26,13 @@ import name.lechners.sudomnia.ui.theme.SudomniaTheme
  */
 class MainActivity : ComponentActivity() {
 
+    /**
+     * Held by the activity, not fetched inside `setContent`, because the lifecycle
+     * callbacks below need it. It is the same instance either way -- the activity is
+     * the ViewModelStoreOwner in both cases.
+     */
+    private lateinit var vm: SudokuViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Before anything else: from here on crashes land in a file the player can share.
@@ -35,19 +42,21 @@ class MainActivity : ComponentActivity() {
         // blank mid-puzzle would be the single most annoying possible bug.
         window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
+        vm = ViewModelProvider(this, SudokuViewModel.factory(applicationContext))[
+            SudokuViewModel::class.java
+        ]
+
         setContent {
             SudomniaTheme {
-                val vm: SudokuViewModel = viewModel(
-                    factory = SudokuViewModel.factory(applicationContext),
-                )
                 val state by vm.ui.collectAsState()
                 val timer by vm.timer.collectAsState()
 
                 // Zweites ViewModel mit Absicht: SudokuViewModel ist die Partie und soll
                 // keinen Netzwerkcode bekommen.
-                val updateVm: UpdateViewModel = viewModel(
-                    factory = UpdateViewModel.factory(applicationContext),
-                )
+                val updateVm: UpdateViewModel = ViewModelProvider(
+                    this@MainActivity,
+                    UpdateViewModel.factory(applicationContext),
+                )[UpdateViewModel::class.java]
                 val update by updateVm.state.collectAsState()
 
                 GameScreen(
@@ -60,6 +69,8 @@ class MainActivity : ComponentActivity() {
                     onErase = vm::onErase,
                     onUndo = { vm.onUndo() },
                     onRedo = { vm.onRedo() },
+                    onPause = vm::onPause,
+                    onResume = vm::onResume,
                     onBeginBranch = vm::onBeginBranch,
                     onCommitBranch = vm::onCommitBranch,
                     onDiscardBranch = vm::onDiscardBranch,
@@ -76,5 +87,19 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    // The clock must not run while nobody is looking at the board. onStart/onStop is
+    // the right pair for that: it covers the screen going off, the app switcher and
+    // the home button alike, and unlike onPause/onResume it does not fire for a
+    // dialog or a half-visible split-screen window.
+    override fun onStart() {
+        super.onStart()
+        vm.onVisibilityChanged(true)
+    }
+
+    override fun onStop() {
+        vm.onVisibilityChanged(false)
+        super.onStop()
     }
 }
