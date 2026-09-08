@@ -136,6 +136,43 @@ Bearbeitung (`Edit`) schon jetzt eine *Liste* von Feldänderungen: das Setzen ei
 Ziffer löscht sie zugleich aus den Notizen aller 20 Nachbarn, und Undo muss beides
 zurücknehmen.
 
+### Zweige: ein Versuch auf Probe
+
+Auf „Schwer" ist regelmäßig kein Feld mehr erzwungen (§5) — der Weg weiter ist, eine
+Ziffer anzunehmen und die Folgen zu verfolgen. `beginBranch()` setzt dazu eine Marke
+in die Bearbeitungsliste; alles danach ist vorläufig, bis `commitBranch()` es behält
+oder `discardBranch()` den ganzen Versuch zurücknimmt.
+
+**Ein Zweig ist nur diese Marke** — kein zweites Brett, keine Zustandskopie. Verwerfen
+ist Undo bis zur Marke und danach ein Abschneiden der Liste. Damit stellt es Notizen
+und die bei Nachbarn gestrichenen Kandidaten genauso exakt wieder her wie der
+Rückgängig-Knopf, ohne dass dafür eine Zeile geschrieben werden musste; wäre der Zweig
+eine Kopie des Bretts, wären es zwei Wahrheiten über denselben Spielstand.
+
+Drei Regeln hängen daran:
+
+- **Undo hält an der Marke.** Sonst stünde der Zweig um Bearbeitungen herum offen, die
+  gar nicht mehr zu ihm gehören, und „alles zurück" hätte keinen definierten Umfang.
+  Nach dem Übernehmen fällt die Grenze sofort weg.
+- **Der Redo-Zweig wird beim *Öffnen* verworfen**, nicht beim Verwerfen. Dann ist
+  Verwerfen ein reines Abschneiden auf die Marke und kann keine Bearbeitungen von
+  *vor* dem Zweig wiederbeleben.
+- **Zweige verschachteln nicht.** Ein zweites `beginBranch()` ist wirkungslos. Ein
+  Stapel wäre billig zu haben, aber „welchen Zweig verwerfe ich gerade?" ist eine
+  Frage, die die Oberfläche dann beantworten müsste — und der Fall, um den es geht,
+  ist eine Annahme und ihre Folgen.
+
+`trialCells()` liefert die Felder, deren **Ziffer** sich seit der Marke geändert hat —
+das ist, was gelb wird. Notizen zählen bewusst nicht: eine gesetzte Ziffer streicht
+sich aus den Notizen von bis zu 20 Nachbarn, die alle einzufärben verteilte den
+Versuch über ein Viertel des Bretts. Eine wieder geleerte Zelle fällt aus der Liste
+heraus, weil dann nichts vom Versuch mehr darin steht.
+
+**Ob der Versuch gescheitert ist, sagt der vorhandene Tipp**: er prüft ohnehin als
+Erstes, ob das Brett noch lösbar ist (§5), und meldet sonst genau das. Der Zweig
+braucht dafür keine eigene Prüfung — und vor allem kein automatisches „das war
+falsch", das dem Spieler die Arbeit abnähme, die er gerade tun wollte.
+
 **Konflikte, keine Fehler.** Markiert wird eine Ziffer, die in Zeile, Spalte oder Block
 doppelt vorkommt — eine Aussage über die Regeln, die der Spieler selbst treffen könnte.
 Ein Abgleich mit der gespeicherten Lösung wäre etwas anderes: die App würde das Rätsel
@@ -214,6 +251,10 @@ auseinanderlaufen. `decode()` ist nullbar und wird validiert (Lösung gültig, V
 dazu); bei jeder Unstimmigkeit wird der Spielstand verworfen statt halb kaputt geladen.
 Gelesen wird **synchron im ViewModel-Konstruktor**, aus demselben Grund wie die
 Einstellungen — sonst blitzt beim Start kurz ein neues Rätsel auf.
+
+Ein offener Zweig ist eine einzelne Zahl in diesem Datensatz (die Marke), Format
+Version 2. Version 1 wird weiterhin gelesen und bekommt „kein Zweig" — wer beim Update
+mitten im Rätsel steckt, verliert es sonst für ein Feld, das es damals nicht gab.
 
 `onBoardChanged()` ist der einzige Trichter für Brettänderungen und besitzt drei Dinge, die
 nicht verstreut werden dürfen: der Tipp verfällt (einer gegen ein älteres Brett gerechnet
@@ -321,6 +362,12 @@ gab.
   die gleichen Ziffern verschwanden darin. Ermittelt durch Nachbau des Zeichencodes
   und Rendern echter Stellungen, nicht durch Beurteilen am Quelltext. Jetzt: Kreuz
   schwächer (`#EDF3F8`), Grün kräftiger (`#A9D98A`).
+- **Vorläufige Ziffern werden zweifach markiert**: gelbe Zelle *und* dunkelgelbe
+  Ziffer. Die Zellfarbe allein reicht nicht — ein Zweigfeld, das gerade gewählt ist
+  oder die hervorgehobene Ziffer trägt, wird in *deren* Farbe gezeichnet, und „das ist
+  nur ein Versuch" darf dabei nicht verschwinden. In der Rangfolge der Zellfarben steht
+  Gelb über der Gleiche-Ziffer-Hervorhebung, nach derselben Regel wie dort: wer weniger
+  Felder färbt, gewinnt.
 - **Die hervorgehobene Ziffer wird auch in den Notizen hervorgehoben** (fett, dunkelgrün).
   Ohne das leuchten die gesetzten Ziffern auf, aber die *notierten* — meist genau die,
   über die gerade nachgedacht wird — muss man mit dem Auge suchen.
@@ -358,7 +405,10 @@ haben keine Android-Importe.
 8. **Ist etwas zwingend, wird es begründet** statt blank aufgedeckt.
 9. **Eine falsche Eingabe wird als tot erkannt**, bevor irgendetwas verraten wird.
 10. **Ein Spielstand übersteht Kodieren und Zurückspielen** samt Notizen und Undo-Tiefe;
-    kaputte Daten liefern `null`, statt beim Start zu werfen.
+    kaputte Daten liefern `null`, statt beim Start zu werfen. Das gilt auch für einen
+    offenen Zweig — und ein Spielstand im alten Format lädt weiterhin.
+11. **Ein verworfener Zweig stellt Ziffern *und* Notizen exakt wieder her**, über
+    zufällige Zugfolgen — dieselbe Prüfung wie für Undo, weil es dieselbe Mechanik ist.
 
 `-DsudokuDeep=1` lässt dieselben Tests mit dem Zehnfachen an Rätseln laufen: ~2.500
 erzeugte Rätsel, auf einem Raspberry Pi 5 in unter 90 Sekunden inklusive Kompilieren.

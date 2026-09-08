@@ -48,10 +48,23 @@ val PaperHint = Color(0xFFF2C97A)
 /** The unit that justifies a hint. Nine cells, so as weak as [PaperPeer]. */
 val PaperHintUnit = Color(0xFFFBF0D8)
 
+/**
+ * Cells written on trial, in an open branch. Yellow -- the one hue still free next to
+ * selection blue, same-digit green, conflict red and hint amber.
+ *
+ * The digits get [InkTrial] on top of it, because the background alone is not enough:
+ * a trial cell that is selected, or that carries the highlighted digit, is painted in
+ * that colour instead, and "this is only provisional" must survive that.
+ */
+val PaperTrial = Color(0xFFF2E27A)
+
 val InkGiven = Color(0xFF1C222E)
 val InkEntry = Color(0xFF1D6FA5)
 val InkConflict = Color(0xFFA32B22)
 val InkNote = Color(0xFF6B7480)
+
+/** A digit entered in an open branch -- dark amber, never mistaken for a kept entry. */
+val InkTrial = Color(0xFF8A5A00)
 
 /** A pencil mark for the currently highlighted digit -- same green family as [PaperSameDigit]. */
 val InkNoteHighlight = Color(0xFF2E6B12)

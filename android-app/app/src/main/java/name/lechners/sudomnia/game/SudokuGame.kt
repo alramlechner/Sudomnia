@@ -15,6 +15,19 @@ import name.lechners.sudomnia.rules.Units
  * statement about the rules that the player could have made themselves; flagging a
  * deviation from the solution would be the app quietly solving the puzzle for them.
  * That line is deliberate.
+ *
+ * ### Trial branches
+ *
+ * When no cell is forced any more, the way on is to assume a digit and follow the
+ * consequences. [beginBranch] marks that point in the history; everything entered
+ * afterwards is provisional and shown in its own colour, until [commitBranch] keeps
+ * it or [discardBranch] takes the whole attempt back in one step.
+ *
+ * A branch is *just a marker in the edit list* -- no second board, no copied state.
+ * Discarding is undo run down to the marker, which is why it restores pencil marks
+ * and peer notes as exactly as the undo button does. The one extra rule is that undo
+ * stops at the marker while a branch is open: crossing it would leave the branch
+ * open around edits that are no longer part of it.
  */
 class SudokuGame(val puzzle: Puzzle) {
 
@@ -27,7 +40,13 @@ class SudokuGame(val puzzle: Puzzle) {
     private val history = ArrayList<Edit>()
     private var applied = 0
 
-    val canUndo: Boolean get() = applied > 0
+    /** Where the open trial branch starts in [history], or -1 when none is open. */
+    private var branchAt = -1
+
+    val inBranch: Boolean get() = branchAt >= 0
+
+    /** Undo stops at the branch marker -- see the class comment. */
+    val canUndo: Boolean get() = applied > if (branchAt >= 0) branchAt else 0
     val canRedo: Boolean get() = applied < history.size
 
     /** How many of the recorded edits are currently applied -- the undo cursor. */
@@ -49,12 +68,16 @@ class SudokuGame(val puzzle: Puzzle) {
      * @return false if a row is malformed -- the caller then discards the saved game
      *         rather than continuing with a half-restored board.
      */
-    fun importHistory(rows: List<List<IntArray>>, applied: Int): Boolean {
+    fun importHistory(rows: List<List<IntArray>>, applied: Int, branchAt: Int = -1): Boolean {
         if (applied < 0 || applied > rows.size) return false
+        // A marker beyond the applied edits would describe a branch that is partly
+        // undone -- there is no such state, so the save is rejected rather than bent.
+        if (branchAt > applied) return false
         history.clear()
         entries.fill(0)
         notes.fill(0)
         this.applied = 0
+        this.branchAt = if (branchAt >= 0) branchAt else -1
         for (row in rows) {
             if (row.isEmpty()) return false
             val changes = row.map {
@@ -106,6 +129,68 @@ class SudokuGame(val puzzle: Puzzle) {
         if (isGiven(cell)) return
         if (entries[cell] == 0 && notes[cell] == 0) return
         record(Edit(listOf(CellChange(cell, entries[cell], 0, notes[cell], 0))))
+    }
+
+    // --- Zweig (Versuch auf Probe) -----------------------------------------
+
+    /** Where the open branch starts, or -1 -- persisted so it survives a restart. */
+    val branchStart: Int get() = branchAt
+
+    /**
+     * Opens a trial branch at the current position. Does nothing if one is already
+     * open: branches do not nest, one level is what "assume a digit and see" needs.
+     *
+     * Any undone tail is dropped here rather than at the end, so that discarding the
+     * branch is a plain truncation to the marker and cannot resurrect edits from
+     * before it.
+     */
+    fun beginBranch() {
+        if (branchAt >= 0) return
+        while (history.size > applied) history.removeAt(history.size - 1)
+        branchAt = applied
+    }
+
+    /** Keeps everything entered in the branch. Only the marker goes away. */
+    fun commitBranch() {
+        branchAt = -1
+    }
+
+    /**
+     * Takes the whole attempt back: undo down to the marker, then drop those edits
+     * for good. Redo must not be able to walk back into an abandoned branch.
+     */
+    fun discardBranch() {
+        if (branchAt < 0) return
+        val start = branchAt
+        branchAt = -1                       // so canUndo lets us step over the marker
+        while (applied > start) undo()
+        while (history.size > start) history.removeAt(history.size - 1)
+    }
+
+    /**
+     * Cells whose **digit** differs from what it was when the branch was opened.
+     *
+     * Notes are deliberately not counted. Placing one digit strips it from up to 20
+     * peers' pencil marks; painting all of those as part of the attempt would colour
+     * a quarter of the board and say nothing about what was actually tried. What is
+     * marked is what the player put there -- and taking a trial digit back out again
+     * unmarks the cell, because then nothing of the attempt is left in it.
+     */
+    fun trialCells(): BooleanArray {
+        val mark = BooleanArray(Units.CELLS)
+        if (branchAt < 0) return mark
+        val before = IntArray(Units.CELLS) { -1 }
+        val after = IntArray(Units.CELLS) { -1 }
+        for (i in branchAt until applied) {
+            for (c in history[i].changes) {
+                if (before[c.cell] < 0) before[c.cell] = c.digitBefore
+                after[c.cell] = c.digitAfter
+            }
+        }
+        for (cell in 0 until Units.CELLS) {
+            if (before[cell] >= 0 && before[cell] != after[cell]) mark[cell] = true
+        }
+        return mark
     }
 
     fun undo(): Boolean {

@@ -3,6 +3,16 @@
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.4.4] – 2026-09-08
+
+### Neu
+- **Zweig** – ein Versuch auf Probe fuer den Punkt, an dem kein Feld mehr erzwungen
+  ist. "Zweig beginnen" setzt eine Marke, alles danach Eingetragene ist vorlaeufig
+  und steht **gelb** im Gitter (Zelle und Ziffer). "Verwerfen" nimmt den ganzen
+  Versuch in einem Schritt zurueck, "Uebernehmen" macht ihn endgueltig. Rueckgaengig
+  haelt an der Marke an, solange der Zweig offen ist; der Zweig ueberlebt das
+  Beenden der App und wird beim Loesen automatisch uebernommen.
+
 ## [0.4.3] – 2026-09-07
 
 ### Behoben

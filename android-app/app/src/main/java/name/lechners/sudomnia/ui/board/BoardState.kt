@@ -13,6 +13,8 @@ class BoardState(
     val givens: BooleanArray,
     val notes: IntArray,
     val conflicts: BooleanArray,
+    /** Cells written on trial in the open branch; all false when none is open. */
+    val trial: BooleanArray,
     val selected: Int,
     /** 0 when same-digit highlighting is off or nothing is selected. */
     val highlightDigit: Int,
@@ -40,7 +42,8 @@ class BoardState(
             values.contentEquals(other.values) &&
             givens.contentEquals(other.givens) &&
             notes.contentEquals(other.notes) &&
-            conflicts.contentEquals(other.conflicts)
+            conflicts.contentEquals(other.conflicts) &&
+            trial.contentEquals(other.trial)
     }
 
     override fun hashCode(): Int {
@@ -48,6 +51,7 @@ class BoardState(
         h = 31 * h + givens.contentHashCode()
         h = 31 * h + notes.contentHashCode()
         h = 31 * h + conflicts.contentHashCode()
+        h = 31 * h + trial.contentHashCode()
         h = 31 * h + selected
         h = 31 * h + highlightDigit
         h = 31 * h + if (highlightPeers) 1 else 0

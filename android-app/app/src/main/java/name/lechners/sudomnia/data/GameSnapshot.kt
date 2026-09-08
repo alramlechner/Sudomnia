@@ -27,6 +27,8 @@ data class GameSnapshot(
     val hintsUsed: Int,
     val aidsUsed: Boolean,
     val counted: Boolean,
+    /** Start of the open trial branch in the edit list, -1 if none. */
+    val branchAt: Int = -1,
 ) {
 
     fun encode(): String = listOf(
@@ -39,6 +41,7 @@ data class GameSnapshot(
         hintsUsed.toString(),
         if (aidsUsed) "1" else "0",
         if (counted) "1" else "0",
+        branchAt.toString(),
         edits.joinToString(EDIT_SEP),
     ).joinToString(FIELD_SEP)
 
@@ -57,11 +60,12 @@ data class GameSnapshot(
                 IntArray(5) { parts[it].toIntOrNull() ?: return null }
             }
         }
-        return SudokuGameRestore(Puzzle(g, s, level), rows, applied)
+        if (branchAt > applied) return null
+        return SudokuGameRestore(Puzzle(g, s, level), rows, applied, branchAt)
     }
 
     companion object {
-        private const val VERSION = 1
+        private const val VERSION = 2
         private const val FIELD_SEP = "|"
         private const val EDIT_SEP = ";"
         private const val CHANGE_SEP = ","
@@ -74,19 +78,23 @@ data class GameSnapshot(
         fun decode(text: String?): GameSnapshot? {
             if (text.isNullOrEmpty()) return null
             val f = text.split(FIELD_SEP)
-            if (f.size != 10) return null
-            if (f[0].toIntOrNull() != VERSION) return null
+            val version = f[0].toIntOrNull() ?: return null
+            // Version 1 knew no trial branch and had one field less. It is still read
+            // rather than dropped: whoever updates mid-puzzle keeps their game.
+            if (version !in 1..VERSION) return null
+            if (f.size != if (version == 1) 10 else 11) return null
             val level = Level.entries.firstOrNull { it.name == f[3] } ?: return null
             return GameSnapshot(
                 givens = f[1],
                 solution = f[2],
                 level = level,
-                edits = if (f[9].isEmpty()) emptyList() else f[9].split(EDIT_SEP),
+                edits = f.last().let { if (it.isEmpty()) emptyList() else it.split(EDIT_SEP) },
                 applied = f[4].toIntOrNull() ?: return null,
                 elapsedMs = f[5].toLongOrNull() ?: return null,
                 hintsUsed = f[6].toIntOrNull() ?: return null,
                 aidsUsed = f[7] == "1",
                 counted = f[8] == "1",
+                branchAt = if (version == 1) -1 else f[9].toIntOrNull() ?: return null,
             )
         }
     }
@@ -97,4 +105,5 @@ class SudokuGameRestore(
     val puzzle: Puzzle,
     val history: List<List<IntArray>>,
     val applied: Int,
+    val branchAt: Int,
 )

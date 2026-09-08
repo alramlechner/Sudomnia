@@ -22,6 +22,16 @@
     <string name="solved_body">%1$s · %2$s</string>
     <string name="solved_new_game">Nächstes Rätsel</string>
 
+    <!-- Zweig: ein Versuch auf Probe, wenn kein Feld mehr erzwungen ist -->
+    <string name="branch_start">Zweig beginnen</string>
+    <string name="branch_empty">Zweig offen – trag deinen Versuch ein</string>
+    <plurals name="branch_cells">
+        <item quantity="one">Zweig · %1$d Feld auf Probe</item>
+        <item quantity="other">Zweig · %1$d Felder auf Probe</item>
+    </plurals>
+    <string name="branch_discard">Verwerfen</string>
+    <string name="branch_commit">Übernehmen</string>
+
     <string name="hint">Tipp</string>
     <string name="hint_locate_forced">Dieses Feld lässt sich jetzt eindeutig bestimmen.</string>
     <string name="hint_locate_reveal" tools:ignore="PluralsCandidate">Hier ist gerade nichts erzwungen. Dieses Feld hat mit %1$d Möglichkeiten die wenigsten.</string>

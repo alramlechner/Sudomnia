@@ -23,6 +23,7 @@ class GameSnapshotTest {
         hintsUsed = 2,
         aidsUsed = true,
         counted = false,
+        branchAt = game.branchStart,
     )
 
     /**
@@ -79,6 +80,46 @@ class GameSnapshotTest {
         assertEquals(2, back.hintsUsed)
         assertTrue(back.aidsUsed)
         assertFalse(back.counted)
+    }
+
+    /** An open trial branch is part of the game, so it has to survive a restart. */
+    @Test
+    fun anOpenBranchSurvivesTheRoundTrip() {
+        val puzzle = PuzzleFactory().generate(Level.HARD, Random(8))
+        val game = SudokuGame(puzzle)
+        val empties = (0 until Units.CELLS).filter { !game.isGiven(it) }
+        game.setDigit(empties[0], puzzle.solution[empties[0]])
+        game.beginBranch()
+        game.setDigit(empties[1], 1)
+        game.setDigit(empties[2], 2)
+
+        val restore = GameSnapshot.decode(snapshotOf(game).encode())!!.toGame()!!
+        val revived = SudokuGame(restore.puzzle)
+        assertTrue(revived.importHistory(restore.history, restore.applied, restore.branchAt))
+
+        assertTrue("der Zweig ist noch offen", revived.inBranch)
+        assertTrue("dieselben Felder auf Probe", game.trialCells().contentEquals(revived.trialCells()))
+        revived.discardBranch()
+        assertEquals("und er laesst sich weiterhin verwerfen", 0, revived.valueAt(empties[1]))
+        assertEquals(puzzle.solution[empties[0]], revived.valueAt(empties[0]))
+    }
+
+    /**
+     * Version 1 had no branch field. Reading it anyway is what keeps a puzzle in
+     * progress alive across the update that introduced the feature.
+     */
+    @Test
+    fun aVersionOneSnapshotStillLoads() {
+        val game = SudokuGame(PuzzleFactory().generate(Level.EASY, Random(10)))
+        game.setDigit((0 until Units.CELLS).first { !game.isGiven(it) }, 7)
+        val v2 = snapshotOf(game).encode().split("|")
+        val v1 = (listOf("1") + v2.subList(1, 9) + v2.last()).joinToString("|")
+
+        val back = GameSnapshot.decode(v1)!!
+        assertEquals(-1, back.branchAt)
+        assertEquals(1, back.applied)
+        assertEquals(1, back.edits.size)
+        assertTrue(back.toGame() != null)
     }
 
     /** Anything unreadable must be dropped, never thrown -- it runs at app startup. */

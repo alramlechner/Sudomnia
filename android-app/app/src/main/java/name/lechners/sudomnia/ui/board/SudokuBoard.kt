@@ -22,6 +22,7 @@ import name.lechners.sudomnia.ui.theme.InkEntry
 import name.lechners.sudomnia.ui.theme.InkGiven
 import name.lechners.sudomnia.ui.theme.InkNote
 import name.lechners.sudomnia.ui.theme.InkNoteHighlight
+import name.lechners.sudomnia.ui.theme.InkTrial
 import name.lechners.sudomnia.ui.theme.PaperBase
 import name.lechners.sudomnia.ui.theme.PaperConflict
 import name.lechners.sudomnia.ui.theme.PaperGivenCell
@@ -30,6 +31,7 @@ import name.lechners.sudomnia.ui.theme.PaperHintUnit
 import name.lechners.sudomnia.ui.theme.PaperPeer
 import name.lechners.sudomnia.ui.theme.PaperSameDigit
 import name.lechners.sudomnia.ui.theme.PaperSelected
+import name.lechners.sudomnia.ui.theme.PaperTrial
 
 /**
  * The whole grid in one [Canvas], not 81 composables.
@@ -95,10 +97,13 @@ private fun DrawScope.drawCellBackgrounds(geo: BoardGeometry, state: BoardState)
         // voluntary hint. The hint outranks the selection, because it is the answer to
         // the button the player just pressed. The hint's unit sits below the same-digit
         // highlight for the reason PaperPeer does: it covers nine cells, not one.
+        // A trial cell ranks above the same-digit highlight by the same rule: an
+        // attempt is a handful of cells, the highlight up to nine.
         val color = when {
             state.conflicts[cell] -> PaperConflict
             cell == state.hintCell -> PaperHint
             cell == state.selected -> PaperSelected
+            state.trial[cell] -> PaperTrial
             state.highlightDigit != 0 && state.values[cell] == state.highlightDigit -> PaperSameDigit
             state.hintUnit >= 0 && Units.unitsOfCell[cell].contains(state.hintUnit) -> PaperHintUnit
             row == selRow || col == selCol || Units.boxOf[cell] == selBox -> PaperPeer
@@ -135,6 +140,9 @@ private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: 
             paint.color = when {
                 state.conflicts[cell] -> InkConflict.toArgb()
                 state.givens[cell] -> InkGiven.toArgb()
+                // Provisional, so not the settled blue of a kept entry -- and unlike
+                // the cell tint this survives being selected or highlighted.
+                state.trial[cell] -> InkTrial.toArgb()
                 else -> InkEntry.toArgb()
             }
             // Centre on the glyph body, not on the baseline.

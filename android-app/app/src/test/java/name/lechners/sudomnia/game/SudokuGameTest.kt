@@ -91,6 +91,115 @@ class SudokuGameTest {
         assertEquals(2, game.valueAt(cell))
     }
 
+    // --- Zweig -------------------------------------------------------------
+
+    /** The whole point of the feature: an attempt comes back in one step, exactly. */
+    @Test
+    fun discardingABranchRestoresDigitsAndNotesExactly() {
+        val game = newGame()
+        val rnd = Random(3)
+        val empties = (0 until Units.CELLS).filter { !game.isGiven(it) }
+        repeat(15) {
+            val cell = empties.random(rnd)
+            if (rnd.nextBoolean()) game.setDigit(cell, rnd.nextInt(1, 10))
+            else game.toggleNote(cell, rnd.nextInt(1, 10))
+        }
+        val entriesBefore = game.entries.copyOf()
+        val notesBefore = game.notes.copyOf()
+        val depthBefore = game.appliedCount
+
+        game.beginBranch()
+        assertTrue(game.inBranch)
+        repeat(15) {
+            val cell = empties.random(rnd)
+            if (rnd.nextBoolean()) game.setDigit(cell, rnd.nextInt(1, 10))
+            else game.toggleNote(cell, rnd.nextInt(1, 10))
+        }
+        game.discardBranch()
+
+        assertFalse(game.inBranch)
+        assertTrue("Ziffern", entriesBefore.contentEquals(game.entries))
+        assertTrue("Notizen -- auch die von Nachbarn gestrichenen", notesBefore.contentEquals(game.notes))
+        assertEquals(depthBefore, game.appliedCount)
+        assertFalse("ein verworfener Zweig darf nicht wiederholbar sein", game.canRedo)
+    }
+
+    @Test
+    fun committingABranchKeepsEverythingAndClearsTheMark() {
+        val game = newGame()
+        val cell = firstEmpty(game)
+        game.beginBranch()
+        game.setDigit(cell, 4)
+        game.commitBranch()
+
+        assertFalse(game.inBranch)
+        assertEquals(4, game.valueAt(cell))
+        assertTrue("nach dem Übernehmen ist es ein Zug wie jeder andere", game.canUndo)
+        game.undo()
+        assertEquals(0, game.valueAt(cell))
+    }
+
+    /** Undo would otherwise leave the branch open around edits that left it. */
+    @Test
+    fun undoStopsAtTheBranchStart() {
+        val game = newGame()
+        val a = firstEmpty(game)
+        val b = (0 until Units.CELLS).first { !game.isGiven(it) && it != a }
+        game.setDigit(a, 1)
+        game.beginBranch()
+        game.setDigit(b, 2)
+
+        assertTrue(game.undo())
+        assertFalse("die Grenze haelt", game.canUndo)
+        assertFalse(game.undo())
+        assertEquals("der Zug vor dem Zweig steht noch", 1, game.valueAt(a))
+
+        game.commitBranch()
+        assertTrue("nach dem Übernehmen faellt die Grenze", game.canUndo)
+    }
+
+    @Test
+    fun trialCellsAreTheOnesWhoseDigitChangedInTheBranch() {
+        val game = newGame()
+        val empties = (0 until Units.CELLS).filter { !game.isGiven(it) }
+        val kept = empties[0]
+        val tried = empties[1]
+        val takenBack = empties[2]
+        val noted = empties[3]
+
+        game.setDigit(kept, 1)
+        game.beginBranch()
+        game.setDigit(tried, 2)
+        game.setDigit(takenBack, 3)
+        game.setDigit(takenBack, 3)        // dieselbe Ziffer nochmal: Feld wieder leer
+        game.toggleNote(noted, 5)
+
+        val trial = game.trialCells()
+        assertTrue(trial[tried])
+        assertFalse("vor dem Zweig gesetzt", trial[kept])
+        assertFalse("wieder geleert, es steht nichts vom Versuch drin", trial[takenBack])
+        assertFalse("nur eine Notiz", trial[noted])
+        assertEquals(1, trial.count { it })
+
+        game.discardBranch()
+        assertTrue("ausserhalb eines Zweigs ist nichts vorlaeufig", game.trialCells().none { it })
+    }
+
+    @Test
+    fun aBranchDoesNotNest() {
+        val game = newGame()
+        val a = firstEmpty(game)
+        val b = (0 until Units.CELLS).first { !game.isGiven(it) && it != a }
+        game.beginBranch()
+        game.setDigit(a, 1)
+        game.beginBranch()                 // ohne Wirkung
+        game.setDigit(b, 2)
+        game.discardBranch()
+
+        assertEquals("beide Versuche sind weg", 0, game.valueAt(a))
+        assertEquals(0, game.valueAt(b))
+    }
+
     @Test
     fun conflictsAreDetectedInRowColumnAndBox() {
         val game = newGame()

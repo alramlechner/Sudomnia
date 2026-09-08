@@ -28,6 +28,10 @@ data class GameUiState(
     val remaining: List<Int> = List(10) { 0 },
     val canUndo: Boolean = false,
     val canRedo: Boolean = false,
+    /** A trial branch is open: entries are provisional until kept or discarded. */
+    val inBranch: Boolean = false,
+    /** How many cells carry a trial digit -- what the branch bar counts out. */
+    val branchCells: Int = 0,
     val solved: Boolean = false,
     val settings: Settings = Settings(),
     val stats: Stats = Stats.EMPTY,

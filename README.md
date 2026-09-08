@@ -9,9 +9,9 @@ ausschließlich für die Update-Prüfung benutzt (siehe „Updates").
 
 ## Stand
 
-Spielbar: Gitter, Ziffernpad, Notizen (Bleistift-Kandidaten), Undo/Redo, Timer,
-Gelöst-Erkennung, drei Schwierigkeitsstufen, App-Icon, signierter Release-Build,
-Auto-Update.
+Spielbar: Gitter, Ziffernpad, Notizen (Bleistift-Kandidaten), Undo/Redo, Zweige
+(Versuch auf Probe), Timer, Gelöst-Erkennung, drei Schwierigkeitsstufen, App-Icon,
+signierter Release-Build, Auto-Update.
 
 **Eingabe: erst das Feld, dann die Entscheidung.** Unter dem Brett stehen zwei Reihen —
 oben die großen Ziffern (eintragen, nochmal tippen löscht wieder), darunter die kleinen
@@ -22,6 +22,14 @@ ist also zugleich die Anzeige. Ohne gewähltes Feld sind beide Reihen grau.
 Ein Feld antippen hebt alle Felder mit derselben Ziffer hervor — gesetzte **und**
 notierte. Funktioniert auch auf den vorgegebenen Zahlen.
 
+**Zweig**, wenn kein Feld mehr eindeutig ist: „Zweig beginnen" setzt eine Marke, ab da
+ist jede eingetragene Ziffer nur ein Versuch und steht **gelb** im Gitter. Geht der
+Versuch auf, macht „Übernehmen" ihn endgültig; geht er nicht auf, räumt „Verwerfen"
+alles davon in einem Schritt weg — auch die Notizen, die dabei bei den Nachbarn
+verschwunden sind. Solange der Zweig offen ist, hält „Rückgängig" an seinem Anfang an,
+damit man nicht versehentlich darunter rutscht. Ob der Versuch schon gescheitert ist,
+sagt übrigens der Tipp: er meldet dann, dass das Rätsel nicht mehr aufgeht.
+
 **Tipp**, wenn es klemmt: der erste Druck hebt ein Feld hervor, der zweite nennt die
 Ziffer und — wenn möglich — den Grund („in Block 5 ist nur hier Platz für die 7"), der
 dritte trägt sie ein. Hat man sich schon verrannt, sagt die App, *dass* das Rätsel nicht
@@ -30,8 +38,8 @@ mehr aufgeht, aber nicht wo.
 **Statistik** pro Stufe: gelöst, begonnen, Bestzeit, dazu die Abzeichen „ohne Hilfen" und
 „ohne Tipp".
 
-Das **laufende Spiel wird gespeichert** — Ziffern, Notizen, Undo-Stack und Spielzeit
-überleben das Beenden der App.
+Das **laufende Spiel wird gespeichert** — Ziffern, Notizen, Undo-Stack, ein offener
+Zweig und die Spielzeit überleben das Beenden der App.
 
 **Alle Hilfen sind abschaltbar** (Kopfzeile → „Hilfen"): Konfliktanzeige, Hervorhebung
 gleicher Ziffern, Hervorhebung von Zeile/Spalte/Block, Ausgrauen fertiger Ziffern.

@@ -74,7 +74,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         val saved = prefs.loadGame() ?: return false
         val restore = saved.toGame() ?: run { prefs.clearGame(); return false }
         val g = SudokuGame(restore.puzzle)
-        if (!g.importHistory(restore.history, restore.applied)) {
+        if (!g.importHistory(restore.history, restore.applied, restore.branchAt)) {
             prefs.clearGame()
             return false
         }
@@ -166,6 +166,37 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
 
     fun onRedo() = game?.let { it.redo(); onBoardChanged() }
 
+    // --- Zweig --------------------------------------------------------------
+
+    /**
+     * Opens a trial branch. Nothing on the board changes, so this does *not* go
+     * through [onBoardChanged]: opening a branch must not count as the first move of
+     * the game, and the standing hint is still valid for the position it was computed
+     * against.
+     */
+    fun onBeginBranch() {
+        val g = game ?: return
+        if (g.isSolved()) return
+        g.beginBranch()
+        publish()
+        saveGame()
+    }
+
+    /** Keeps the attempt. Again no board change -- only the provisional mark goes. */
+    fun onCommitBranch() {
+        val g = game ?: return
+        g.commitBranch()
+        publish()
+        saveGame()
+    }
+
+    /** Throws the attempt away; the board really moves, so the usual funnel applies. */
+    fun onDiscardBranch() {
+        val g = game ?: return
+        g.discardBranch()
+        onBoardChanged()
+    }
+
     // --- Tipp ---------------------------------------------------------------
 
     /**
@@ -250,6 +281,9 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
     private fun onSolved() {
         stopTimer()
         val g = game ?: return
+        // A full, conflict-free grid is the solution, so the open attempt worked --
+        // leaving it provisional would offer to discard a finished puzzle.
+        g.commitBranch()
         if (countedSolved) return
         countedSolved = true
         stats = stats.withSolved(
@@ -276,6 +310,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
                 hintsUsed = hintsUsed,
                 aidsUsed = !aidsCleanRun,
                 counted = countedSolved,
+                branchAt = g.branchStart,
             )
         )
     }
@@ -302,6 +337,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
 
         val full = g.isFull()
         val solved = g.isSolved()
+        val trial = g.trialCells()
 
         if (!settings.allAidsOff) aidsCleanRun = false
 
@@ -321,6 +357,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
                 givens = BooleanArray(Units.CELLS) { g.isGiven(it) },
                 notes = g.notes.copyOf(),
                 conflicts = shown,
+                trial = trial,
                 selected = selected,
                 highlightDigit = highlight,
                 highlightPeers = settings.highlightPeers,
@@ -336,6 +373,8 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             selectedNotes = if (editable) g.notes[selected] else 0,
             canUndo = g.canUndo,
             canRedo = g.canRedo,
+            inBranch = g.inBranch,
+            branchCells = trial.count { it },
             solved = solved,
             settings = settings,
             stats = stats,

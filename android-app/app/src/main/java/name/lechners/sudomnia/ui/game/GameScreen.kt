@@ -45,6 +45,9 @@ fun GameScreen(
     onErase: () -> Unit,
     onUndo: () -> Unit,
     onRedo: () -> Unit,
+    onBeginBranch: () -> Unit,
+    onCommitBranch: () -> Unit,
+    onDiscardBranch: () -> Unit,
     onNewGame: (Level) -> Unit,
     onSettingsChange: (Settings) -> Unit,
     onHint: () -> Unit,
@@ -125,6 +128,16 @@ fun GameScreen(
                     }
                 }
             }
+
+            // Directly under the board: it comments on the yellow cells up there.
+            BranchBar(
+                inBranch = state.inBranch,
+                cells = state.branchCells,
+                enabled = !state.generating && !state.solved,
+                onBegin = onBeginBranch,
+                onCommit = onCommitBranch,
+                onDiscard = onDiscardBranch,
+            )
 
             // Two permanent rows, no mode switch: pick a cell, then decide. The
             // rows go dead without an editable cell, which is how the order is
