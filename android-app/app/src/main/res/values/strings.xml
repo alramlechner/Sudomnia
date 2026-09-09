@@ -47,16 +47,40 @@
     <string name="branch_discard">Discard</string>
     <string name="branch_commit">Keep</string>
 
+    <!-- Hint. One string per rung of the ladder: the hint explains the technique it
+         actually used, so these must stay in step with rules/Technique.kt. -->
     <string name="hint">Hint</string>
-    <string name="hint_locate_forced">This cell can be worked out right now.</string>
-    <string name="hint_locate_reveal" tools:ignore="PluralsCandidate">Nothing is forced at the moment. With %1$d candidates, this cell has the fewest.</string>
-    <string name="hint_show_digit">Show digit</string>
-    <string name="hint_reveal_naked" tools:ignore="PluralsCandidate">Only the %1$d is left for this cell.</string>
-    <string name="hint_reveal_hidden">In %1$s, this is the only place for the %2$d.</string>
-    <string name="hint_reveal_bare" tools:ignore="PluralsCandidate">The %1$d belongs here.</string>
+    <string name="hint_show_why">Why?</string>
+    <string name="hint_next">Next</string>
     <string name="hint_apply">Enter it</string>
     <string name="hint_dismiss">Close</string>
     <string name="hint_dead_end">With the entries so far, this puzzle can no longer be solved. Undo some moves.</string>
+
+    <string name="hint_locate_place">This cell can be worked out right now.</string>
+    <string name="hint_locate_strike">Something can be crossed out here.</string>
+    <string name="hint_locate_reveal" tools:ignore="PluralsCandidate">Nothing is forced at the moment. With %1$d candidates, this cell has the fewest.</string>
+    <string name="hint_reveal_bare" tools:ignore="PluralsCandidate">The %1$d belongs here.</string>
+
+    <string name="technique_hidden_single">Hidden single</string>
+    <string name="technique_naked_single">Naked single</string>
+    <string name="technique_locked_candidates">Locked candidates</string>
+    <string name="technique_naked_pair">Naked pair</string>
+    <string name="technique_hidden_pair">Hidden pair</string>
+    <string name="technique_naked_triple">Naked triple</string>
+    <string name="technique_hidden_triple">Hidden triple</string>
+    <string name="technique_x_wing">X-Wing</string>
+    <string name="technique_swordfish">Swordfish</string>
+    <string name="technique_simple_colouring">Simple colouring</string>
+    <string name="technique_xy_wing">XY-Wing</string>
+
+    <string name="why_hidden_single">In %1$s, this is the only place left for the %2$d.</string>
+    <string name="why_naked_single" tools:ignore="PluralsCandidate">Every other digit is already taken in the row, column or box of this cell. Only the %1$d is left.</string>
+    <string name="why_locked_candidates" tools:ignore="PluralsCandidate">In %1$s the %2$d fits only in cells that also lie in %3$s, so it can go from the rest of %3$s.</string>
+    <string name="why_naked_subset">These cells in %1$s hold nothing but %2$s between them, so those digits can go from the rest of %1$s.</string>
+    <string name="why_hidden_subset">In %1$s the digits %2$s fit nowhere but in these cells, so everything else can go from them.</string>
+    <string name="why_fish" tools:ignore="PluralsCandidate">The %1$d sits in these lines in the same positions, so it can go from the marked cells.</string>
+    <string name="why_simple_colouring" tools:ignore="PluralsCandidate">Follow the %1$d through the units where it has just two places left: the marked cells end up ruled out either way.</string>
+    <string name="why_xy_wing" tools:ignore="PluralsCandidate">Whichever digit the pivot takes, one wing becomes %1$d — so the %1$d can go from every cell that sees both wings.</string>
 
     <string name="unit_row">row %1$d</string>
     <string name="unit_col">column %1$d</string>

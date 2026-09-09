@@ -229,49 +229,64 @@ bei einem eindeutig lösbaren Rätsel ist das dasselbe.
 
 ## 5. Tipp
 
+Der Tipp ist **ein Schritt der Technikleiter, genommen vom Brett, wie es dasteht**
+(`HumanSolver.nextSteps`) — derselbe Code, der die Stufe misst. Er kann deshalb immer
+sagen *warum*, und er sagt nur Dinge, die der Spieler selbst hätte sehen können.
+
 `rules/Hint.kt` beantwortet „was jetzt?" in dieser Reihenfolge:
 
 1. `grid.load(board)` scheitert → **tot** (zwei gleiche Ziffern in einer Einheit)
 2. `solver.countSolutions(board, limit = 1) == 0` → **tot**
-3. Hidden Single → verraten **und** begründen
-4. Naked Single → verraten **und** begründen
-5. sonst `bestBranchCell()` → verraten, ohne Begründung
+3. die Kette der Leiter bis zur nächsten setzbaren Ziffer
+4. sonst `bestBranchCell()` → blank aufdecken
 
-**Warum das billig ist:** die Lösung entsteht beim Weggraben ohnehin und liegt in
-`Puzzle.solution`. Teuer wäre nur das Begründen — dafür bräuchte es eine Bibliothek
-menschlicher Lösetechniken (Locked Candidates, Subsets, X-Wing, …), die hier bewusst
-fehlt. Der Kniff ist, *welche* Zelle verraten wird: ist gerade eine zwingend, nimmt der
-Tipp die und kann sie erklären.
+### Warum eine Kette und nicht ein Schritt
 
-**Hidden Single vor Naked Single**, entgegen `Grid.propagate`. Für den Solver ist Naked
-billiger, für den Menschen ist es umgekehrt — dasselbe Argument wie bei den Stufen in
-`Level.kt`.
+Eine Elimination ändert das Brett nicht. Zeigt man dem Spieler eine einzelne, kommt
+beim nächsten Druck dieselbe wieder — für immer. Die Kette läuft deshalb bis zu dem
+Schritt, der wirklich eine Ziffer setzt: „streich das weg, dann das, und jetzt ist die
+7 erzwungen." Jeder Druck rückt einen Schritt weiter, jeder Schritt hat zwei Stufen
+(*wo* — dann *warum*), und am Ende steht „Eintragen".
 
-**Schritt 2 ist Vorbedingung, keine Zusatzfunktion.** Auf einem toten Brett würde Schritt 5
-eine Ziffer aus der Lösung setzen, die mit der falschen Eingabe des Spielers kollidiert; er
-sähe einen unerklärlichen Konflikt. Der Test ist exakt, nicht heuristisch: das Rätsel hat
-genau eine Lösung, also ist das Brett genau dann tot, wenn eine Eingabe abweicht. Angezeigt
-wird nur *dass*, nie *wo* — der Ausweg ist der vorhandene Rückgängig-Knopf.
+Gemessen über 2.563 Tipps in allen vier Bändern: **2.514 Ketten sind ein einziger
+Schritt**, 49 sind länger, die längste war 20. Die Obergrenze in `nextSteps` ist
+entsprechend keine gestaltete Länge, sondern nur eine Abbruchbedingung.
 
-**Die Notizen des Spielers fließen nicht ein**, `find()` nimmt sie gar nicht entgegen.
-Notizen sind unvollständig, veralten und können falsch sein; ein Tipp, der darauf rechnet,
-wäre beweisbar falsch, und der Spieler hätte keine Chance das zu merken — für ihn ist die
+### Was der Tipp nicht tut
+
+**Er fasst die Notizen des Spielers nicht an.** Eine Elimination wird gezeigt und dann
+geschlossen; es gibt kein „Eintragen" dafür. Kandidaten wegzustreichen, die der Spieler
+nie notiert hat, wäre eine Änderung, die er nicht sehen kann — und die Notizen sind
+seine.
+
+**Die Notizen fließen auch nicht ein**, `find()` nimmt sie gar nicht entgegen. Notizen
+sind unvollständig, veralten und können falsch sein; ein Tipp, der darauf rechnet, wäre
+beweisbar falsch, und der Spieler hätte keine Chance das zu merken — für ihn ist die
 App die Autorität. Der Kandidatenstand aus `Grid.load(board)` ist dagegen kanonisch.
 
-### Wie weit das trägt (gemessen)
+**Schritt 2 ist Vorbedingung, keine Zusatzfunktion.** Auf einem toten Brett wäre jede
+Herleitung ein Argument innerhalb eines Widerspruchs. Der Test ist exakt, nicht
+heuristisch: das Rätsel hat genau eine Lösung, also ist das Brett genau dann tot, wenn
+eine Eingabe abweicht. Angezeigt wird nur *dass*, nie *wo* — der Ausweg ist der
+vorhandene Rückgängig-Knopf.
 
-Auf „Schwer" läuft **jedes** Rätsel mit Singles allein fest — das ist die Definition der
-Stufe. An genau diesem Punkt kann der Tipp also nur aufdecken. Aber: **je Aufdeckung
-werden im Schnitt 17 weitere Felder zwingend**, und rund zwei Aufdeckungen reichen für ein
-ganzes Rätsel (`HintTest.reportsHowFarASingleRevealCarriesOnHardPuzzles`).
+### Die blanke Aufdeckung ist übrig geblieben, nicht geblieben nötig
 
-Die Messung ist bewusst am Feststeck-Punkt gemacht, nicht an zufälligen Stellungen: füllt
-man zufällige korrekte Ziffern ein, schaltet man Singles frei, die der Spieler nicht hätte
-herleiten können — das schönt das Ergebnis auf ~100 % begründbare Tipps. Die Technikleiter
-würde also je schwerem Rätsel etwa zwei blanke Aufdeckungen durch erklärte Schritte
-ersetzen; das ist ihr tatsächlicher Gegenwert.
+Sie ist für Rätsel aus diesem Generator unerreichbar geworden: jedes ist mit der Leiter
+lösbar (§3), und der Test `everyHintIsExplainable` spielt jedes Rätsel jeder Stufe
+allein über den Tipp-Knopf durch, ohne je eine Aufdeckung zu sehen. Sie bleibt für zwei
+Fälle, die nicht hypothetisch sind: ein Spielstand aus einer älteren Version, dessen
+Rätsel ohne diese Zusage ausgegraben wurde, und ein Brett, das der Spieler mit eigenen
+korrekten Zügen in eine Stellung gebracht hat, die die Leiter nicht knackt.
 
----
+### Was das ersetzt hat
+
+Vorher konnte der Tipp genau zwei Dinge begründen — Hidden und Naked Single — und
+deckte sonst blank auf. Auf „Schwer" lief **jedes** Rätsel mit Singles allein fest, das
+war die Definition der Stufe; der Tipp konnte dort also grundsätzlich nur aufdecken.
+Gemessen wurde damals, wie weit eine Aufdeckung trägt (17 weitere erzwungene Felder,
+rund zwei Aufdeckungen je Rätsel). Genau diese Zahl war das Argument, die Technikleiter
+zu bauen.
 
 ## 6. Statistik und Spielstand
 

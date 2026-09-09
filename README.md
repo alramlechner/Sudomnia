@@ -30,10 +30,13 @@ verschwunden sind. Solange der Zweig offen ist, hält „Rückgängig" an seinem
 damit man nicht versehentlich darunter rutscht. Ob der Versuch schon gescheitert ist,
 sagt übrigens der Tipp: er meldet dann, dass das Rätsel nicht mehr aufgeht.
 
-**Tipp**, wenn es klemmt: der erste Druck hebt ein Feld hervor, der zweite nennt die
-Ziffer und — wenn möglich — den Grund („in Block 5 ist nur hier Platz für die 7"), der
-dritte trägt sie ein. Hat man sich schon verrannt, sagt die App, *dass* das Rätsel nicht
-mehr aufgeht, aber nicht wo.
+**Tipp**, wenn es klemmt — und er sagt immer *warum*. Der erste Druck hebt hervor,
+worum es geht, der zweite nennt die Technik und den Grund („Eingesperrte Kandidaten:
+in Block 5 passt die 7 nur in Felder der Spalte 3 — im Rest der Spalte fällt sie weg"),
+der dritte trägt die Ziffer ein. Braucht es mehrere Schritte bis dahin, führt der Tipp
+durch die Kette. Gestrichene Kandidaten werden im Gitter durchgestrichen gezeigt, auch
+wenn du sie nie notiert hattest. Hat man sich schon verrannt, sagt die App, *dass* das
+Rätsel nicht mehr aufgeht, aber nicht wo.
 
 **Pause** in der Kopfzeile: die Uhr steht, das Brett wird ausgeblendet (kein Schleier,
 es wird nicht gezeichnet), ein Tipp irgendwohin macht weiter. Die Uhr hält außerdem

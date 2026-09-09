@@ -47,16 +47,40 @@
     <string name="branch_discard">Verwerfen</string>
     <string name="branch_commit">Übernehmen</string>
 
+    <!-- Tipp. Je eine Zeile pro Sprosse der Leiter: der Tipp erklaert die Technik, die
+         er wirklich benutzt hat; muss zu rules/Technique.kt passen. -->
     <string name="hint">Tipp</string>
-    <string name="hint_locate_forced">Dieses Feld lässt sich jetzt eindeutig bestimmen.</string>
-    <string name="hint_locate_reveal" tools:ignore="PluralsCandidate">Hier ist gerade nichts erzwungen. Dieses Feld hat mit %1$d Möglichkeiten die wenigsten.</string>
-    <string name="hint_show_digit">Ziffer zeigen</string>
-    <string name="hint_reveal_naked" tools:ignore="PluralsCandidate">Für dieses Feld bleibt nur die %1$d übrig.</string>
-    <string name="hint_reveal_hidden">In %1$s ist nur hier Platz für die %2$d.</string>
-    <string name="hint_reveal_bare" tools:ignore="PluralsCandidate">Hier gehört die %1$d hin.</string>
+    <string name="hint_show_why">Warum?</string>
+    <string name="hint_next">Weiter</string>
     <string name="hint_apply">Eintragen</string>
     <string name="hint_dismiss">Schließen</string>
     <string name="hint_dead_end">Mit den bisherigen Eingaben lässt sich das Rätsel nicht mehr lösen. Nimm Züge zurück.</string>
+
+    <string name="hint_locate_place">Dieses Feld lässt sich jetzt eindeutig bestimmen.</string>
+    <string name="hint_locate_strike">Hier lässt sich etwas ausschließen.</string>
+    <string name="hint_locate_reveal" tools:ignore="PluralsCandidate">Hier ist gerade nichts erzwungen. Dieses Feld hat mit %1$d Möglichkeiten die wenigsten.</string>
+    <string name="hint_reveal_bare" tools:ignore="PluralsCandidate">Hier gehört die %1$d hin.</string>
+
+    <string name="technique_hidden_single">Verstecktes Single</string>
+    <string name="technique_naked_single">Nacktes Single</string>
+    <string name="technique_locked_candidates">Eingesperrte Kandidaten</string>
+    <string name="technique_naked_pair">Nacktes Paar</string>
+    <string name="technique_hidden_pair">Verstecktes Paar</string>
+    <string name="technique_naked_triple">Nacktes Tripel</string>
+    <string name="technique_hidden_triple">Verstecktes Tripel</string>
+    <string name="technique_x_wing">X-Wing</string>
+    <string name="technique_swordfish">Schwertfisch</string>
+    <string name="technique_simple_colouring">Färben</string>
+    <string name="technique_xy_wing">XY-Wing</string>
+
+    <string name="why_hidden_single">In %1$s ist nur hier noch Platz für die %2$d.</string>
+    <string name="why_naked_single" tools:ignore="PluralsCandidate">Jede andere Ziffer steht schon in der Zeile, der Spalte oder dem Block dieses Feldes. Übrig bleibt nur die %1$d.</string>
+    <string name="why_locked_candidates" tools:ignore="PluralsCandidate">In %1$s passt die %2$d nur in Felder, die auch in %3$s liegen — im Rest von %3$s fällt sie damit weg.</string>
+    <string name="why_naked_subset">Diese Felder in %1$s enthalten zusammen nichts außer %2$s — im Rest von %1$s fallen diese Ziffern damit weg.</string>
+    <string name="why_hidden_subset">In %1$s passen die Ziffern %2$s nirgendwo sonst hin als in diese Felder — alles andere fällt dort weg.</string>
+    <string name="why_fish" tools:ignore="PluralsCandidate">Die %1$d liegt in diesen Linien an denselben Stellen — in den markierten Feldern fällt sie damit weg.</string>
+    <string name="why_simple_colouring" tools:ignore="PluralsCandidate">Verfolge die %1$d durch die Einheiten, in denen sie nur noch zwei Plätze hat: die markierten Felder scheiden so oder so aus.</string>
+    <string name="why_xy_wing" tools:ignore="PluralsCandidate">Welche Ziffer der Angelpunkt auch nimmt, ein Flügel wird zur %1$d — in jedem Feld, das beide Flügel sieht, fällt die %1$d weg.</string>
 
     <string name="unit_row">Zeile %1$d</string>
     <string name="unit_col">Spalte %1$d</string>

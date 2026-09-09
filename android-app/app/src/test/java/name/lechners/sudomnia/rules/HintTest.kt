@@ -21,12 +21,13 @@ class HintTest {
     }
 
     /**
-     * The one that matters. Whatever the hint names, it must be the digit the unique
-     * solution has in that cell -- otherwise the app confidently places a digit that
-     * is guaranteed wrong, on request, which is the worst bug this feature can have.
+     * The one that matters. Whatever the hint says, it must agree with the unique
+     * solution: a placement names the digit that belongs there, an elimination strikes
+     * one that does not. Otherwise the app confidently tells the player something
+     * false, on request, which is the worst bug this feature can have.
      */
     @Test
-    fun aHintNeverNamesTheWrongDigit() {
+    fun aHintNeverSaysSomethingFalse() {
         val factory = PuzzleFactory()
         val rnd = Random(20260903)
         for (level in Level.entries) {
@@ -37,12 +38,20 @@ class HintTest {
                 for (moves in 0 until blanks step maxOf(1, blanks / 8)) {
                     val board = partiallyPlayed(puzzle, moves, rnd)
                     when (val hint = finder.find(board, puzzle.solution)) {
-                        is Hint.Forced -> {
-                            assertEquals(
-                                "$level, $moves gesetzt: falsche Ziffer in Zelle ${hint.cell}",
-                                puzzle.solution[hint.cell], hint.digit,
-                            )
-                            assertEquals("Tipp auf ein belegtes Feld", 0, board[hint.cell])
+                        is Hint.Deduce -> for (step in hint.steps) {
+                            if (step.technique.places) {
+                                assertEquals(
+                                    "$level, $moves gesetzt: falsche Ziffer in Zelle ${step.cell}",
+                                    puzzle.solution[step.cell], step.digit,
+                                )
+                                assertEquals("Tipp auf ein belegtes Feld", 0, board[step.cell])
+                            }
+                            for (e in step.eliminations) {
+                                assertTrue(
+                                    "$level, $moves gesetzt: ${step.technique} streicht die richtige ${e.digit}",
+                                    puzzle.solution[e.cell] != e.digit,
+                                )
+                            }
                         }
                         is Hint.Reveal -> {
                             assertEquals(
@@ -60,33 +69,78 @@ class HintTest {
         }
     }
 
-    /** If something is forced, take the explainable route -- never fall back to a bare reveal. */
+    /**
+     * **The payoff of the technique ladder.** Every hint, on every level, at every
+     * point of the game, comes with a reason -- a bare reveal never happens.
+     *
+     * Before the ladder this was measurably false: on the hard band *every* puzzle ran
+     * dry of singles by construction, so the hint at the sticking point could only
+     * uncover a digit and say nothing. The old test in this file measured how far one
+     * such uncovering carried (17 further cells, ~2 per puzzle); that number was the
+     * argument for building the ladder, and this test is what replaced it.
+     */
     @Test
-    fun aForcedCellIsAlwaysPreferredOverABareReveal() {
+    fun everyHintIsExplainable() {
         val factory = PuzzleFactory()
-        val rnd = Random(7)
-        val singles = SinglesSolver()
-        repeat(perLevel * 2) {
-            val puzzle = factory.generate(Level.MEDIUM, rnd)
-            val board = partiallyPlayed(puzzle, 5, rnd)
-            // The board is singles-solvable by construction, so something is forced.
-            assertTrue(singles.solves(board, useHidden = true))
-            assertTrue(
-                "erwartet Forced, war ${finder.find(board, puzzle.solution)}",
-                finder.find(board, puzzle.solution) is Hint.Forced,
-            )
+        val rnd = Random(31)
+        var hints = 0
+        var longest = 0
+        val lengths = HashMap<Int, Int>()
+
+        for (level in Level.entries) {
+            repeat(perLevel) {
+                val puzzle = factory.generate(level, rnd)
+                val board = puzzle.givens.copyOf()
+                // Walk the puzzle the way the hint button does: apply what it says to
+                // enter, and keep asking until the grid is full.
+                var guard = 0
+                while (board.any { it == 0 } && guard++ < 200) {
+                    val hint = finder.find(board, puzzle.solution)
+                    assertTrue(
+                        "$level: blanke Aufdeckung statt Begruendung",
+                        hint is Hint.Deduce,
+                    )
+                    val chain = (hint as Hint.Deduce).steps
+                    longest = maxOf(longest, chain.size)
+                    lengths[chain.size] = (lengths[chain.size] ?: 0) + 1
+                    val last = hint.last
+                    assertTrue(
+                        "die Kette muss beim Setzen enden (Laenge ${chain.size})",
+                        last.technique.places,
+                    )
+                    board[last.cell] = last.digit
+                    hints++
+                }
+                assertTrue("$level: Raetsel nicht durchgespielt", board.none { it == 0 })
+            }
         }
+        println("Tipp-Ketten: laengste $longest, Verteilung ${lengths.toSortedMap()}")
+        assertTrue(hints > 100)
     }
 
-    /** An easy puzzle is singles-solvable, so its very first hint must be explainable. */
+    /**
+     * A chain is only worth showing if it ends somewhere: the last step writes a
+     * digit, everything before it strikes candidates. A chain of pure eliminations
+     * would leave the player with the same board and the same hint on the next press.
+     */
     @Test
-    fun theFirstHintOnAnEasyPuzzleIsExplainable() {
+    fun aHintChainEndsWithSomethingToEnter() {
         val factory = PuzzleFactory()
-        val rnd = Random(11)
-        repeat(perLevel) {
-            val puzzle = factory.generate(Level.EASY, rnd)
-            assertTrue(finder.find(puzzle.givens, puzzle.solution) is Hint.Forced)
+        val rnd = Random(37)
+        var chained = 0
+
+        repeat(perLevel * 2) {
+            val puzzle = factory.generate(Level.EXPERT, rnd)
+            val hint = finder.find(puzzle.givens, puzzle.solution)
+            if (hint !is Hint.Deduce) return@repeat
+            assertTrue("die Kette endet im Setzen", hint.last.technique.places)
+            for (step in hint.steps.dropLast(1)) {
+                assertTrue("nur der letzte Schritt setzt", !step.technique.places)
+                assertTrue("ein Zwischenschritt muss etwas streichen", step.eliminations.isNotEmpty())
+            }
+            if (hint.steps.size > 1) chained++
         }
+        println("EXPERT: $chained von ${perLevel * 2} Raetseln brauchen schon im ersten Tipp mehr als einen Schritt")
     }
 
     /** A wrong entry kills the board, and the hint has to notice before revealing anything. */
@@ -124,67 +178,15 @@ class HintTest {
         repeat(perLevel) {
             val puzzle = factory.generate(Level.HARD, rnd)
             val board = partiallyPlayed(puzzle, 3, rnd)
-            assertEquals(
-                finder.find(board, puzzle.solution),
-                finder.find(board, puzzle.solution),
-            )
-        }
-    }
-
-    /**
-     * Plays every forced cell until none is left -- exactly where a player who only
-     * knows singles runs out of road.
-     */
-    private fun playedToStandstill(puzzle: Puzzle): IntArray {
-        val board = puzzle.givens.copyOf()
-        while (true) {
-            val hint = finder.find(board, puzzle.solution)
-            if (hint !is Hint.Forced) return board
-            board[hint.cell] = hint.digit
-        }
-    }
-
-    /**
-     * The number that decides whether the technique ladder is worth building.
-     *
-     * Measured at the sticking point, not at random positions: filling in random
-     * correct digits unlocks singles that the player could not have deduced, which
-     * flatters the result to ~100%. What matters is the moment the player is actually
-     * stuck -- and on HARD that moment has, by construction, no single left, so the
-     * hint there is a bare reveal.
-     *
-     * A bare reveal is not useless: it restarts the puzzle, because one revealed cell
-     * usually makes several more forced. This test records how far a single reveal
-     * carries, which is the honest measure of what the cheap hint buys.
-     */
-    @Test
-    fun reportsHowFarASingleRevealCarriesOnHardPuzzles() {
-        val factory = PuzzleFactory()
-        val rnd = Random(23)
-        var reveals = 0
-        var forcedAfterwards = 0
-        var stuckAtStart = 0
-
-        repeat(perLevel * 2) {
-            val puzzle = factory.generate(Level.HARD, rnd)
-            var board = playedToStandstill(puzzle)
-            if (board.count { it == 0 } > 0) stuckAtStart++
-
-            // Break the deadlock once, then see how many cells fall out for free.
-            while (board.count { it == 0 } > 0) {
-                val hint = finder.find(board, puzzle.solution)
-                if (hint !is Hint.Reveal) break
-                board[hint.cell] = hint.digit
-                reveals++
-                val before = board.count { it == 0 }
-                board = playedToStandstill(Puzzle(board, puzzle.solution, puzzle.level))
-                forcedAfterwards += before - board.count { it == 0 } - 1
+            val a = finder.find(board, puzzle.solution)
+            val b = finder.find(board, puzzle.solution)
+            assertEquals(a::class, b::class)
+            if (a is Hint.Deduce && b is Hint.Deduce) {
+                assertEquals(a.steps.size, b.steps.size)
+                assertEquals(a.last.technique, b.last.technique)
+                assertEquals(a.last.cell, b.last.cell)
+                assertEquals(a.last.digit, b.last.digit)
             }
         }
-        println(
-            "HARD: %d von %d Raetseln laufen mit Singles allein fest; ".format(stuckAtStart, perLevel * 2) +
-                "%d Aufdeckungen noetig, je Aufdeckung %.1f weitere Felder geschenkt"
-                    .format(reveals, forcedAfterwards.toDouble() / reveals)
-        )
     }
 }

@@ -20,10 +20,21 @@ class BoardState(
     val highlightDigit: Int,
     /** Whether the row, column and box of the selected cell get tinted. */
     val highlightPeers: Boolean,
-    /** Cell the current hint points at, or -1. */
-    val hintCell: Int,
-    /** Unit that justifies the current hint, or -1. */
-    val hintUnit: Int,
+    /** Cells the current hint's pattern is made of; empty when no hint is shown. */
+    val hintCells: BooleanArray,
+    /**
+     * The units that justify the hint, as a bit per unit -- 27 units, 32 bits, so the
+     * whole set is one Int and comparing two board states stays a single comparison.
+     */
+    val hintUnits: Int,
+    /**
+     * Candidates the hint strikes out, packed as `cell * 16 + digit`.
+     *
+     * Drawn even where the player has not pencilled the digit in: the point of the
+     * step is that the digit *could* have gone there and now cannot, which is
+     * invisible if the display depends on whether they happened to note it.
+     */
+    val hintStrikes: IntArray,
 ) {
     /**
      * `conflicts` is already all-false when the player has switched conflict
@@ -37,8 +48,9 @@ class BoardState(
         return selected == other.selected &&
             highlightDigit == other.highlightDigit &&
             highlightPeers == other.highlightPeers &&
-            hintCell == other.hintCell &&
-            hintUnit == other.hintUnit &&
+            hintUnits == other.hintUnits &&
+            hintCells.contentEquals(other.hintCells) &&
+            hintStrikes.contentEquals(other.hintStrikes) &&
             values.contentEquals(other.values) &&
             givens.contentEquals(other.givens) &&
             notes.contentEquals(other.notes) &&
@@ -55,8 +67,9 @@ class BoardState(
         h = 31 * h + selected
         h = 31 * h + highlightDigit
         h = 31 * h + if (highlightPeers) 1 else 0
-        h = 31 * h + hintCell
-        h = 31 * h + hintUnit
+        h = 31 * h + hintCells.contentHashCode()
+        h = 31 * h + hintUnits
+        h = 31 * h + hintStrikes.contentHashCode()
         return h
     }
 }

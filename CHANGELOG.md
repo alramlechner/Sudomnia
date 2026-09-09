@@ -10,6 +10,11 @@ Versionierung nach [SemVer](https://semver.org/lang/de/).
   taete: Hidden/Naked Single, Locked Candidates, Naked/Hidden Pair und Triple, X-Wing,
   Swordfish, Simple Colouring, XY-Wing -- und **nie durch Raten**. Die hoechste dabei
   noetige Technik ist die Stufe (`Grader`), gemessen statt geschaetzt.
+- **Der Tipp begruendet jetzt jeden Schritt.** Er nimmt den naechsten Schritt der
+  Leiter vom Brett, wie es dasteht, nennt die Technik und den Grund und fuehrt noetigen-
+  falls durch eine Kette von Schritten bis zu der Ziffer, die man eintragen kann.
+  Gestrichene Kandidaten stehen durchgestrichen im Gitter. Die blanke Aufdeckung ohne
+  Begruendung ist damit fuer Raetsel aus diesem Generator verschwunden.
 - **Vier Stufen** statt drei: Leicht, Mittel, Schwer, Experte. "vorlaeufig" ist aus der
   Kopfzeile verschwunden, dafuer steht dort jetzt die Zahl der Vorgaben.
 

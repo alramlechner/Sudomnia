@@ -75,6 +75,9 @@ private class BoardPaints {
     val note = textPaint(Typeface.DEFAULT)
     val noteHighlight = textPaint(Typeface.DEFAULT_BOLD)
 
+    /** Struck-out candidates from a hint -- drawn with a line through them. */
+    val noteStruck = textPaint(Typeface.DEFAULT_BOLD).apply { strokeWidth = 2f }
+
     private fun textPaint(face: Typeface) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
         typeface = face
@@ -101,11 +104,11 @@ private fun DrawScope.drawCellBackgrounds(geo: BoardGeometry, state: BoardState)
         // attempt is a handful of cells, the highlight up to nine.
         val color = when {
             state.conflicts[cell] -> PaperConflict
-            cell == state.hintCell -> PaperHint
+            state.hintCells[cell] -> PaperHint
             cell == state.selected -> PaperSelected
             state.trial[cell] -> PaperTrial
             state.highlightDigit != 0 && state.values[cell] == state.highlightDigit -> PaperSameDigit
-            state.hintUnit >= 0 && Units.unitsOfCell[cell].contains(state.hintUnit) -> PaperHintUnit
+            Units.unitsOfCell[cell].any { state.hintUnits and (1 shl it) != 0 } -> PaperHintUnit
             row == selRow || col == selCol || Units.boxOf[cell] == selBox -> PaperPeer
             state.givens[cell] -> PaperGivenCell
             else -> null
@@ -129,6 +132,24 @@ private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: 
     paints.noteHighlight.textSize = geo.cellSize * 0.26f
     paints.noteHighlight.color = InkNoteHighlight.toArgb()
 
+    // The candidates a hint strikes out, drawn in the note grid whether or not the
+    // player pencilled them in.
+    paints.noteStruck.textSize = geo.cellSize * 0.26f
+    paints.noteStruck.color = InkConflict.toArgb()
+    for (packed in state.hintStrikes) {
+        val cell = packed / 16
+        val d = packed % 16
+        if (state.values[cell] != 0) continue
+        val step = geo.cellSize / 3f
+        val nx = geo.left(Units.colOf[cell]) + ((d - 1) % 3 + 0.5f) * step
+        val ny = geo.top(Units.rowOf[cell]) + ((d - 1) / 3 + 0.5f) * step -
+            (paints.noteStruck.descent() + paints.noteStruck.ascent()) / 2f
+        canvas.drawText(d.toString(), nx, ny, paints.noteStruck)
+        val half = paints.noteStruck.measureText(d.toString()) * 0.75f
+        val mid = ny + (paints.noteStruck.descent() + paints.noteStruck.ascent()) / 2f
+        canvas.drawLine(nx - half, mid, nx + half, mid, paints.noteStruck)
+    }
+
     for (cell in 0 until Units.CELLS) {
         val row = Units.rowOf[cell]
         val col = Units.colOf[cell]
@@ -151,6 +172,8 @@ private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: 
         } else if (state.notes[cell] != 0) {
             val step = geo.cellSize / 3f
             Bits.forEach(state.notes[cell]) { d ->
+                // Skip what the hint has already drawn struck out in this very slot.
+                if (state.hintStrikes.any { it == cell * 16 + d }) return@forEach
                 // A pencil mark for the highlighted digit gets the same treatment as
                 // a placed one. Without it, selecting a 2 lights up the placed 2s but
                 // leaves the pencilled 2s -- usually the ones actually being reasoned

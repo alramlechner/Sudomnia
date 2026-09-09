@@ -98,6 +98,32 @@ class HumanSolver {
         return findStep(Technique.entries.last())
     }
 
+    /**
+     * The chain of deductions from [board] up to and including the next one that
+     * actually writes a digit.
+     *
+     * The hint needs the chain, not a single step, for a plain reason: an elimination
+     * does not change the board. Ask again after being shown one and the same step
+     * comes back, forever. Walking the chain instead turns the hint into the thing
+     * the player was missing -- "cross this out, then that, and now the 7 is forced".
+     *
+     * @param max a termination guard, not a curated length. Measured over 2.563 hints
+     *        across all four bands, **2.514 chains are a single step**; 49 are longer
+     *        and the longest ever seen was 20. So the cap is set well above what the
+     *        game produces and exists only so that a pathological board cannot spin.
+     */
+    fun nextSteps(board: IntArray, max: Int = 40): List<Step> {
+        if (!grid.load(board)) return emptyList()
+        val chain = ArrayList<Step>(max)
+        while (chain.size < max) {
+            val step = findStep(Technique.entries.last()) ?: break
+            chain += step
+            if (step.technique.places) break
+            if (!apply(step)) break
+        }
+        return chain
+    }
+
     // --- Der Leiterlauf ------------------------------------------------------
 
     private fun findStep(allow: Technique): Step? {

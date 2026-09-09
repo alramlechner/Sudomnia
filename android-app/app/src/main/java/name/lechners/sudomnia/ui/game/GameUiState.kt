@@ -4,6 +4,7 @@ import name.lechners.sudomnia.data.Settings
 import name.lechners.sudomnia.data.Stats
 import name.lechners.sudomnia.rules.Hint
 import name.lechners.sudomnia.rules.Level
+import name.lechners.sudomnia.rules.Step
 import name.lechners.sudomnia.ui.board.BoardState
 
 /**
@@ -58,7 +59,7 @@ data class GameUiState(
     val fullButWrong: Boolean = false,
 )
 
-/** How much of a hint has been revealed so far. */
+/** How much of the current step has been revealed: where it is, then why. */
 enum class HintStage { LOCATE, REVEAL }
 
 /**
@@ -67,7 +68,18 @@ enum class HintStage { LOCATE, REVEAL }
  * `Hint` is a sealed interface of data classes, so this can be a data class too --
  * no arrays involved, unlike [BoardState].
  */
-data class HintState(val hint: Hint, val stage: HintStage)
+data class HintState(
+    val hint: Hint,
+    val stage: HintStage,
+    /** How far along the chain of deductions the player has pressed. */
+    val index: Int = 0,
+) {
+    /** The step being shown, or null for a bare reveal / dead end. */
+    val step: Step? get() = (hint as? Hint.Deduce)?.steps?.getOrNull(index)
+
+    /** Is this the last step of the chain -- the one that may be entered? */
+    val isLast: Boolean get() = hint !is Hint.Deduce || index == hint.steps.size - 1
+}
 
 /**
  * The clock lives in its own flow.

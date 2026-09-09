@@ -264,9 +264,19 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
                 _ui.value = _ui.value.copy(hint = _ui.value.hint!!.copy(stage = HintStage.REVEAL))
                 publish()
             }
-            HintStage.REVEAL -> {
+            // Mid-chain: on to the next deduction. The board has not moved, so the
+            // chain computed for it is still the truth.
+            HintStage.REVEAL -> if (!_ui.value.hint!!.isLast) {
+                val h = _ui.value.hint!!
+                _ui.value = _ui.value.copy(hint = h.copy(stage = HintStage.LOCATE, index = h.index + 1))
+                publish()
+            } else {
+                // Only a step that *places* something can be entered. An elimination
+                // is shown and then dismissed: the app does not reach into the
+                // player's pencil marks, and striking a candidate they never wrote
+                // down would be a change they cannot see.
                 when (val h = _ui.value.hint!!.hint) {
-                    is Hint.Forced -> g.setDigit(h.cell, h.digit)
+                    is Hint.Deduce -> if (h.last.technique.places) g.setDigit(h.last.cell, h.last.digit)
                     is Hint.Reveal -> g.setDigit(h.cell, h.digit)
                     Hint.DeadEnd -> Unit
                 }
@@ -391,15 +401,26 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
 
         if (!settings.allAidsOff) aidsCleanRun = false
 
+        // What the board shows of the hint. The pattern is visible from the first
+        // stage -- that stage *is* "look here" -- while the units and the struck
+        // candidates only appear with the reasoning, because they give it away.
         val hint = _ui.value.hint
-        val hintCell = when (val h = hint?.hint) {
-            is Hint.Forced -> h.cell
-            is Hint.Reveal -> h.cell
-            else -> -1
+        val hintCells = BooleanArray(Units.CELLS)
+        var hintUnits = 0
+        var hintStrikes = IntArray(0)
+        val hintStep = hint?.step
+        if (hintStep != null) {
+            for (c in hintStep.pattern) hintCells[c] = true
+            if (hint.stage == HintStage.REVEAL) {
+                for (u in hintStep.units) hintUnits = hintUnits or (1 shl u)
+                hintStrikes = IntArray(hintStep.eliminations.size) { i ->
+                    val e = hintStep.eliminations[i]
+                    e.cell * 16 + e.digit
+                }
+            }
+        } else if (hint?.hint is Hint.Reveal) {
+            hintCells[(hint.hint as Hint.Reveal).cell] = true
         }
-        val hintUnit = if (hint?.stage == HintStage.REVEAL) {
-            (hint.hint as? Hint.Forced)?.unit ?: -1
-        } else -1
 
         _ui.value = _ui.value.copy(
             board = BoardState(
@@ -411,8 +432,9 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
                 selected = selected,
                 highlightDigit = highlight,
                 highlightPeers = settings.highlightPeers,
-                hintCell = hintCell,
-                hintUnit = hintUnit,
+                hintCells = hintCells,
+                hintUnits = hintUnits,
+                hintStrikes = hintStrikes,
             ),
             generating = false,
             level = g.puzzle.level,
