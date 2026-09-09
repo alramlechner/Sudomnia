@@ -3,7 +3,7 @@
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [SemVer](https://semver.org/lang/de/).
 
-## [Unveroeffentlicht] – Vorbereitung auf Veröffentlichung
+## [0.5.0] – 2026-09-09
 
 ### Neu
 - **Die Technikleiter ist da.** `HumanSolver` loest ein Raetsel so, wie ein Mensch es
@@ -25,17 +25,22 @@ Versionierung nach [SemVer](https://semver.org/lang/de/).
   eine Entfernung jetzt zurueck, sobald die Leiter das Raetsel nicht mehr zu Ende
   bringt.
 
-### Neu (Veröffentlichung)
+### Vorbereitung auf die Veröffentlichung
 - **Englisch als Standardsprache**, Deutsch als Uebersetzung (`values-de`). Die App
   war bis hier nur deutsch.
 - **Zwei Varianten** (`play`, `selfhosted`). Die Play-Fassung enthaelt die
   Selbst-Aktualisierung nicht -- Google verbietet Apps aus dem Store, sich auf einem
   anderen Weg selbst zu aktualisieren -- und haelt damit **keine einzige
   Berechtigung**. Die selfhosted-Fassung bleibt wie bisher; `deploy.sh` baut sie.
-
-### Geaendert
 - **Ein frischer Clone uebersetzt jetzt** (`assemblePlayDebug`). Bisher scheiterte er
   am fehlenden Client-Zertifikat, das absichtlich nicht im Repo liegt.
+- **Store-Material und Projektseite**: `store/` mit den Eintragstexten in beiden
+  Sprachen, Data-Safety-Antworten, Icon 512 und Feature-Grafiken; `docs/` als
+  Projektseite samt der Datenschutzerklaerung, auf die der Play-Eintrag zeigt;
+  `RELEASING.md` fuer beide Auslieferungswege; CI-Workflow, der die Berechtigungen
+  der Play-Variante prueft.
+- **AAB statt APK fuer Play** ueber das Play-Publisher-Plugin. Die Play-Tasks der
+  selfhosted-Variante sind abgeschaltet.
 
 ## [0.4.5] – 2026-09-08
 
