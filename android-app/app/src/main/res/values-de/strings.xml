@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Deutsche Uebersetzung. Die Vorlage ist values/strings.xml (Englisch, Standard).
+
+    Beide Dateien muessen denselben Satz an Namen haben: fehlt hier einer, faellt die
+    App mitten im Satz auf Englisch zurueck, und das ist schlechter als eine der
+    beiden Sprachen ganz.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Sudomnia</string>
+
+    <string name="new_game">Neues Spiel</string>
+    <string name="choose_level">Schwierigkeit</string>
+    <string name="level_easy">Leicht</string>
+    <string name="level_medium">Mittel</string>
+    <string name="level_hard">Schwer</string>
+    <!-- Prototype: the levels come from a singles-only oracle, not from the real
+         technique grader. Say so, so that testing does not build wrong expectations. -->
+    <string name="level_provisional">vorläufig</string>
+
+    <string name="generating">Rätsel wird erzeugt…</string>
+    <string name="pad_notes">Notizen</string>
+    <string name="erase">Löschen</string>
+    <string name="undo">Rückgängig</string>
+    <string name="redo">Wiederholen</string>
+    <string name="cancel">Abbrechen</string>
+
+    <string name="solved_title">Gelöst!</string>
+    <string name="solved_body">%1$s · %2$s</string>
+    <string name="solved_new_game">Nächstes Rätsel</string>
+
+    <!-- Pause: haelt die Uhr an und blendet das Brett aus -->
+    <string name="paused_pause">Pause</string>
+    <string name="paused_title">Pausiert</string>
+    <string name="paused_resume">Weiter</string>
+
+    <!-- Zweig: ein Versuch auf Probe, wenn kein Feld mehr erzwungen ist -->
+    <string name="branch_start">Zweig beginnen</string>
+    <string name="branch_empty">Zweig offen – trag deinen Versuch ein</string>
+    <plurals name="branch_cells">
+        <item quantity="one">Zweig · %1$d Feld auf Probe</item>
+        <item quantity="other">Zweig · %1$d Felder auf Probe</item>
+    </plurals>
+    <string name="branch_discard">Verwerfen</string>
+    <string name="branch_commit">Übernehmen</string>
+
+    <string name="hint">Tipp</string>
+    <string name="hint_locate_forced">Dieses Feld lässt sich jetzt eindeutig bestimmen.</string>
+    <string name="hint_locate_reveal" tools:ignore="PluralsCandidate">Hier ist gerade nichts erzwungen. Dieses Feld hat mit %1$d Möglichkeiten die wenigsten.</string>
+    <string name="hint_show_digit">Ziffer zeigen</string>
+    <string name="hint_reveal_naked" tools:ignore="PluralsCandidate">Für dieses Feld bleibt nur die %1$d übrig.</string>
+    <string name="hint_reveal_hidden">In %1$s ist nur hier Platz für die %2$d.</string>
+    <string name="hint_reveal_bare" tools:ignore="PluralsCandidate">Hier gehört die %1$d hin.</string>
+    <string name="hint_apply">Eintragen</string>
+    <string name="hint_dismiss">Schließen</string>
+    <string name="hint_dead_end">Mit den bisherigen Eingaben lässt sich das Rätsel nicht mehr lösen. Nimm Züge zurück.</string>
+
+    <string name="unit_row">Zeile %1$d</string>
+    <string name="unit_col">Spalte %1$d</string>
+    <string name="unit_box">Block %1$d</string>
+
+    <string name="stats">Statistik</string>
+    <string name="stats_solved">Gelöst</string>
+    <string name="stats_started">Begonnen</string>
+    <string name="stats_best">Bestzeit</string>
+    <string name="stats_no_aids">ohne Hilfen</string>
+    <string name="stats_no_hints">ohne Tipp</string>
+    <string name="stats_none">–</string>
+    <string name="stats_total">Insgesamt gelöst: %1$d</string>
+    <string name="stats_reset">Zurücksetzen</string>
+    <string name="stats_reset_ask">Alle Zählerstände löschen?</string>
+    <string name="stats_reset_yes">Löschen</string>
+    <string name="solved_no_hints">ohne Tipp</string>
+    <plurals name="solved_hints">
+        <item quantity="one">%1$d Tipp</item>
+        <item quantity="other">%1$d Tipps</item>
+    </plurals>
+
+    <string name="settings">Hilfen</string>
+    <string name="settings_intro">Jede dieser Anzeigen nimmt dir einen Teil der Arbeit ab. Schalte ab, was du selbst machen willst.</string>
+    <string name="setting_conflicts">Konflikte anzeigen</string>
+    <string name="setting_conflicts_hint">Zeigt sofort, ob eine Ziffer im Feld überhaupt möglich ist</string>
+    <string name="setting_same_digit">Gleiche Ziffer hervorheben</string>
+    <string name="setting_same_digit_hint">Färbt alle Felder mit derselben Ziffer wie das gewählte</string>
+    <string name="setting_peers">Zeile, Spalte, Block hervorheben</string>
+    <string name="setting_peers_hint">Färbt die Einheiten des gewählten Feldes</string>
+    <string name="setting_dim_digits">Fertige Ziffern ausgrauen</string>
+    <string name="setting_dim_digits_hint">Graut eine Ziffer im Ziffernpad aus, wenn sie neunmal gesetzt ist</string>
+    <string name="settings_done">Fertig</string>
+    <string name="no_aids">ohne Hilfen</string>
+    <string name="full_but_wrong">Das Gitter ist voll, aber noch nicht richtig.</string>
+
+    <!-- Update -->
+    <string name="update_banner">Version %1$s ist da</string>
+    <string name="update_banner_loading">Version %1$s wird geladen…</string>
+    <string name="update_install">Installieren</string>
+    <string name="update_check">Nach Update suchen</string>
+    <string name="update_checking">Wird gesucht…</string>
+    <string name="update_downloading">Lädt…</string>
+    <string name="update_version">App-Version %1$s</string>
+    <string name="update_current">Aktuell</string>
+    <string name="update_failed">Fehlgeschlagen: %1$s</string>
+    <string name="update_available_note">Version %1$s verfügbar</string>
+
+    <!-- Diagnose -->
+    <string name="diag_title">Fehlerbericht</string>
+    <string name="diag_hint">Protokoll und Absturzberichte weitergeben, wenn etwas klemmt</string>
+    <string name="diag_share">Teilen</string>
+
+</resources>

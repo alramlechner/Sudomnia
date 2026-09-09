@@ -58,8 +58,10 @@ Die echte Bewertung braucht eine Bibliothek menschlicher Lösetechniken (Naked/H
 Pairs, Locked Candidates, X-Wing, XY-Wing, Colouring, Unique Rectangle …); die ist
 noch nicht gebaut. Bis dahin sagt die App im Kopfbereich ehrlich „vorläufig".
 
-Noch nicht da: Begründungen jenseits von Singles (dafür bräuchte es die Technikleiter),
-Englisch.
+Die **Oberfläche gibt es auf Englisch und Deutsch**; Englisch ist der Standard, Deutsch
+kommt automatisch auf einem deutschsprachigen Gerät.
+
+Noch nicht da: Begründungen jenseits von Singles — dafür bräuchte es die Technikleiter.
 
 ## Bauen
 

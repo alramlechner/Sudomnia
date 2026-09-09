@@ -1,103 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    English is the default locale; the German translation lives in values-de.
+    The app was German-only until 0.5.0; see CHANGELOG.
+
+    Keep the two files in step. A string added here and forgotten there falls back
+    to English mid-sentence, which is worse than either language on its own.
+-->
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Sudomnia</string>
 
-    <string name="new_game">Neues Spiel</string>
-    <string name="choose_level">Schwierigkeit</string>
-    <string name="level_easy">Leicht</string>
-    <string name="level_medium">Mittel</string>
-    <string name="level_hard">Schwer</string>
+    <string name="new_game">New game</string>
+    <string name="choose_level">Difficulty</string>
+    <string name="level_easy">Easy</string>
+    <string name="level_medium">Medium</string>
+    <string name="level_hard">Hard</string>
     <!-- Prototype: the levels come from a singles-only oracle, not from the real
          technique grader. Say so, so that testing does not build wrong expectations. -->
-    <string name="level_provisional">vorläufig</string>
+    <string name="level_provisional">provisional</string>
 
-    <string name="generating">Rätsel wird erzeugt…</string>
-    <string name="pad_notes">Notizen</string>
-    <string name="erase">Löschen</string>
-    <string name="undo">Rückgängig</string>
-    <string name="redo">Wiederholen</string>
-    <string name="cancel">Abbrechen</string>
+    <string name="generating">Generating puzzle…</string>
+    <string name="pad_notes">Notes</string>
+    <string name="erase">Erase</string>
+    <string name="undo">Undo</string>
+    <string name="redo">Redo</string>
+    <string name="cancel">Cancel</string>
 
-    <string name="solved_title">Gelöst!</string>
+    <string name="solved_title">Solved!</string>
     <string name="solved_body">%1$s · %2$s</string>
-    <string name="solved_new_game">Nächstes Rätsel</string>
+    <string name="solved_new_game">Next puzzle</string>
 
-    <!-- Pause: haelt die Uhr an und blendet das Brett aus -->
+    <!-- Pause: stops the clock and hides the board -->
     <string name="paused_pause">Pause</string>
-    <string name="paused_title">Pausiert</string>
-    <string name="paused_resume">Weiter</string>
+    <string name="paused_title">Paused</string>
+    <string name="paused_resume">Resume</string>
 
-    <!-- Zweig: ein Versuch auf Probe, wenn kein Feld mehr erzwungen ist -->
-    <string name="branch_start">Zweig beginnen</string>
-    <string name="branch_empty">Zweig offen – trag deinen Versuch ein</string>
+    <!-- Branch: a trial run for when no cell is forced any more -->
+    <string name="branch_start">Start branch</string>
+    <string name="branch_empty">Branch open – enter your attempt</string>
     <plurals name="branch_cells">
-        <item quantity="one">Zweig · %1$d Feld auf Probe</item>
-        <item quantity="other">Zweig · %1$d Felder auf Probe</item>
+        <item quantity="one">Branch · %1$d cell on trial</item>
+        <item quantity="other">Branch · %1$d cells on trial</item>
     </plurals>
-    <string name="branch_discard">Verwerfen</string>
-    <string name="branch_commit">Übernehmen</string>
+    <string name="branch_discard">Discard</string>
+    <string name="branch_commit">Keep</string>
 
-    <string name="hint">Tipp</string>
-    <string name="hint_locate_forced">Dieses Feld lässt sich jetzt eindeutig bestimmen.</string>
-    <string name="hint_locate_reveal" tools:ignore="PluralsCandidate">Hier ist gerade nichts erzwungen. Dieses Feld hat mit %1$d Möglichkeiten die wenigsten.</string>
-    <string name="hint_show_digit">Ziffer zeigen</string>
-    <string name="hint_reveal_naked" tools:ignore="PluralsCandidate">Für dieses Feld bleibt nur die %1$d übrig.</string>
-    <string name="hint_reveal_hidden">In %1$s ist nur hier Platz für die %2$d.</string>
-    <string name="hint_reveal_bare" tools:ignore="PluralsCandidate">Hier gehört die %1$d hin.</string>
-    <string name="hint_apply">Eintragen</string>
-    <string name="hint_dismiss">Schließen</string>
-    <string name="hint_dead_end">Mit den bisherigen Eingaben lässt sich das Rätsel nicht mehr lösen. Nimm Züge zurück.</string>
+    <string name="hint">Hint</string>
+    <string name="hint_locate_forced">This cell can be worked out right now.</string>
+    <string name="hint_locate_reveal" tools:ignore="PluralsCandidate">Nothing is forced at the moment. With %1$d candidates, this cell has the fewest.</string>
+    <string name="hint_show_digit">Show digit</string>
+    <string name="hint_reveal_naked" tools:ignore="PluralsCandidate">Only the %1$d is left for this cell.</string>
+    <string name="hint_reveal_hidden">In %1$s, this is the only place for the %2$d.</string>
+    <string name="hint_reveal_bare" tools:ignore="PluralsCandidate">The %1$d belongs here.</string>
+    <string name="hint_apply">Enter it</string>
+    <string name="hint_dismiss">Close</string>
+    <string name="hint_dead_end">With the entries so far, this puzzle can no longer be solved. Undo some moves.</string>
 
-    <string name="unit_row">Zeile %1$d</string>
-    <string name="unit_col">Spalte %1$d</string>
-    <string name="unit_box">Block %1$d</string>
+    <string name="unit_row">row %1$d</string>
+    <string name="unit_col">column %1$d</string>
+    <string name="unit_box">box %1$d</string>
 
-    <string name="stats">Statistik</string>
-    <string name="stats_solved">Gelöst</string>
-    <string name="stats_started">Begonnen</string>
-    <string name="stats_best">Bestzeit</string>
-    <string name="stats_no_aids">ohne Hilfen</string>
-    <string name="stats_no_hints">ohne Tipp</string>
+    <string name="stats">Statistics</string>
+    <string name="stats_solved">Solved</string>
+    <string name="stats_started">Started</string>
+    <string name="stats_best">Best time</string>
+    <string name="stats_no_aids">without aids</string>
+    <string name="stats_no_hints">without hints</string>
     <string name="stats_none">–</string>
-    <string name="stats_total">Insgesamt gelöst: %1$d</string>
-    <string name="stats_reset">Zurücksetzen</string>
-    <string name="stats_reset_ask">Alle Zählerstände löschen?</string>
-    <string name="stats_reset_yes">Löschen</string>
-    <string name="solved_no_hints">ohne Tipp</string>
+    <string name="stats_total">Solved in total: %1$d</string>
+    <string name="stats_reset">Reset</string>
+    <string name="stats_reset_ask">Clear all counters?</string>
+    <string name="stats_reset_yes">Clear</string>
+    <string name="solved_no_hints">without hints</string>
     <plurals name="solved_hints">
-        <item quantity="one">%1$d Tipp</item>
-        <item quantity="other">%1$d Tipps</item>
+        <item quantity="one">%1$d hint</item>
+        <item quantity="other">%1$d hints</item>
     </plurals>
 
-    <string name="settings">Hilfen</string>
-    <string name="settings_intro">Jede dieser Anzeigen nimmt dir einen Teil der Arbeit ab. Schalte ab, was du selbst machen willst.</string>
-    <string name="setting_conflicts">Konflikte anzeigen</string>
-    <string name="setting_conflicts_hint">Zeigt sofort, ob eine Ziffer im Feld überhaupt möglich ist</string>
-    <string name="setting_same_digit">Gleiche Ziffer hervorheben</string>
-    <string name="setting_same_digit_hint">Färbt alle Felder mit derselben Ziffer wie das gewählte</string>
-    <string name="setting_peers">Zeile, Spalte, Block hervorheben</string>
-    <string name="setting_peers_hint">Färbt die Einheiten des gewählten Feldes</string>
-    <string name="setting_dim_digits">Fertige Ziffern ausgrauen</string>
-    <string name="setting_dim_digits_hint">Graut eine Ziffer im Ziffernpad aus, wenn sie neunmal gesetzt ist</string>
-    <string name="settings_done">Fertig</string>
-    <string name="no_aids">ohne Hilfen</string>
-    <string name="full_but_wrong">Das Gitter ist voll, aber noch nicht richtig.</string>
+    <string name="settings">Aids</string>
+    <string name="settings_intro">Each of these displays takes part of the work off your hands. Switch off whatever you want to do yourself.</string>
+    <string name="setting_conflicts">Show conflicts</string>
+    <string name="setting_conflicts_hint">Tells you immediately whether a digit is possible in a cell at all</string>
+    <string name="setting_same_digit">Highlight the same digit</string>
+    <string name="setting_same_digit_hint">Tints every cell holding the same digit as the selected one</string>
+    <string name="setting_peers">Highlight row, column, box</string>
+    <string name="setting_peers_hint">Tints the units of the selected cell</string>
+    <string name="setting_dim_digits">Dim finished digits</string>
+    <string name="setting_dim_digits_hint">Greys out a digit on the keypad once it has been placed nine times</string>
+    <string name="settings_done">Done</string>
+    <string name="no_aids">without aids</string>
+    <string name="full_but_wrong">The grid is full, but not yet right.</string>
 
-    <!-- Update -->
-    <string name="update_banner">Version %1$s ist da</string>
-    <string name="update_banner_loading">Version %1$s wird geladen…</string>
-    <string name="update_install">Installieren</string>
-    <string name="update_check">Nach Update suchen</string>
-    <string name="update_checking">Wird gesucht…</string>
-    <string name="update_downloading">Lädt…</string>
-    <string name="update_version">App-Version %1$s</string>
-    <string name="update_current">Aktuell</string>
-    <string name="update_failed">Fehlgeschlagen: %1$s</string>
-    <string name="update_available_note">Version %1$s verfügbar</string>
+    <!-- Update. Only reachable in the selfhosted flavour; the Play build shows the
+         version line without a button. -->
+    <string name="update_banner">Version %1$s is here</string>
+    <string name="update_banner_loading">Downloading version %1$s…</string>
+    <string name="update_install">Install</string>
+    <string name="update_check">Check for updates</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_downloading">Downloading…</string>
+    <string name="update_version">App version %1$s</string>
+    <string name="update_current">Up to date</string>
+    <string name="update_failed">Failed: %1$s</string>
+    <string name="update_available_note">Version %1$s available</string>
 
-    <!-- Diagnose -->
-    <string name="diag_title">Fehlerbericht</string>
-    <string name="diag_hint">Protokoll und Absturzberichte weitergeben, wenn etwas klemmt</string>
-    <string name="diag_share">Teilen</string>
+    <!-- Diagnostics -->
+    <string name="diag_title">Error report</string>
+    <string name="diag_hint">Pass on the log and crash reports when something is stuck</string>
+    <string name="diag_share">Share</string>
 
 </resources>

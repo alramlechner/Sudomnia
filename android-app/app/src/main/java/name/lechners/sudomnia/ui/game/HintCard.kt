@@ -22,7 +22,7 @@ import name.lechners.sudomnia.ui.theme.AppSurfaceHigh
 import name.lechners.sudomnia.ui.theme.InkConflict
 import name.lechners.sudomnia.ui.theme.TextPrimary
 
-/** "Zeile 4" / "Spalte 7" / "Block 5" -- units are numbered from 1 for the player. */
+/** "row 4" / "column 7" / "box 5" -- units are numbered from 1 for the player. */
 @Composable
 fun unitLabel(unit: Int): String = when {
     unit < 9 -> stringResource(R.string.unit_row, unit + 1)

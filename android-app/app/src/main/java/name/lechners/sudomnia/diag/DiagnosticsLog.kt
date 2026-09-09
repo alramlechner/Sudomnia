@@ -32,7 +32,7 @@ object DiagnosticsLog {
     /** Above this the file is halved. A ring buffer in a file, cheaply. */
     private const val MAX_BYTES = 64 * 1024
 
-    private val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.GERMANY)
+    private val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
 
     private var file: File? = null
 

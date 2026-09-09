@@ -3,6 +3,20 @@
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [Unveroeffentlicht] – Vorbereitung auf Veröffentlichung
+
+### Neu
+- **Englisch als Standardsprache**, Deutsch als Uebersetzung (`values-de`). Die App
+  war bis hier nur deutsch.
+- **Zwei Varianten** (`play`, `selfhosted`). Die Play-Fassung enthaelt die
+  Selbst-Aktualisierung nicht -- Google verbietet Apps aus dem Store, sich auf einem
+  anderen Weg selbst zu aktualisieren -- und haelt damit **keine einzige
+  Berechtigung**. Die selfhosted-Fassung bleibt wie bisher; `deploy.sh` baut sie.
+
+### Geaendert
+- **Ein frischer Clone uebersetzt jetzt** (`assemblePlayDebug`). Bisher scheiterte er
+  am fehlenden Client-Zertifikat, das absichtlich nicht im Repo liegt.
+
 ## [0.4.5] – 2026-09-08
 
 ### Neu
