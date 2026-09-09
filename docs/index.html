@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sudomnia — a Sudoku that never needs guessing</title>
+<meta name="description" content="Sudomnia is a Sudoku for Android. Every puzzle is checked to be solvable by reasoning alone. No ads, no account, not one permission, fully offline, open source.">
+<meta name="color-scheme" content="dark">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:0 20px;background:#161A22;color:#E8ECF2;
+       font:16px/1.65 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:720px;margin:0 auto;padding:56px 0 80px}
+  h1{font-size:1.9rem;line-height:1.2;margin:0 0 .2em}
+  h2{font-size:1.15rem;margin:2.2em 0 .5em;color:#3193C6}
+  a{color:#3193C6}
+  code{background:#2B303E;padding:.15em .4em;border-radius:4px;font-size:.9em;
+       overflow-wrap:anywhere}
+  ul{padding-left:1.2em}
+  .lede{color:#9AA5B8}
+  .mark{display:block;width:96px;margin:0 0 24px}
+  table{border-collapse:collapse;width:100%;margin:.5em 0}
+  th,td{text-align:left;padding:.35em .6em;border-bottom:1px solid #3C4456;font-size:.95rem}
+  th{color:#9AA5B8;font-weight:600}
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid #3C4456;
+         color:#9AA5B8;font-size:.9rem}
+</style>
+</head>
+<body><div class="wrap">
+<img class="mark" src="icon.png" alt="">
+<h1>Sudomnia</h1>
+<p class="lede">A Sudoku for Android. Every puzzle is checked to be solvable by
+reasoning alone — no guessing, ever.</p>
+
+<h2>No puzzle needs guessing</h2>
+<p>Before a puzzle reaches you, Sudomnia solves it the way a person would: hidden
+and naked singles, locked candidates, naked and hidden pairs and triples, X-Wing,
+Swordfish, simple colouring, XY-Wing. Never by trying a digit to see what happens.
+A puzzle that cannot be finished that way is not published to you.</p>
+<p>Most generators only check that the solution is unique. We measured our own
+earlier version: of the puzzles it called <em>hard</em>, 53&nbsp;% could not be
+finished by any of those techniques.</p>
+
+<h2>Four levels that mean something</h2>
+<p>The level is the hardest technique the puzzle actually requires, measured on
+that grid — not a guess from the number of clues.</p>
+<table>
+<tr><th>Level</th><th>What it takes</th></tr>
+<tr><td>Easy</td><td>singles only, at least 36 clues left standing</td></tr>
+<tr><td>Medium</td><td>singles only, dug as deep as uniqueness allows</td></tr>
+<tr><td>Hard</td><td>locked candidates, or a pair or triple</td></tr>
+<tr><td>Expert</td><td>an X-Wing, colouring or an XY-Wing</td></tr>
+</table>
+
+<h2>Hints that explain themselves</h2>
+<p>The hint names the technique and the reason — <em>“in box 5 the 7 fits only in
+cells that also lie in column 3, so it can go from the rest of column 3”</em> — and
+shows the candidates it strikes out, crossed out in the grid. Only the last press
+enters a digit, and by then you know why it belongs there.</p>
+
+<h2>Nothing leaves your device</h2>
+<p>The Play build holds no Android permission that lets it do anything — not even
+internet access. There is no server side: puzzles are generated on the device.
+No ads, no account, no analytics, no crash reporter.</p>
+
+<h2>Get it</h2>
+<ul>
+<li>Source, releases and issues:
+    <a href="https://github.com/alramlechner/Sudomnia">github.com/alramlechner/Sudomnia</a></li>
+<li><a href="privacy.html">Privacy policy</a></li>
+</ul>
+
+<footer>
+Apache-2.0. Built by Alram Lechner. Sister project of
+<a href="https://github.com/alramlechner/Chessomnia">Chessomnia</a>.
+</footer>
+</div></body>
+</html>

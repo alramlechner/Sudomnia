@@ -1,31 +1,43 @@
 # Datenschutz
 
-Sudomnia sammelt nichts, speichert nichts ueber dich und hat kein Konto.
+Sudomnia sammelt nichts, speichert nichts über dich und hat kein Konto.
 
-## Was auf dem Geraet bleibt
+Die im Play Store ausgelieferte Fassung hält **keine einzige Android-Berechtigung**
+— nicht einmal Internetzugriff. Sie kann technisch gar nichts irgendwohin senden.
+
+Diese Seite auf Deutsch; die für Google Play hinterlegte englische Fassung steht
+unter <https://alramlechner.github.io/Sudomnia/privacy.html> und sagt dasselbe.
+
+## Was auf dem Gerät bleibt
 
 Einstellungen, Statistik und der laufende Spielstand liegen in den privaten
-SharedPreferences der App. Sie verlassen das Geraet nie und verschwinden mit der
+SharedPreferences der App. Sie verlassen das Gerät nie und verschwinden mit der
 Deinstallation.
 
 ## Netzwerk
 
-Das Spiel selbst ist offline. Die App baut genau eine Verbindung auf, und nur wenn
-ein Update-Zertifikat einkompiliert ist (das ist in oeffentlichen Builds nicht der
-Fall): sie fragt beim Start und danach alle 15 Minuten den privaten Server der
-Familie nach der aktuellen Version und laedt auf Knopfdruck das APK. Dabei wird
-nichts uebertragen, was ueber die HTTP-Anfrage selbst hinausgeht -- keine
-Kennungen, keine Spielstaende, keine Statistik.
+Es gibt keine Serverseite. Die Rätsel entstehen auf dem Gerät.
+
+Das Repository enthält daneben eine zweite Variante (`selfhosted`), die der Autor
+für die Geräte im eigenen Haushalt baut und die sich ihre Updates von einem
+privaten Server holt. Sie wird **nicht** über Google Play verteilt und braucht
+dafür `INTERNET` und `REQUEST_INSTALL_PACKAGES`. Auch sie überträgt nichts, was
+über die HTTP-Anfrage selbst hinausgeht — keine Kennungen, keine Spielstände,
+keine Statistik. Welche Variante ein Build ist, lässt sich am Manifest ablesen;
+`RELEASING.md` prüft genau das am hochgeladenen Bundle.
 
 ## Fehlerberichte
 
-Abstuerze und Fehler landen in einer Textdatei im privaten Speicher der App. Sie
-wird **nur** verschickt, wenn du im Hilfen-Dialog auf "Teilen" tippst -- dann
-waehlst du selbst das Ziel. Die App hat keinen Upload-Weg; es gibt keinen
+Abstürze und Fehler landen in einer Textdatei im privaten Speicher der App. Sie
+wird **nur** verschickt, wenn du im Hilfen-Dialog auf „Teilen" tippst — dann
+wählst du selbst das Ziel. Die App hat keinen Upload-Weg; es gibt keinen
 Crash-Reporter und keine Analytics.
 
-## Berechtigungen
+## Kinder
 
-- `INTERNET` -- ausschliesslich fuer die Update-Pruefung
-- `REQUEST_INSTALL_PACKAGES` -- um das heruntergeladene APK dem Paketinstaller
-  zu uebergeben
+Die App enthält keine Werbung, keine Käufe, keine nutzergenerierten Inhalte und
+keine Kommunikationsfunktionen. Sie erhebt von niemandem Daten, in keinem Alter.
+
+## Kontakt
+
+Fragen oder ein Fehler in diesem Text: <https://github.com/alramlechner/Sudomnia/issues>

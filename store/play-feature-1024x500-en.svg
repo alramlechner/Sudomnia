@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+  <rect width="1024" height="500" fill="#2B303E"/>
+  <rect x="442.00" y="104.00" width="43.40" height="43.40" rx="8.40" fill="#3193C6"/>
+  <rect x="490.30" y="104.00" width="43.40" height="43.40" rx="8.40" fill="#4A5570"/>
+  <rect x="538.60" y="104.00" width="43.40" height="43.40" rx="8.40" fill="#4A5570"/>
+  <rect x="442.00" y="152.30" width="43.40" height="43.40" rx="8.40" fill="#4A5570"/>
+  <rect x="490.30" y="152.30" width="43.40" height="43.40" rx="8.40" fill="#FFFFFF"/>
+  <rect x="538.60" y="152.30" width="43.40" height="43.40" rx="8.40" fill="#4A5570"/>
+  <rect x="442.00" y="200.60" width="43.40" height="43.40" rx="8.40" fill="#4A5570"/>
+  <rect x="490.30" y="200.60" width="43.40" height="43.40" rx="8.40" fill="#4A5570"/>
+  <rect x="538.60" y="200.60" width="43.40" height="43.40" rx="8.40" fill="#3193C6"/>
+  <text x="512.0" y="340" text-anchor="middle"
+        font-family="DejaVu Sans, Helvetica, Arial, sans-serif"
+        font-size="76" font-weight="600" fill="#F4F1E8">Sudomnia</text>
+  <text x="512.0" y="386" text-anchor="middle"
+        font-family="DejaVu Sans, Helvetica, Arial, sans-serif"
+        font-size="26" fill="#9AA5B8">Sudoku. No guessing. No ads. No account.</text>
+</svg>

@@ -1,0 +1,60 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android-app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Java 17 is required: newer JDKs crash the Kotlin compiler in this setup.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests
+        run: ./gradlew test
+
+      # The deep run generates ~2,500 puzzles and grades every one of them. It is
+      # the actual proof that the generator never ships a puzzle needing guesswork
+      # and that no technique ever contradicts the solution. Slow locally, so it is
+      # behind a flag there; CI should always pay that price.
+      - name: Deep generator and solver runs
+        run: ./gradlew test -DsudokuDeep=1 --rerun-tasks
+
+      # checkReleaseBuilds is off in the build file so that lint stays out of the
+      # release path; that also suppresses the NewApi check, which is the one that
+      # would catch a call above minSdk. So run it explicitly here.
+      - name: Lint
+        run: ./gradlew lintPlayRelease
+
+      # Only the play flavour: the selfhosted one needs a client certificate that
+      # is deliberately not in the repository. That a fresh clone can build the
+      # published variant with no secrets at all is a property worth testing.
+      - name: Assemble (unsigned without a keystore)
+        run: ./gradlew assemblePlayRelease
+
+      - name: Permissions of the built APK
+        run: |
+          set -e
+          MANIFEST=app/build/intermediates/merged_manifest/playRelease/*/AndroidManifest.xml
+          echo "uses-permission lines in the merged manifest:"
+          grep -oE '<uses-permission[^>]*>' $MANIFEST
+          # The Play build must hold no permission that grants it any capability.
+          # The one line AndroidX declares about the app itself is expected.
+          if grep -qE 'android.permission.(INTERNET|REQUEST_INSTALL_PACKAGES)' $MANIFEST; then
+            echo "::error::the play flavour must not request INTERNET or REQUEST_INSTALL_PACKAGES"
+            exit 1
+          fi

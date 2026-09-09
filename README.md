@@ -108,32 +108,40 @@ Die Version steht an genau einer Stelle: `version.properties`.
 
 ## Veröffentlichen
 
+Zwei Wege, und sie sind nicht dasselbe:
+
 ```bash
-./deploy.sh --notes "Was neu ist"     # Version +1, Release-Build, ab auf den Server
-./deploy.sh --no-bump                 # wenn die Version schon von Hand erhöht wurde
+cd android-app && ./gradlew bundlePlayRelease   # das AAB für Google Play
+./deploy.sh --notes "Was neu ist"               # die APK für die Geräte im Haus
 ```
 
-Legt die APK unter `/var/lib/sudomnia/apk/` ab und schreibt das Manifest `latest.json`,
-das die installierten Apps abfragen. Ein Neustart des EnergyControl-Servers ist dafür
-nicht nötig.
+Die Play-Fassung enthält die Selbst-Aktualisierung nicht und hält **keine einzige
+Berechtigung**; die selfhosted-Fassung holt sich ihre Updates vom EnergyControl-Server
+im Haus. Der ganze Ablauf samt Prüfung des hochgeladenen Bundles steht in
+`RELEASING.md`, die Store-Texte in `store/`.
 
 ## Updates
 
-Die App fragt beim Start und danach alle 15 Minuten
-`https://sudomnia.invalid:8443/api/v1/sudomnia/app/latest.json` ab. Ist dort ein höherer
-`version_code` hinterlegt, erscheint über dem Brett ein Streifen „Version x.y.z ist da";
-ein Tipp darauf lädt die APK, prüft ihre SHA-256 und übergibt sie dem Paketinstaller.
-Dieselbe Funktion steckt unten im Hilfen-Dialog, dort auch als „jetzt nachsehen".
+**Aus dem Play Store** kommen sie wie bei jeder anderen App. Die Play-Fassung hat
+keinen eigenen Update-Weg und darf auch keinen haben.
+
+**Die Fassung für die Geräte im Haus** (`selfhosted`) fragt beim Start und danach alle
+15 Minuten `https://sudomnia.invalid:8443/api/v1/sudomnia/app/latest.json` ab. Ist dort
+ein höherer `version_code` hinterlegt, erscheint über dem Brett ein Streifen „Version
+x.y.z ist da"; ein Tipp darauf lädt die APK, prüft ihre SHA-256 und übergibt sie dem
+Paketinstaller. Dieselbe Funktion steckt unten im Hilfen-Dialog, dort auch als „jetzt
+nachsehen".
 
 Der Weg läuft über den mTLS-Port des Servers — **das Update funktioniert deshalb auch
 von unterwegs, ohne VPN.** Das dafür nötige Client-Zertifikat liegt fest in der App
-(`res/raw/sudomnia_client.p12`, nicht im Repo); es ist serverseitig auf genau diesen
-einen Download beschränkt und öffnet sonst nichts. Wenn es klemmt, gibt es im Heimnetz den Notweg
-`http://sudomnia.invalid:8082/sudomnia/app/download` im Browser.
+(`app/src/selfhosted/res/raw/sudomnia_client.p12`, nicht im Repo); es ist serverseitig
+auf genau diesen einen Download beschränkt und öffnet sonst nichts. Wenn es klemmt, gibt
+es im Heimnetz den Notweg `http://sudomnia.invalid:8082/sudomnia/app/download` im
+Browser.
 
-Deshalb hat die App zwei Berechtigungen: `INTERNET` und `REQUEST_INSTALL_PACKAGES`.
-Beide werden ausschließlich hierfür verwendet — das Spiel selbst kennt keinen Server,
-sammelt nichts und sendet nichts.
+Nur diese Fassung hat deshalb zwei Berechtigungen: `INTERNET` und
+`REQUEST_INSTALL_PACKAGES`. Beide werden ausschließlich hierfür verwendet — das Spiel
+selbst kennt keinen Server, sammelt nichts und sendet nichts.
 
 ## Wenn etwas klemmt
 
@@ -171,21 +179,24 @@ Apache-2.0 — siehe [LICENSE](LICENSE) und [NOTICE](NOTICE).
 ¹ Einzelne Sudoku-Gitter sind keine schutzfähigen Werke. Sie liegen ohnehin nur im
 Testpfad und werden nicht mit der App ausgeliefert.
 
-## Zwei Dateien fehlen im Repo
+## Drei Dateien fehlen im Repo
 
-Beide absichtlich (siehe [RELEASING.md](RELEASING.md)):
+Alle drei absichtlich (siehe [RELEASING.md](RELEASING.md)). **Der `play`-Build braucht
+keine davon** — ein frischer Clone übersetzt ihn ohne jedes Geheimnis:
 
-- `android-app/app/src/main/res/raw/sudomnia_client.p12` — das Client-Zertifikat für
-  die Update-Prüfung gegen meinen Heimserver. Ein privater Schlüssel gehört nicht auf
-  GitHub. **Ohne diese Datei übersetzt das Projekt nicht** (`R.raw.sudomnia_client`
-  existiert dann nicht). Das ist so gewollt: ein fehlender Schlüssel soll beim Bauen
-  auffallen, an einer offensichtlichen Stelle, statt auf irgendeinem Tablet.
-  Wer forkt, braucht die Update-Funktion ohnehin nicht — der Server dahinter steht nur
-  bei mir. `update/` hängt an keiner anderen Schicht und lässt sich samt den beiden
-  Zeilen in `MainActivity` ersatzlos entfernen.
+- `android-app/app/src/selfhosted/res/raw/sudomnia_client.p12` — das Client-Zertifikat
+  für die Update-Prüfung gegen meinen Heimserver. Ein privater Schlüssel gehört nicht
+  auf GitHub. **Ohne diese Datei übersetzt die `selfhosted`-Variante nicht**
+  (`R.raw.sudomnia_client` existiert dann nicht). Das ist so gewollt: ein fehlender
+  Schlüssel soll beim Bauen auffallen, an einer offensichtlichen Stelle, statt auf
+  irgendeinem Tablet. Wer forkt, braucht diese Variante ohnehin nicht — der Server
+  dahinter steht nur bei mir.
 - `android-app/keystore.properties` — ohne sie entsteht ein **unsigniertes** Release.
+- `android-app/play-service-account.json` — nur für den automatisierten Play-Upload.
+  Ohne sie laufen alle übrigen Tasks; nur `publish*` scheitert, mit klarer Meldung.
 
 ## Mitarbeit
 
 Siehe [CONTRIBUTING.md](CONTRIBUTING.md). Datenschutz: [PRIVACY.md](PRIVACY.md).
-Änderungen: [CHANGELOG.md](CHANGELOG.md).
+Änderungen: [CHANGELOG.md](CHANGELOG.md). Projektseite:
+[alramlechner.github.io/Sudomnia](https://alramlechner.github.io/Sudomnia/).
