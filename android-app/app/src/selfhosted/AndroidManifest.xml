@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Nur die selfhosted-Variante: die App holt sich neue Versionen selbst vom
+    EnergyControl-Server im Haus (siehe update/UpdateClient.kt). Beide Berechtigungen
+    und der FileProvider gehoeren ausschliesslich dazu.
+
+    Im Play-Build existiert diese Datei nicht und der Code auch nicht — Google
+    verbietet Apps aus dem Store, sich auf einem anderen Weg selbst zu aktualisieren,
+    und REQUEST_INSTALL_PACKAGES bekaeme ein Sudoku ohnehin nicht deklariert.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <application>
+
+        <!-- Reicht das heruntergeladene APK aus dem Cache an den Paketinstaller weiter.
+             Ohne FileProvider waere das eine file:// -Uri und damit seit Android 7 verboten. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+    </application>
+</manifest>

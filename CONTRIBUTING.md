@@ -10,14 +10,22 @@ Java 17 ist Pflicht; neuere JDKs bringen den Kotlin-Compiler zum Absturz.
 ```bash
 cd android-app
 ./gradlew test
-./gradlew assembleDebug
+./gradlew assemblePlayDebug
 ```
 
-**Ein frischer Clone uebersetzt nicht**: `android-app/app/src/main/res/raw/sudomnia_client.p12`
-fehlt absichtlich (privater Schluessel, siehe RELEASING.md), und `UpdateClient`
-referenziert ihn ueber `R.raw`. Wer nur am Spiel arbeiten will, loescht das Paket
-`update/` samt den beiden Zeilen in `MainActivity` -- es haengt an keiner anderen
-Schicht. Ohne `keystore.properties` bleibt der Release-Build ausserdem unsigniert.
+**Es gibt zwei Varianten** (`flavorDimensions "distribution"`):
+
+| Variante | Was drin ist | Wofuer |
+|---|---|---|
+| `play` | kein `update/`, keine einzige Berechtigung | Google Play, und der Standard beim Entwickeln |
+| `selfhosted` | Selbst-Aktualisierung vom Haus-Server, `INTERNET` + `REQUEST_INSTALL_PACKAGES` | die privaten Geraete, `deploy.sh` |
+
+Ein frischer Clone uebersetzt `play` vollstaendig — dort wird kein Geheimnis
+gebraucht. `selfhosted` dagegen scheitert absichtlich, solange
+`android-app/app/src/selfhosted/res/raw/sudomnia_client.p12` fehlt (privater
+Schluessel, siehe RELEASING.md): ein fehlendes Zertifikat soll beim Bauen auffallen
+und nicht erst auf dem Geraet. Ohne `keystore.properties` bleibt der Release-Build
+ausserdem unsigniert.
 
 ## Worauf beim Code geachtet wird
 

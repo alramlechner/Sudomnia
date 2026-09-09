@@ -19,13 +19,16 @@ import java.io.File
 /**
  * The update check, kept out of `SudokuViewModel` on purpose: that one is the game and
  * has no business knowing about sockets.
+ *
+ * Lives in the `selfhosted` source set only -- see [UpdateController] for why the Play
+ * build must not contain any of this.
  */
-class UpdateViewModel(private val context: Context) : ViewModel() {
+class UpdateViewModel(private val context: Context) : ViewModel(), UpdateController {
 
     private val client = UpdateClient(context)
 
     private val _state = MutableStateFlow<UpdateState>(UpdateState.Idle)
-    val state: StateFlow<UpdateState> = _state.asStateFlow()
+    override val state: StateFlow<UpdateState> = _state.asStateFlow()
 
     private var latest: ReleaseInfo? = null
 
@@ -46,7 +49,7 @@ class UpdateViewModel(private val context: Context) : ViewModel() {
         return "${info.versionName ?: "?"} (${currentVersionCode()})"
     }
 
-    fun checkNow() = check(manual = true)
+    override fun checkNow() = check(manual = true)
 
     private fun check(manual: Boolean) {
         if (_state.value.busy) return
@@ -80,7 +83,7 @@ class UpdateViewModel(private val context: Context) : ViewModel() {
      * so cancelling in the system dialog leaves a working button behind rather than a
      * screen that claims to be downloading forever.
      */
-    fun install() {
+    override fun install() {
         val release = latest ?: return
         if (_state.value is UpdateState.Downloading) return
         _state.value = UpdateState.Downloading(release.versionName)

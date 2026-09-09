@@ -30,8 +30,10 @@ import name.lechners.sudomnia.update.UpdateState
  * line would cost grid area every single game to report a non-event.
  */
 @Composable
-fun UpdateBanner(state: UpdateState, onInstall: () -> Unit, modifier: Modifier = Modifier) {
-    val version = state.installableVersion ?: return
+fun UpdateBanner(state: UpdateState?, onInstall: () -> Unit, modifier: Modifier = Modifier) {
+    // null means the build has no self-update at all (the Play flavour) -- the same
+    // "draw nothing" as every state that has nothing to offer.
+    val version = state?.installableVersion ?: return
     val downloading = state is UpdateState.Downloading
 
     Row(

@@ -31,7 +31,8 @@ import name.lechners.sudomnia.update.UpdateState
 @Composable
 fun SettingsDialog(
     settings: Settings,
-    update: UpdateState,
+    /** null in a build without self-update -- then the row is just the version. */
+    update: UpdateState?,
     onChange: (Settings) -> Unit,
     onInstallUpdate: () -> Unit,
     onCheckUpdate: () -> Unit,
@@ -120,11 +121,11 @@ private fun AidSwitch(
  */
 @Composable
 private fun UpdateRow(
-    update: UpdateState,
+    update: UpdateState?,
     onInstall: () -> Unit,
     onCheck: () -> Unit,
 ) {
-    val installable = update.installableVersion
+    val installable = update?.installableVersion
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -147,6 +148,9 @@ private fun UpdateRow(
                 fontSize = 12.sp,
             )
         }
+        // No controller, no button: in the Play build updates come from the store, and
+        // a "check now" that could never find anything would be a lie in a dialog.
+        if (update == null) return@Row
         TextButton(
             onClick = if (installable != null) onInstall else onCheck,
             enabled = !update.busy,

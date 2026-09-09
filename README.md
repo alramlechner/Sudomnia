@@ -69,12 +69,20 @@ Java 17 ist Pflicht — neuere JDKs bringen den Kotlin-Compiler zum Absturz.
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
 export ANDROID_HOME=$HOME/android-sdk
 cd android-app
-./gradlew test                  # Solver, Generator, Spiellogik
-./gradlew test -DsudokuDeep=1   # dieselben Tests mit 10x so vielen Rätseln
-./gradlew assembleDebug         # app/build/outputs/apk/debug/app-debug.apk
-./gradlew lintRelease           # NewApi & Co. -- laeuft bewusst nicht im Release-Pfad
-./gradlew assembleRelease       # signiert, ~1,7 MB
+./gradlew test                     # Solver, Generator, Spiellogik
+./gradlew test -DsudokuDeep=1      # dieselben Tests mit 10x so vielen Rätseln
+./gradlew assemblePlayDebug        # app/build/outputs/apk/play/debug/…
+./gradlew lintPlayRelease          # NewApi & Co. -- laeuft bewusst nicht im Release-Pfad
+./gradlew bundlePlayRelease        # das AAB für Google Play
+./gradlew assembleSelfhostedRelease # die APK für den Haus-Server
 ```
+
+**Zwei Varianten.** `play` ist die Fassung für den Store: ohne Selbst-Aktualisierung
+und **ohne eine einzige Berechtigung** — Google verbietet Apps aus dem Store, sich auf
+einem anderen Weg selbst zu aktualisieren. `selfhosted` ist die Fassung für die
+Geräte im Haus, die ihre Updates vom EnergyControl-Server holt; nur sie braucht das
+Client-Zertifikat und ist ohne dieses nicht baubar. Ein frischer Clone übersetzt
+`play` ohne jedes Geheimnis.
 
 Der Release-Build wird über eine **nicht eingecheckte** `android-app/keystore.properties`
 signiert (Vorlage: `keystore.properties.example`). Fehlt die Datei, entsteht ein

@@ -26,6 +26,27 @@ android {
         versionName = versionProps.getProperty("VERSION_NAME")
     }
 
+    // Zwei Auslieferungswege, zwei Varianten -- und der Unterschied ist nicht ein
+    // Schalter zur Laufzeit, sondern welche Dateien ueberhaupt uebersetzt werden.
+    //
+    //   play        fuer Google Play. Ohne update/, ohne Client-Zertifikat, ohne eine
+    //               einzige Berechtigung. Play verbietet Apps aus dem Store, sich auf
+    //               einem anderen Weg selbst zu aktualisieren. Nebeneffekt, der genauso
+    //               wichtig ist: ein frischer Clone uebersetzt diese Variante ohne
+    //               jedes Geheimnis -- vorher scheiterte er an R.raw.sudomnia_client.
+    //   selfhosted  wie bisher: holt sich neue Versionen vom EnergyControl-Server im
+    //               Haus (deploy.sh baut diese Variante).
+    //
+    // Gleiche applicationId in beiden: die Familientablets sollen zwischen Haus-APK und
+    // Store-Version wechseln koennen, ohne Statistik und laufendes Spiel zu verlieren.
+    // Das setzt voraus, dass beide mit demselben Schluessel signiert sind -- siehe
+    // RELEASING.md zu Play App Signing.
+    flavorDimensions += "distribution"
+    productFlavors {
+        create("play") { dimension = "distribution" }
+        create("selfhosted") { dimension = "distribution" }
+    }
+
     // Release signing is driven by an untracked keystore.properties (see
     // keystore.properties.example). Without it the release build stays unsigned,
     // which is what a fork or a CI check wants -- and it keeps the key and the

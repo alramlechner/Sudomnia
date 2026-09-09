@@ -79,12 +79,15 @@ fi
 echo ""
 echo "==> Baue APK (Java 17 ist Pflicht, neuere JDKs zerlegen den Kotlin-Compiler)..."
 cd "$GRADLE_DIR"
+# Die selfhosted-Variante: nur sie enthaelt die Selbst-Aktualisierung, die dieses
+# Skript ueberhaupt beliefert. Die play-Variante hat weder den Code noch die
+# Berechtigungen dafuer -- siehe app/build.gradle.kts und RELEASING.md.
 JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64 \
   PATH=/usr/lib/jvm/java-17-openjdk-arm64/bin:$PATH \
   ANDROID_HOME=/home/pi/android-sdk \
-  ./gradlew assembleRelease --no-daemon
+  ./gradlew assembleSelfhostedRelease --no-daemon
 
-APK_SRC="$GRADLE_DIR/app/build/outputs/apk/release/app-release.apk"
+APK_SRC="$GRADLE_DIR/app/build/outputs/apk/selfhosted/release/app-selfhosted-release.apk"
 APK_DST="$APK_DIR/sudomnia-${NEW_NAME}.apk"
 
 # Ein unsigniertes Release kann keine installierte Version aktualisieren -- lieber hier

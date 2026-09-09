@@ -24,11 +24,29 @@ Ein Gradle-Modul, Namespace `name.lechners.sudomnia`, minSdk 30 / targetSdk 36, 
 Abhängigkeiten: core-ktx, Compose BOM, activity-compose, lifecycle-viewmodel-compose, junit.
 Kein Room, kein DI-Framework, keine HTTP-Bibliothek.
 
-**Zwei Berechtigungen, beide nur für das Update** (`INTERNET`, `REQUEST_INSTALL_PACKAGES`,
-siehe §11). Das Spiel selbst kennt keinen Server: es erzeugt seine Rätsel, speichert in
-SharedPreferences und sendet nichts. `update/` ist deshalb bewusst ein eigenes Paket mit
-eigenem ViewModel und hat keine Verbindung zu `rules/`, `game/` oder `data/` — man kann es
-ersatzlos löschen, ohne das Spiel anzufassen.
+**Zwei Varianten, und der Unterschied ist nicht ein Schalter.** `play` ist die Fassung
+für Google Play: **keine einzige Berechtigung**, kein Netzwerkcode, kein Zertifikat.
+`selfhosted` ist die Fassung für die Geräte im Haus und enthält die
+Selbst-Aktualisierung mit `INTERNET` und `REQUEST_INSTALL_PACKAGES` (§11). Google
+verbietet Apps aus dem Store, sich auf einem anderen Weg selbst zu aktualisieren — der
+Play-Build enthält den Code deshalb nicht bloß deaktiviert, sondern **gar nicht**.
+Genau das war `update/` immer schon zugedacht: ein eigenes Paket ohne Verbindung zu
+`rules/`, `game/` oder `data/`.
+
+Getrennt wird über Gradle-Quellverzeichnisse, nicht über ein `if`:
+
+```
+src/main/…/update/UpdateState.kt        reine Daten, die die Oberfläche zeichnet
+src/main/…/update/UpdateController.kt   was die Oberfläche braucht -- drei Mitglieder
+src/play/…/update/UpdateSupport.kt      liefert null. Das ist die ganze Datei.
+src/selfhosted/…/update/UpdateSupport.kt + UpdateClient/UpdateViewModel/ReleaseInfo
+```
+
+`UpdateSupport` gibt es genau einmal pro Variante und nirgends in `main` — es ist die
+einzige Stelle, die weiß, welche der beiden gebaut wird. Der Nebeneffekt ist genauso
+wichtig wie die Store-Regel: **ein frischer Clone übersetzt `play` ohne jedes
+Geheimnis.** Vorher scheiterte er an `R.raw.sudomnia_client`, und das ist für ein
+quelloffenes Projekt keine Kleinigkeit, sondern die Eintrittsschwelle.
 
 ---
 

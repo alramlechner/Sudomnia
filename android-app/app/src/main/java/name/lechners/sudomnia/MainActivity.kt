@@ -15,7 +15,8 @@ import androidx.lifecycle.ViewModelProvider
 import name.lechners.sudomnia.diag.DiagnosticsLog
 import name.lechners.sudomnia.ui.game.GameScreen
 import name.lechners.sudomnia.ui.game.SudokuViewModel
-import name.lechners.sudomnia.update.UpdateViewModel
+import name.lechners.sudomnia.update.UpdateState
+import name.lechners.sudomnia.update.UpdateSupport
 import name.lechners.sudomnia.ui.theme.SudomniaTheme
 
 /**
@@ -51,13 +52,12 @@ class MainActivity : ComponentActivity() {
                 val state by vm.ui.collectAsState()
                 val timer by vm.timer.collectAsState()
 
-                // Zweites ViewModel mit Absicht: SudokuViewModel ist die Partie und soll
-                // keinen Netzwerkcode bekommen.
-                val updateVm: UpdateViewModel = ViewModelProvider(
-                    this@MainActivity,
-                    UpdateViewModel.factory(applicationContext),
-                )[UpdateViewModel::class.java]
-                val update by updateVm.state.collectAsState()
+                // Die Selbst-Aktualisierung gibt es nur in der selfhosted-Variante;
+                // im Play-Build liefert UpdateSupport null und die App enthaelt weder
+                // Netzwerkcode noch die Berechtigung dafuer.
+                val updateController = UpdateSupport.rememberController(this@MainActivity)
+                var update: UpdateState? = null
+                if (updateController != null) update = updateController.state.collectAsState().value
 
                 GameScreen(
                     state = state,
@@ -79,8 +79,8 @@ class MainActivity : ComponentActivity() {
                     onHint = vm::onHint,
                     onDismissHint = vm::onDismissHint,
                     onResetStats = vm::resetStats,
-                    onInstallUpdate = updateVm::install,
-                    onCheckUpdate = updateVm::checkNow,
+                    onInstallUpdate = { updateController?.install() },
+                    onCheckUpdate = { updateController?.checkNow() },
                     modifier = Modifier
                         .fillMaxSize()
                         .windowInsetsPadding(WindowInsets.systemBars),

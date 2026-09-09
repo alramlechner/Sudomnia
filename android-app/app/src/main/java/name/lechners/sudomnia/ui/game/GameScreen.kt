@@ -39,7 +39,7 @@ import name.lechners.sudomnia.update.UpdateState
 fun GameScreen(
     state: GameUiState,
     timer: TimerState,
-    update: UpdateState,
+    update: UpdateState?,
     onCellTap: (Int) -> Unit,
     onDigit: (Int) -> Unit,
     onNote: (Int) -> Unit,
