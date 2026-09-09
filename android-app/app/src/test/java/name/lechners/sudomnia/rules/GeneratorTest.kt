@@ -54,12 +54,40 @@ class GeneratorTest {
     }
 
     /**
-     * The three bands must actually be different, not just differently labelled.
-     * This is what would break first if the directed digging in [Digger] regressed.
+     * **The promise of the whole app**: no puzzle it hands out needs guessing.
+     *
+     * Before the technique ladder existed this was false and nobody could see it --
+     * the old "hard" band accepted any puzzle with a unique solution, and a
+     * measurement over 150 of them found that **53 % could not be finished by any
+     * human technique**. A player who got one had no way of telling the difference
+     * between "I am not seeing it" and "there is nothing to see".
+     */
+    @Test
+    fun everyGeneratedPuzzleIsSolvableWithoutGuessing() {
+        val factory = PuzzleFactory()
+        val grader = Grader()
+        val rnd = Random(4711)
+        for (level in Level.entries) {
+            repeat(perLevel) {
+                val puzzle = factory.generate(level, rnd)
+                val grade = grader.grade(puzzle.givens)
+                assertTrue(
+                    "$level mit ${puzzle.clueCount} Vorgaben braucht Raten: ${puzzle.toLine()}",
+                    grade.solvableWithoutGuessing,
+                )
+            }
+        }
+    }
+
+    /**
+     * The four bands must actually be different, not just differently labelled --
+     * and each one must be what [Level] says it is. This is what would break first
+     * if the directed digging in [Digger] regressed.
      */
     @Test
     fun theLevelBandsAreDistinct() {
         val factory = PuzzleFactory()
+        val grader = Grader()
         val rnd = Random(5)
         repeat(perLevel) {
             val easy = factory.generate(Level.EASY, rnd)
@@ -76,7 +104,21 @@ class GeneratorTest {
 
             val hard = factory.generate(Level.HARD, rnd)
             if (hard.level == Level.HARD) {
-                assertTrue("hard must outlast singles", !singles.solves(hard.givens, true))
+                val hardest = grader.grade(hard.givens).hardest!!
+                assertTrue("hard must outlast singles", hardest.score > Technique.NAKED_SINGLE.score)
+                assertTrue(
+                    "hard must not need more than a subset, needed $hardest",
+                    hardest.score <= Technique.HIDDEN_TRIPLE.score,
+                )
+            }
+
+            val expert = factory.generate(Level.EXPERT, rnd)
+            if (expert.level == Level.EXPERT) {
+                val hardest = grader.grade(expert.givens).hardest!!
+                assertTrue(
+                    "expert must need a fish, colouring or a wing, needed $hardest",
+                    hardest.score >= Technique.X_WING.score,
+                )
             }
         }
     }
@@ -130,21 +172,35 @@ class GeneratorTest {
         }
     }
 
-    /** Removing one more clue from a generated puzzle must break uniqueness. */
+    /**
+     * Nothing more can be taken out.
+     *
+     * Minimality used to mean "removing any clue breaks uniqueness", and that is no
+     * longer the claim: the digger stops when the *band* breaks, which happens well
+     * before ambiguity does. The honest statement, and the one the digger really
+     * guarantees, is that every remaining clue is load-bearing for one of the two
+     * reasons -- take it away and the puzzle either stops having one solution or
+     * stops being solvable without guessing.
+     *
+     * Checked on [Level.EXPERT], the band dug to the very limit of the ladder.
+     */
     @Test
-    fun hardPuzzlesAreMinimal() {
+    fun noFurtherClueCanBeRemovedFromAnExpertPuzzle() {
         val factory = PuzzleFactory()
+        val grader = Grader()
         val rnd = Random(8)
         repeat(if (deep) 20 else 3) {
-            val puzzle = factory.generate(Level.HARD, rnd)
+            val puzzle = factory.generate(Level.EXPERT, rnd)
             val givens = puzzle.givens.copyOf()
             for (c in 0 until 81) {
                 if (givens[c] == 0) continue
                 val saved = givens[c]
                 givens[c] = 0
+                val ambiguous = solver.countSolutions(givens, limit = 2) > 1
+                val needsGuessing = !grader.grade(givens).solvableWithoutGuessing
                 assertTrue(
-                    "cell $c could still be removed -- puzzle was not minimal",
-                    solver.countSolutions(givens, limit = 2) > 1,
+                    "Feld $c haette auch noch weg gekonnt -- weder mehrdeutig noch unloesbar",
+                    ambiguous || needsGuessing,
                 )
                 givens[c] = saved
             }

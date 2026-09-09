@@ -3,12 +3,15 @@ package name.lechners.sudomnia.rules
 /**
  * Solves using nothing but singles -- and reports whether that was enough.
  *
- * This is the oracle the digger uses to aim at a difficulty band (see [Digger]).
+ * This is the oracle the digger uses for the two singles-only bands (see [Digger]).
  * "Can a human finish this by only ever spotting a forced cell?" is exactly the
  * line between the easy tiers and everything above them.
  *
- * In the full build this class becomes the bottom rung of the real technique
- * ladder, so none of it is throwaway code.
+ * [HumanSolver] capped at [Technique.NAKED_SINGLE] answers the same question, and
+ * this class stays anyway: it runs [Grid.propagate], which chases the consequences
+ * of a placement in one pass instead of rescanning the whole grid for one step at a
+ * time. The digger asks the question once per removed cell, ~80 times per puzzle, so
+ * the difference is the generator's response time on a tablet.
  *
  * Not thread-safe -- one instance per thread.
  */

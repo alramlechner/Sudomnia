@@ -6,6 +6,21 @@ Versionierung nach [SemVer](https://semver.org/lang/de/).
 ## [Unveroeffentlicht] – Vorbereitung auf Veröffentlichung
 
 ### Neu
+- **Die Technikleiter ist da.** `HumanSolver` loest ein Raetsel so, wie ein Mensch es
+  taete: Hidden/Naked Single, Locked Candidates, Naked/Hidden Pair und Triple, X-Wing,
+  Swordfish, Simple Colouring, XY-Wing -- und **nie durch Raten**. Die hoechste dabei
+  noetige Technik ist die Stufe (`Grader`), gemessen statt geschaetzt.
+- **Vier Stufen** statt drei: Leicht, Mittel, Schwer, Experte. "vorlaeufig" ist aus der
+  Kopfzeile verschwunden, dafuer steht dort jetzt die Zahl der Vorgaben.
+
+### Behoben
+- **Raetsel, die Raten verlangten.** Die alte Stufe "Schwer" hiess nur "Singles
+  genuegen nicht" und nahm sonst alles, was eindeutig war -- gemessen an 150 solchen
+  Raetseln waren **53 % mit keiner menschlichen Technik loesbar**. Der Digger nimmt
+  eine Entfernung jetzt zurueck, sobald die Leiter das Raetsel nicht mehr zu Ende
+  bringt.
+
+### Neu (Veröffentlichung)
 - **Englisch als Standardsprache**, Deutsch als Uebersetzung (`values-de`). Die App
   war bis hier nur deutsch.
 - **Zwei Varianten** (`play`, `selfhosted`). Die Play-Fassung enthaelt die

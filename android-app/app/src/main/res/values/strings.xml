@@ -14,9 +14,12 @@
     <string name="level_easy">Easy</string>
     <string name="level_medium">Medium</string>
     <string name="level_hard">Hard</string>
-    <!-- Prototype: the levels come from a singles-only oracle, not from the real
-         technique grader. Say so, so that testing does not build wrong expectations. -->
-    <string name="level_provisional">provisional</string>
+    <string name="level_expert">Expert</string>
+
+    <plurals name="clue_count">
+        <item quantity="one">%1$d clue</item>
+        <item quantity="other">%1$d clues</item>
+    </plurals>
 
     <string name="generating">Generating puzzle…</string>
     <string name="pad_notes">Notes</string>

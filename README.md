@@ -10,8 +10,8 @@ ausschließlich für die Update-Prüfung benutzt (siehe „Updates").
 ## Stand
 
 Spielbar: Gitter, Ziffernpad, Notizen (Bleistift-Kandidaten), Undo/Redo, Zweige
-(Versuch auf Probe), Timer mit Pause, Gelöst-Erkennung, drei Schwierigkeitsstufen, App-Icon,
-signierter Release-Build, Auto-Update.
+(Versuch auf Probe), Timer mit Pause, Gelöst-Erkennung, vier gemessene
+Schwierigkeitsstufen, App-Icon, signierter Release-Build, Auto-Update.
 
 **Eingabe: erst das Feld, dann die Entscheidung.** Unter dem Brett stehen zwei Reihen —
 oben die großen Ziffern (eintragen, nochmal tippen löscht wieder), darunter die kleinen
@@ -53,10 +53,21 @@ Die wichtigste ist die Konfliktanzeige — sie sagt dir sofort, ob eine Ziffer i
 schweigt, und du merkst es erst, wenn das Gitter nicht aufgeht. Die Einstellungen
 überleben den App-Neustart.
 
-**Die Stufen sind vorläufig.** Sie kommen aus einem Solver, der nur „Singles" kennt.
-Die echte Bewertung braucht eine Bibliothek menschlicher Lösetechniken (Naked/Hidden
-Pairs, Locked Candidates, X-Wing, XY-Wing, Colouring, Unique Rectangle …); die ist
-noch nicht gebaut. Bis dahin sagt die App im Kopfbereich ehrlich „vorläufig".
+**Vier Stufen, und sie sind gemessen.** Die App löst jedes Rätsel vor der Ausgabe so,
+wie ein Mensch es täte — nur mit Techniken, die sich in einem Satz erklären lassen —
+und die höchste dabei nötige Technik ist die Stufe:
+
+| Stufe | Was sie verlangt |
+|---|---|
+| **Leicht** | nur Singles, und mindestens 36 Vorgaben bleiben stehen |
+| **Mittel** | nur Singles, aber so tief ausgegraben, wie es geht |
+| **Schwer** | Locked Candidates oder ein Paar/Tripel |
+| **Experte** | X-Wing, Simple Colouring oder XY-Wing |
+
+**Kein Rätsel verlangt Raten.** Das ist neu und war vorher nicht so: gemessen an 150
+Rätseln der alten „Schwer"-Stufe waren **53 % mit keiner menschlichen Technik lösbar**.
+Wer dort feststeckte, konnte nicht wissen, ob er etwas übersieht oder ob es nichts zu
+sehen gibt. Der Generator gräbt jetzt nur so tief, wie die Technikleiter noch mitkommt.
 
 Die **Oberfläche gibt es auf Englisch und Deutsch**; Englisch ist der Standard, Deutsch
 kommt automatisch auf einem deutschsprachigen Gerät.

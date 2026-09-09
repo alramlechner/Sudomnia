@@ -24,6 +24,7 @@ class Digger {
 
     private val solver = Solver()
     private val singles = SinglesSolver()
+    private val grader = Grader()
     private val order = IntArray(Units.CELLS) { it }
 
     fun dig(full: IntArray, level: Level, rnd: Random): IntArray {
@@ -44,20 +45,31 @@ class Digger {
     }
 
     /**
-     * Classifies an existing puzzle. Cheap: two runs of the singles oracle.
+     * Classifies an existing puzzle by solving it the way a person would.
      *
-     * Used to label what actually came out of [dig], so the level shown to the
-     * player is measured rather than intended.
+     * Used to label what actually came out of [dig], so the level shown to the player
+     * is measured rather than intended. Falls back to [Level.EXPERT] for a puzzle the
+     * ladder cannot finish -- [dig] does not produce those any more, but a puzzle
+     * restored from an old saved game might be one.
      */
-    fun classify(givens: IntArray): Level = when {
-        !singles.solves(givens, useHidden = true) -> Level.HARD
-        givens.count { it != 0 } >= EASY_MIN_CLUES -> Level.EASY
-        else -> Level.MEDIUM
-    }
+    fun classify(givens: IntArray): Level = grader.grade(givens).level ?: Level.EXPERT
 
+    /**
+     * May this puzzle keep the cell that was just emptied?
+     *
+     * The bound is the band's ceiling, so the check is as cheap as the band is easy:
+     * the singles-only bands never leave the fast propagation oracle, and only the
+     * expert band pays for the whole ladder on every removal.
+     *
+     * For [Level.EXPERT] the bound is not a ceiling but a floor of a different kind:
+     * the full ladder must still finish the puzzle. That is what keeps guessing out
+     * of the game -- more than half of the maximally dug puzzles this generator used
+     * to hand out as "hard" could not be finished by any technique at all.
+     */
     private fun allows(puzzle: IntArray, level: Level): Boolean = when (level) {
         Level.EASY, Level.MEDIUM -> singles.solves(puzzle, useHidden = true)
-        Level.HARD -> true
+        Level.HARD -> grader.solvesWithin(puzzle, Technique.HIDDEN_TRIPLE)
+        Level.EXPERT -> grader.solvesWithin(puzzle, Technique.entries.last())
     }
 
     /**

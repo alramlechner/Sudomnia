@@ -1,33 +1,45 @@
 package name.lechners.sudomnia.rules
 
 /**
- * Provisional difficulty bands.
+ * The four difficulty bands -- **measured**, not intended.
  *
- * These are *not* the real grading. The real one runs a solver that only uses
- * human techniques (naked/hidden pairs, locked candidates, X-Wing, XY-Wing,
- * colouring, ...) and scores which of them were needed. That is the expensive part
- * of the full build and is not here yet. The UI says "provisional" for exactly
- * this reason.
+ * Each band is defined by the hardest rung of [Technique] a puzzle actually needs,
+ * found by solving it the way a person would ([HumanSolver]). [Digger] aims at a band
+ * while digging and [Digger.classify] measures what came out, so the label the player
+ * sees cannot be a promise the puzzle does not keep.
  *
- * Until then:
+ * | Band | What it takes |
+ * |---|---|
+ * | [EASY] | singles only, and at least [Digger.EASY_MIN_CLUES] clues left standing |
+ * | [MEDIUM] | singles only, but dug as deep as uniqueness allows |
+ * | [HARD] | locked candidates or a subset (naked/hidden pair or triple) |
+ * | [EXPERT] | a fish, colouring or an XY-Wing -- X-Wing and above |
  *
- *  - [HARD]   singles are not enough -- some real technique is required
- *  - [EASY]   singles suffice *and* the puzzle keeps at least [Digger.EASY_MIN_CLUES]
- *             clues, so there is little to deduce
- *  - [MEDIUM] singles suffice, but the puzzle is dug as deep as that allows
+ * ### Every puzzle is solvable without guessing
+ *
+ * That is the promise this enum is built on, and it used to be broken: the old
+ * "hard" band accepted anything with a unique solution, and measurement showed
+ * **53 % of those could not be finished by any technique in the ladder** -- they
+ * needed forcing chains or, in practice, trial and error. The digger now takes a
+ * removal back if the ladder can no longer finish the puzzle, so the band is a
+ * statement about the reasoning required, not merely about how few clues are left.
+ *
+ * ### Why the clue count still appears, but only once
+ *
+ * The number of clues is a poor difficulty signal in general -- maximally dug
+ * singles-only puzzles and puzzles needing real techniques both sit at ~24.5 clues,
+ * so it does not separate the upper bands at all. It only separates [EASY] from
+ * [MEDIUM], where both fall to singles and the question is how many deductions there
+ * are to make: 36 clues means fewer than half the grid is blank.
  *
  * ### Why the band is not "naked singles" vs. "hidden singles"
  *
  * That was the first attempt and it is wrong. A naked single ("this cell has only
- * one candidate left") requires scanning all 20 peers of a cell and ruling out
- * eight digits. A hidden single ("this box has only one spot left for a 5") is
- * found by scanning three lines and is what every beginner's guide teaches first.
+ * one candidate left") requires scanning all 20 peers of a cell and ruling out eight
+ * digits. A hidden single ("this box has only one spot left for a 5") is found by
+ * scanning three lines and is what every beginner's guide teaches first.
  * Machine-cheap and human-cheap run in opposite directions here, so splitting the
- * easy tiers along that line would have labelled the *easier* puzzles harder.
- *
- * Clue count is a weak difficulty signal in general -- measurements on this
- * generator put maximally dug singles-only puzzles and puzzles needing real
- * techniques both at ~25 clues. It is only used *within* the singles-only class,
- * where it does separate "barely any deduction" from "a long chain of them".
+ * easy tiers along that line would have labelled the *easier* puzzles harder. The
+ * same argument shapes the order of [Technique] itself.
  */
-enum class Level { EASY, MEDIUM, HARD }
+enum class Level { EASY, MEDIUM, HARD, EXPERT }

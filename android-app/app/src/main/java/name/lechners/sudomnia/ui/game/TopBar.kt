@@ -10,6 +10,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,6 +27,7 @@ fun levelLabel(level: Level): String = stringResource(
         Level.EASY -> R.string.level_easy
         Level.MEDIUM -> R.string.level_medium
         Level.HARD -> R.string.level_hard
+        Level.EXPERT -> R.string.level_expert
     }
 )
 
@@ -54,15 +56,14 @@ fun TopBar(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
             )
-            // The level comes from a stand-in grader, so it says so. Hiding that
-            // would train the player to distrust the labels once the real one lands.
+            // The level is measured, not intended: it names the hardest technique the
+            // puzzle actually needs (see Level). Until 0.5.0 this line said
+            // "provisional", because the bands came from a singles-only stand-in.
             // Playing without aids is worth showing too: it is a harder game, and
             // nothing else on screen would tell you that afterwards.
             Text(
                 text = buildString {
-                    append(stringResource(R.string.level_provisional))
-                    append(" · ")
-                    append(clueCount)
+                    append(pluralStringResource(R.plurals.clue_count, clueCount, clueCount))
                     if (settings.allAidsOff) {
                         append(" · ")
                         append(stringResource(R.string.no_aids))

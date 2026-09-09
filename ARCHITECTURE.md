@@ -94,32 +94,60 @@ Test-Orakel* vorgesehen, nicht für die Produktion.
 
 ---
 
-## 3. Schwierigkeit — und was hier noch fehlt
+## 3. Schwierigkeit
 
-Die Anzahl der Vorgaben ist ein schlechter Indikator. Gemessen an diesem Generator:
+Die Anzahl der Vorgaben ist ein schlechter Indikator. Gemessen an diesem Generator
+landen maximal ausgegrabene Singles-Rätsel und Rätsel, die echte Techniken brauchen,
+**auf dieselbe Kommastelle** bei ~24,5 Vorgaben. Die Zahl trennt sie überhaupt nicht.
 
-| Stufe | Ø Vorgaben (200 Rätsel je Stufe) |
+Die Stufe kommt deshalb aus der **Technikleiter**: `HumanSolver` löst das Rätsel so,
+wie ein Mensch es täte — nur mit Techniken, die sich in einem Satz erklären lassen,
+und **ohne je zu raten**. Die höchste Sprosse, die dabei gebraucht wird, ist die
+Stufe (`Grader`).
+
+| Sprosse | Was man sieht |
 |---|---|
-| Leicht | 36,0 |
-| Mittel | 24,5 |
-| Schwer | 24,5 |
+| Hidden Single | in dieser Einheit ist nur noch ein Platz für die 5 |
+| Naked Single | in diesem Feld ist nur noch eine Ziffer möglich |
+| Locked Candidates | im Block liegt die 7 nur in einer Zeile → raus aus dem Rest der Zeile |
+| Naked Pair/Triple | zwei (drei) Felder teilen sich zwei (drei) Ziffern |
+| Hidden Pair/Triple | zwei (drei) Ziffern können nur in zwei (drei) Felder |
+| X-Wing, Swordfish | dieselbe Ziffer in denselben zwei (drei) Spalten zweier (dreier) Zeilen |
+| Simple Colouring | Zweierketten einer Ziffer, zweifarbig verfolgt |
+| XY-Wing | Angelpunkt {x,y} mit zwei Flügeln {x,z} und {y,z} |
 
-Maximal ausgegrabene Singles-Rätsel und Rätsel, die echte Techniken brauchen, landen
-**auf dieselbe Kommastelle** bei 24,5 Vorgaben. Die Zahl trennt sie überhaupt nicht.
+### Die vier Bänder
 
-### Die vorläufige Einteilung
+| Stufe | Regel | Ø Vorgaben | Ø Schritte | ms/Rätsel |
+|---|---|---|---|---|
+| **Leicht** | Singles genügen, ≥ 36 Vorgaben bleiben stehen | 36,0 | 45 | 2,3 |
+| **Mittel** | Singles genügen, maximal ausgegraben | 24,8 | 56 | 3,3 |
+| **Schwer** | Locked Candidates oder ein Subset nötig | 24,4 | 61 | 13,6 |
+| **Experte** | X-Wing, Colouring oder XY-Wing nötig | 24,8 | 63 | 25,5 |
 
-`Digger` gräbt nicht blind und sortiert hinterher ein, sondern **hört auf, wenn eine
-Schranke reißt** — dadurch ist jede Stufe ein einziger Durchlauf ohne Verwerfen:
+Gemessen über je 100 Rätsel mit `generator-cli --mode grade` auf einem Raspberry Pi 5.
+Das Werkzeug ist der Grund, dass hier Zahlen und keine Vermutungen stehen — nach jeder
+Änderung an `Digger`, `Technique` oder `HumanSolver` gehört es neu laufen gelassen.
 
-| Stufe | Regel | Ø Vorgaben |
-|---|---|---|
-| **Leicht** | Singles genügen, und es bleiben ≥ 36 Vorgaben stehen | 36 |
-| **Mittel** | Singles genügen, maximal ausgegraben | ~24 |
-| **Schwer** | Singles genügen **nicht** | ~25 |
+### Was die Leiter wirklich geändert hat
 
-`Digger.classify()` misst die Stufe am fertigen Rätsel nach. Die angezeigte Stufe ist
-also gemessen, nicht beabsichtigt — die Fabrik kann nicht danebenliegen.
+Nicht die Etiketten, sondern die Rätsel. Die alte „Schwer"-Stufe hieß „Singles
+genügen nicht" und nahm sonst alles, was eindeutig war. Die Messung über 150 solcher
+Rätsel: **53 % waren mit keiner Technik der Leiter lösbar** — sie verlangten
+Forcing Chains oder in der Praxis Raten. Der Spieler konnte nicht unterscheiden, ob er
+etwas übersieht oder ob es nichts zu sehen gibt.
+
+Der Digger nimmt eine Entfernung jetzt zurück, sobald die Leiter das Rätsel nicht mehr
+zu Ende bringt. **Jedes ausgelieferte Rätsel ist ohne Raten lösbar** — das ist die
+Zusage, auf der der „Zweig" (§4) als *freiwilliges* Werkzeug überhaupt erst Sinn ergibt.
+
+### Was das kostet
+
+Die Schranke ist zugleich die Abkürzung: der Digger prüft nach jeder Entfernung nur
+gegen die *Decke des angepeilten Bandes*. Leicht und Mittel bleiben deshalb beim
+schnellen Singles-Orakel (`SinglesSolver` mit `Grid.propagate`, ein Durchlauf statt
+Schritt für Schritt), und nur Experte bezahlt die volle Leiter — 25 ms je Rätsel,
+mit Erzeugung.
 
 ### Verworfen: „Naked Singles" vs. „Hidden Singles" als Stufengrenze
 
@@ -129,20 +157,18 @@ Feld hat nur noch einen Kandidaten") verlangt, alle 20 Nachbarn zu prüfen und a
 Ziffern auszuschließen. Ein Hidden Single („in diesem Block ist nur noch ein Platz für
 die 5") findet man durch Abscannen von drei Linien — es ist die erste Technik, die
 jede Anleitung zeigt. Maschinell billig und menschlich billig laufen hier
-gegeneinander.
+gegeneinander. Dieselbe Überlegung bestimmt die Reihenfolge in `Technique`.
 
-### Was noch kommt
+### Verworfen: Forcing Chains, Nice Loops, ALS
 
-Die echte Bewertung braucht einen Solver, der nur mit menschlichen Techniken löst und
-protokolliert, welche nötig waren (Naked/Hidden Pairs und Triples, Locked Candidates,
-X-Wing, Swordfish, XY-Wing, Simple Colouring, Unique Rectangle, Forcing Chains).
-Stufe = max(höchste benötigte Technik, Punktesumme). Als Nebenprodukt fällt die
-erklärende Hinweis-Funktion ab („Naked Pair {3,7} in Zeile 4, deshalb fällt die 3 in
-R4C8 weg") — das ist der eigentliche Grund, den Aufwand zu treiben.
+Sie lösen mehr Rätsel — aber die Erklärung für einen solchen Schritt ist ein Absatz,
+kein Satz. Ein Tipp, dem niemand folgen kann, ist schlechter als ein ehrliches „hier
+ist gerade nichts erzwungen". Rätsel, die sie brauchen, werden nicht ausgeliefert.
 
-`SinglesSolver` ist bereits die unterste Sprosse dieser Leiter, also kein Wegwerfcode.
-
----
+Uniqueness-Techniken (Unique Rectangle) fehlen aus einem anderen Grund: sie
+argumentieren mit „das Rätsel hat genau eine Lösung" — eine Tatsache über den
+Setzenden, nicht über das Gitter. Sie würden den Solver außerdem als *Prüfer* der
+Eindeutigkeit unbrauchbar machen, und genau dafür braucht ihn der Generator.
 
 ## 4. Die laufende Partie
 

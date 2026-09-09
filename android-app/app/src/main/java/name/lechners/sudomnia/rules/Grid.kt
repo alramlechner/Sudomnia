@@ -84,6 +84,22 @@ class Grid {
         return true
     }
 
+    /**
+     * Strikes a single candidate. @return true if it was still there.
+     *
+     * The counterpart to [place] for the human techniques: they argue a digit *out*
+     * of a cell without knowing what goes in instead. Leaving an empty candidate
+     * mask behind is a contradiction, but it is not this method's job to judge that
+     * -- [HumanSolver] checks it, because only the caller knows whether an empty
+     * cell means "the player wrote something wrong" or "this branch is refuted".
+     */
+    fun removeCandidate(cell: Int, digit: Int): Boolean {
+        val bit = Bits.of(digit)
+        if (digits[cell] != 0 || cand[cell] and bit == 0) return false
+        cand[cell] = cand[cell] and bit.inv()
+        return true
+    }
+
     /** True if [digit] may legally go into the (empty) [cell]. */
     fun canPlace(cell: Int, digit: Int): Boolean =
         digits[cell] == 0 && Bits.contains(cand[cell], digit)

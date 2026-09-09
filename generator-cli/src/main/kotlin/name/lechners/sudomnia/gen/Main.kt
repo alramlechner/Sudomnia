@@ -50,6 +50,21 @@ private fun stringArg(args: Array<String>, name: String, default: String): Strin
 }
 
 fun main(args: Array<String>) {
+    // Drei Betriebsarten in einem Werkzeug, weil sie sich denselben Generator teilen:
+    //   bank   erzeugt den Raetsel-Vorrat (Vorgabe)
+    //   grade  misst die Technikleiter -- daher stammen die Zahlen in ARCHITECTURE.md
+    //   find   sucht ein Raetsel, das eine bestimmte Technik erzwingt (Test-Fixture)
+    when (stringArg(args, "--mode", "bank")) {
+        "grade" -> return grade(intArg(args, "--count", 200))
+        "find" -> return find(
+            name.lechners.sudomnia.rules.Technique.valueOf(stringArg(args, "--technique", "SWORDFISH")),
+            intArg(args, "--count", 5000),
+        )
+    }
+    bank(args)
+}
+
+private fun bank(args: Array<String>) {
     val totalCount = intArg(args, "--count", 10_000)
     val threadCount = intArg(args, "--threads", (Runtime.getRuntime().availableProcessors() - 1).coerceAtLeast(1))
     val outDir = File(stringArg(args, "--out", "generated-puzzles")).apply { mkdirs() }
