@@ -13,6 +13,12 @@ class BoardState(
     val givens: BooleanArray,
     val notes: IntArray,
     val conflicts: BooleanArray,
+    /**
+     * Per cell, the mask of pencil marks that clash with a digit already placed in a
+     * peer. All zero when conflict marking is switched off -- the same single gate
+     * as [conflicts].
+     */
+    val noteConflicts: IntArray,
     /** Cells written on trial in the open branch; all false when none is open. */
     val trial: BooleanArray,
     val selected: Int,
@@ -55,6 +61,7 @@ class BoardState(
             givens.contentEquals(other.givens) &&
             notes.contentEquals(other.notes) &&
             conflicts.contentEquals(other.conflicts) &&
+            noteConflicts.contentEquals(other.noteConflicts) &&
             trial.contentEquals(other.trial)
     }
 
@@ -63,6 +70,7 @@ class BoardState(
         h = 31 * h + givens.contentHashCode()
         h = 31 * h + notes.contentHashCode()
         h = 31 * h + conflicts.contentHashCode()
+        h = 31 * h + noteConflicts.contentHashCode()
         h = 31 * h + trial.contentHashCode()
         h = 31 * h + selected
         h = 31 * h + highlightDigit

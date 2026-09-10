@@ -106,7 +106,7 @@
     <string name="settings">Hilfen</string>
     <string name="settings_intro">Jede dieser Anzeigen nimmt dir einen Teil der Arbeit ab. Schalte ab, was du selbst machen willst.</string>
     <string name="setting_conflicts">Konflikte anzeigen</string>
-    <string name="setting_conflicts_hint">Zeigt sofort, ob eine Ziffer im Feld überhaupt möglich ist</string>
+    <string name="setting_conflicts_hint">Zeigt sofort, ob eine Ziffer im Feld überhaupt möglich ist — auch bei Notizen</string>
     <string name="setting_same_digit">Gleiche Ziffer hervorheben</string>
     <string name="setting_same_digit_hint">Färbt alle Felder mit derselben Ziffer wie das gewählte</string>
     <string name="setting_peers">Zeile, Spalte, Block hervorheben</string>

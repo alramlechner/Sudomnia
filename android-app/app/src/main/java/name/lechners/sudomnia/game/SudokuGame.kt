@@ -233,6 +233,38 @@ class SudokuGame(val puzzle: Puzzle) {
     }
 
     /**
+     * Per cell, the mask of pencil marks that cannot be right: some peer already
+     * holds that digit.
+     *
+     * Same statement as [conflicts], made about a note instead of an entry -- a
+     * digit that appears twice in one unit. The app is not comparing anything with
+     * the solution here; it is repeating a rule the player could read off the board
+     * themselves. That is why it hangs off the same setting.
+     *
+     * **Two notes of the same digit in one unit are not a conflict.** Both may still
+     * be candidates -- that is what a pencil mark is for. Only a note that clashes
+     * with a *placed* digit is impossible.
+     *
+     * Notes get cleared from all 20 peers when a digit is placed, so this can only
+     * catch a mark written after the fact: a 5 pencilled into a row that already
+     * contains one. Which is exactly the moment the player wants to be told.
+     */
+    fun noteConflicts(): IntArray {
+        val bad = IntArray(Units.CELLS)
+        for (c in 0 until Units.CELLS) {
+            val marks = notes[c]
+            if (marks == 0 || valueAt(c) != 0) continue
+            var taken = 0
+            for (p in Units.peers[c]) {
+                val v = valueAt(p)
+                if (v != 0) taken = taken or Bits.of(v)
+            }
+            bad[c] = marks and taken
+        }
+        return bad
+    }
+
+    /**
      * How often each digit 1..9 still has to be placed; index 0 is unused.
      * Drives the "this digit is done" state of the keypad.
      */

@@ -394,6 +394,11 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         val realConflicts = g.conflicts()
         val shown =
             if (settings.showConflicts) realConflicts else BooleanArray(Units.CELLS)
+        // Pencil marks go through the very same gate. They are not computed unless
+        // they are shown -- unlike the entries, whose conflicts the solved detection
+        // needs either way.
+        val shownNoteConflicts =
+            if (settings.showConflicts) g.noteConflicts() else IntArray(Units.CELLS)
 
         val full = g.isFull()
         val solved = g.isSolved()
@@ -428,6 +433,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
                 givens = BooleanArray(Units.CELLS) { g.isGiven(it) },
                 notes = g.notes.copyOf(),
                 conflicts = shown,
+                noteConflicts = shownNoteConflicts,
                 trial = trial,
                 selected = selected,
                 highlightDigit = highlight,

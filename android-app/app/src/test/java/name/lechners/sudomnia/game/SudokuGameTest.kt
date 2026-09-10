@@ -213,6 +213,75 @@ class SudokuGameTest {
         assertTrue(bad[peer])
     }
 
+    // --- Konflikte in Notizen ------------------------------------------------
+
+    /**
+     * A pencil mark that clashes with a digit already on the board is impossible, and
+     * with conflict marking on the app says so. Placing a digit clears it from the
+     * peers' notes, so the only way to get one is to write it afterwards -- which is
+     * exactly the mistake worth catching.
+     */
+    @Test
+    fun aNoteThatClashesWithAPlacedDigitIsReported() {
+        val game = newGame()
+        val cell = firstEmpty(game)
+        val peer = Units.peers[cell].first { !game.isGiven(it) && it != cell }
+
+        game.setDigit(cell, 6)
+        game.toggleNote(peer, 6)
+        // Eine Ziffer, die in der Nachbarschaft des Feldes wirklich noch frei ist --
+        // sonst prueft der zweite Teil des Tests nur die Vorgaben des Raetsels.
+        val free = (1..9).first { d -> d != 6 && Units.peers[peer].none { game.valueAt(it) == d } }
+        game.toggleNote(peer, free)
+
+        val bad = game.noteConflicts()
+        assertTrue("die 6 ist in dieser Einheit vergeben", Bits.contains(bad[peer], 6))
+        assertFalse("die $free nicht", Bits.contains(bad[peer], free))
+    }
+
+    /** Two pencil marks of the same digit in one unit are both still possible. */
+    @Test
+    fun twoNotesOfTheSameDigitInAUnitAreNotAConflict() {
+        val game = newGame()
+        val cells = (0 until Units.CELLS).filter { !game.isGiven(it) }
+        val a = cells.first()
+        val b = Units.peers[a].first { !game.isGiven(it) }
+        // A digit that is not yet placed anywhere near either cell.
+        val digit = (1..9).first { d ->
+            Units.peers[a].none { game.valueAt(it) == d } && Units.peers[b].none { game.valueAt(it) == d }
+        }
+        game.toggleNote(a, digit)
+        game.toggleNote(b, digit)
+
+        val bad = game.noteConflicts()
+        assertEquals(0, bad[a])
+        assertEquals(0, bad[b])
+    }
+
+    /** A given counts as a placed digit, exactly like a player's entry. */
+    @Test
+    fun aNoteThatClashesWithAGivenIsReported() {
+        val game = newGame()
+        val clue = (0 until Units.CELLS).first { game.isGiven(it) }
+        val empty = Units.peers[clue].first { !game.isGiven(it) }
+        game.toggleNote(empty, game.valueAt(clue))
+        assertTrue(Bits.contains(game.noteConflicts()[empty], game.valueAt(clue)))
+    }
+
+    /** Undo takes the mark back, so the conflict has to go with it. */
+    @Test
+    fun theNoteConflictDisappearsWithTheNote() {
+        val game = newGame()
+        val cell = firstEmpty(game)
+        val peer = Units.peers[cell].first { !game.isGiven(it) && it != cell }
+        game.setDigit(cell, 3)
+        game.toggleNote(peer, 3)
+        assertTrue(game.noteConflicts()[peer] != 0)
+
+        game.undo()
+        assertEquals(0, game.noteConflicts()[peer])
+    }
+
     @Test
     fun remainingCountsDownAsDigitsArePlaced() {
         val game = newGame()

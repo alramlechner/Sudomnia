@@ -75,6 +75,9 @@ private class BoardPaints {
     val note = textPaint(Typeface.DEFAULT)
     val noteHighlight = textPaint(Typeface.DEFAULT_BOLD)
 
+    /** A pencil mark that clashes with a placed digit. */
+    val noteConflict = textPaint(Typeface.DEFAULT_BOLD)
+
     /** Struck-out candidates from a hint -- drawn with a line through them. */
     val noteStruck = textPaint(Typeface.DEFAULT_BOLD).apply { strokeWidth = 2f }
 
@@ -131,6 +134,8 @@ private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: 
     paints.note.color = InkNote.toArgb()
     paints.noteHighlight.textSize = geo.cellSize * 0.26f
     paints.noteHighlight.color = InkNoteHighlight.toArgb()
+    paints.noteConflict.textSize = geo.cellSize * 0.26f
+    paints.noteConflict.color = InkConflict.toArgb()
 
     // The candidates a hint strikes out, drawn in the note grid whether or not the
     // player pencilled them in.
@@ -178,7 +183,14 @@ private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: 
                 // a placed one. Without it, selecting a 2 lights up the placed 2s but
                 // leaves the pencilled 2s -- usually the ones actually being reasoned
                 // about -- to be hunted for by eye.
-                val paint = if (d == state.highlightDigit) paints.noteHighlight else paints.note
+                // A mark that is already impossible is shown as one -- same red as a
+                // clashing entry, and it outranks the same-digit highlight: "this is
+                // wrong" beats "this is what you were looking for".
+                val paint = when {
+                    Bits.contains(state.noteConflicts[cell], d) -> paints.noteConflict
+                    d == state.highlightDigit -> paints.noteHighlight
+                    else -> paints.note
+                }
                 val nCol = (d - 1) % 3
                 val nRow = (d - 1) / 3
                 val nx = geo.left(col) + (nCol + 0.5f) * step

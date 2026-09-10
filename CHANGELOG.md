@@ -3,6 +3,15 @@
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [Unveroeffentlicht]
+
+### Behoben
+- **Die Konfliktanzeige uebersah Notizen.** Sie markierte nur gesetzte Ziffern; ein
+  Bleistift-Kandidat, dessen Ziffer in der Zeile, der Spalte oder dem Block schon
+  steht, blieb unauffaellig. Jetzt wird er rot -- dieselbe Aussage ueber dieselbe
+  Regel. Zwei *Notizen* derselben Ziffer in einer Einheit bleiben zulaessig, dafuer
+  sind Notizen da.
+
 ## [0.5.0] – 2026-09-09
 
 ### Neu

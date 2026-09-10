@@ -52,7 +52,9 @@ Zweig und die Spielzeit überleben das Beenden der App.
 **Alle Hilfen sind abschaltbar** (Kopfzeile → „Hilfen"): Konfliktanzeige, Hervorhebung
 gleicher Ziffern, Hervorhebung von Zeile/Spalte/Block, Ausgrauen fertiger Ziffern.
 Die wichtigste ist die Konfliktanzeige — sie sagt dir sofort, ob eine Ziffer im Feld
-überhaupt möglich ist, und nimmt dir damit die halbe Denkarbeit ab. Aus heißt: die App
+überhaupt möglich ist, und nimmt dir damit die halbe Denkarbeit ab. Sie gilt auch für
+**Notizen**: ein Kandidat, dessen Ziffer in Zeile, Spalte oder Block schon steht, wird
+rot. Aus heißt: die App
 schweigt, und du merkst es erst, wenn das Gitter nicht aufgeht. Die Einstellungen
 überleben den App-Neustart.
 

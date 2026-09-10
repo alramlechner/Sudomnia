@@ -222,6 +222,15 @@ doppelt vorkommt — eine Aussage über die Regeln, die der Spieler selbst treff
 Ein Abgleich mit der gespeicherten Lösung wäre etwas anderes: die App würde das Rätsel
 still mitlösen. Diese Grenze ist Absicht.
 
+**Auch Notizen.** `noteConflicts()` markiert einen Bleistift-Kandidaten, dessen Ziffer
+in der Nachbarschaft schon gesetzt ist — dieselbe Aussage über dieselbe Regel, nur über
+eine Notiz statt über eine Eingabe. Zwei *Notizen* derselben Ziffer in einer Einheit
+sind dagegen kein Konflikt: beide dürfen Kandidaten sein, dafür sind Notizen da.
+
+Die Lücke gab es nur, weil das Setzen einer Ziffer sie aus den Notizen aller 20
+Nachbarn streicht — ein unmöglicher Kandidat kann also nur entstehen, wenn er
+*nachträglich* notiert wird. Genau in dem Moment will man es wissen.
+
 `isSolved()` prüft „voll und konfliktfrei" und konsultiert die Lösung ebenfalls nicht —
 bei einem eindeutig lösbaren Rätsel ist das dasselbe.
 
@@ -332,7 +341,9 @@ ist, und erledigt damit die halbe Denkarbeit. Aus heißt, dass die App schweigt.
 
 **Es gibt genau ein Gate.** Die Konflikte werden immer berechnet — die Gelöst-Erkennung
 braucht sie —, aber `SudokuViewModel.publish()` reicht dem Brett bei abgeschalteter
-Anzeige ein durchweg leeres Array; das Brett erfährt den Unterschied nie. Diese
+Anzeige ein durchweg leeres Array; das Brett erfährt den Unterschied nie. Die
+Notiz-Konflikte laufen durch dasselbe Gate und werden bei abgeschalteter Anzeige gar
+nicht erst berechnet: sie sind, anders als die der Eingaben, für nichts anderes gut. Diese
 Entscheidung im ViewModel zu treffen statt im Zeichencode bedeutet, dass es genau eine
 Stelle gibt, an der die App die Lösung verraten könnte, statt einer pro Zeichendurchgang.
 
