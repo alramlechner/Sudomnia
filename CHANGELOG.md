@@ -3,7 +3,7 @@
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [SemVer](https://semver.org/lang/de/).
 
-## [Unveroeffentlicht]
+## [0.5.1] – 2026-09-10
 
 ### Behoben
 - **Die Konfliktanzeige uebersah Notizen.** Sie markierte nur gesetzte Ziffern; ein
