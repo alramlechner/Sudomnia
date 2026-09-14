@@ -3,6 +3,21 @@
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [0.6.0] – 2026-09-14
+
+### Neu
+- **Warnung vor falschen Eingaben** -- die fuenfte Hilfe, und die einzige, die
+  standardmaessig **aus** ist. Eingeschaltet vergleicht sie jede gesetzte Ziffer mit der
+  Loesung und sagt sofort Bescheid. Die vier anderen Hilfen reden ueber die *Regeln*,
+  diese liest die *Antwort* -- deshalb kostet sie etwas: **drei falsche Eingaben beenden
+  die Partie.** Die Warnung zaehlt die verbleibenden Versuche laut mit, damit die dritte
+  keine Ueberraschung ist, und der Hinweis im Einstellungsdialog nennt den Preis, bevor
+  man den Schalter umlegt.
+- Im **Zweig** wird nicht geprueft: dort *soll* eine Annahme falsch sein duerfen.
+  Rueckgaengig gibt einen verbrauchten Versuch nicht zurueck -- sonst waere der Preis
+  keiner --, und der Zaehler steht im Spielstand, also bringt auch ein Neustart der App
+  keine frischen Versuche.
+
 ## [0.5.1] – 2026-09-10
 
 ### Behoben

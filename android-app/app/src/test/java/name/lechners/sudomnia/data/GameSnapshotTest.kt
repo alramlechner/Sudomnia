@@ -24,6 +24,7 @@ class GameSnapshotTest {
         aidsUsed = true,
         counted = false,
         branchAt = game.branchStart,
+        mistakes = 2,
     )
 
     /**
@@ -119,6 +120,34 @@ class GameSnapshotTest {
         assertEquals(-1, back.branchAt)
         assertEquals(1, back.applied)
         assertEquals(1, back.edits.size)
+        assertTrue(back.toGame() != null)
+    }
+
+    /**
+     * The strikes already used are part of the game. Losing them on a restart would
+     * turn closing the app into a way of buying three fresh attempts.
+     */
+    @Test
+    fun theMistakeCountSurvivesTheRoundTrip() {
+        val game = SudokuGame(PuzzleFactory().generate(Level.EASY, Random(11)))
+        assertEquals(2, GameSnapshot.decode(snapshotOf(game).encode())!!.mistakes)
+    }
+
+    /**
+     * Version 2 had no mistake count. It is read as "none yet" rather than dropped --
+     * whoever updates mid-puzzle keeps the puzzle, and starting them on three fresh
+     * attempts is the forgiving way to be wrong about it.
+     */
+    @Test
+    fun aVersionTwoSnapshotStillLoads() {
+        val game = SudokuGame(PuzzleFactory().generate(Level.EASY, Random(12)))
+        game.setDigit((0 until Units.CELLS).first { !game.isGiven(it) }, 7)
+        val v3 = snapshotOf(game).encode().split("|")
+        val v2 = (listOf("2") + v3.subList(1, 10) + v3.last()).joinToString("|")
+
+        val back = GameSnapshot.decode(v2)!!
+        assertEquals(0, back.mistakes)
+        assertEquals(1, back.applied)
         assertTrue(back.toGame() != null)
     }
 

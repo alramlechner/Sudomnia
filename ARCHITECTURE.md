@@ -220,7 +220,10 @@ falsch", das dem Spieler die Arbeit abnähme, die er gerade tun wollte.
 **Konflikte, keine Fehler.** Markiert wird eine Ziffer, die in Zeile, Spalte oder Block
 doppelt vorkommt — eine Aussage über die Regeln, die der Spieler selbst treffen könnte.
 Ein Abgleich mit der gespeicherten Lösung wäre etwas anderes: die App würde das Rätsel
-still mitlösen. Diese Grenze ist Absicht.
+still mitlösen. Diese Grenze ist Absicht — und sie gilt in `SudokuGame` weiterhin
+ausnahmslos. Überschreiten kann sie nur der Spieler selbst, indem er die Warnung vor
+falschen Eingaben einschaltet (§7); der Vergleich steht dann im ViewModel, nicht im
+Modell.
 
 **Auch Notizen.** `noteConflicts()` markiert einen Bleistift-Kandidaten, dessen Ziffer
 in der Nachbarschaft schon gesetzt ist — dieselbe Aussage über dieselbe Regel, nur über
@@ -320,9 +323,10 @@ dazu); bei jeder Unstimmigkeit wird der Spielstand verworfen statt halb kaputt g
 Gelesen wird **synchron im ViewModel-Konstruktor**, aus demselben Grund wie die
 Einstellungen — sonst blitzt beim Start kurz ein neues Rätsel auf.
 
-Ein offener Zweig ist eine einzelne Zahl in diesem Datensatz (die Marke), Format
-Version 2. Version 1 wird weiterhin gelesen und bekommt „kein Zweig" — wer beim Update
-mitten im Rätsel steckt, verliert es sonst für ein Feld, das es damals nicht gab.
+Ein offener Zweig ist eine einzelne Zahl in diesem Datensatz (die Marke), der Fehlerzähler
+der Warnung (§7) eine zweite; das ist Format Version 3. Die Versionen 1 und 2 werden
+weiterhin gelesen und bekommen „kein Zweig" beziehungsweise „noch keine Fehler" — wer beim
+Update mitten im Rätsel steckt, verliert es sonst für ein Feld, das es damals nicht gab.
 
 `onBoardChanged()` ist der einzige Trichter für Brettänderungen und besitzt drei Dinge, die
 nicht verstreut werden dürfen: der Tipp verfällt (einer gegen ein älteres Brett gerechnet
@@ -338,6 +342,41 @@ hervorheben, fertige Ziffern im Ziffernpad ausgrauen.
 
 Die erste ist die eigentliche: sie sagt sofort, ob eine Ziffer im Feld überhaupt möglich
 ist, und erledigt damit die halbe Denkarbeit. Aus heißt, dass die App schweigt.
+
+### Die fünfte Hilfe ist von anderer Art
+
+`warnOnWrong` vergleicht jede Eingabe mit der gespeicherten Lösung und sagt sofort, wenn
+sie abweicht. Die vier anderen reden über die *Regeln* — was dasteht, kann der Spieler
+selbst nachprüfen. Diese liest die *Antwort*. Daraus folgt alles Übrige:
+
+- **Sie ist als einzige standardmäßig aus.** Eine Hilfe, die mitlöst, gibt man niemandem,
+  der nicht danach gefragt hat.
+- **Sie kostet etwas.** Drei falsche Eingaben beenden die Partie (`game/MistakeTally.kt`,
+  `LIMIT = 3`). Ohne Preis wäre sie kein Kompromiss, sondern ein Solver mit Extraschritten:
+  man tippt durch, bis es grün bleibt. Der Hinweistext im Einstellungsdialog nennt den
+  Preis deshalb mit, und die Warnung zählt die verbleibenden Versuche laut mit — die
+  dritte darf keine Überraschung sein.
+- **Sie zählt in `allAidsOff` mit**, also verwirkt sie das Abzeichen „ohne Hilfen" wie
+  jede andere.
+
+**Gezählt wird in `onDigit`, nicht in `onBoardChanged`.** Durch den Trichter laufen auch
+Rückgängig, Wiederholen und das Verwerfen eines Zweiges — einen Zug zurückzuspielen ist
+aber nicht, ihn zu machen. Aus demselben Grund geht der Zähler nur nach oben: ließe sich
+ein Versuch per Rückgängig zurückkaufen, wäre der Preis keiner. Auf einem verlorenen Brett
+sind Rückgängig und Wiederholen deshalb tot, auf einem gelösten weiterhin nicht.
+
+**Im Zweig wird nicht geprüft.** Ein Zweig (§4) ist ausdrücklich eine Annahme, die falsch
+sein darf — das ist sein Zweck. Dafür einen Versuch abzuziehen, ließe die beiden Funktionen
+einander widersprechen.
+
+**Ein `finished` statt zweier Flags.** Uhr, Ziffernpad, Tipp, Pause und Zweigleiste fragen
+nicht mehr `solved`, sondern `GameUiState.finished` (`solved || lost`). Zwei Flags an sechs
+Stellen sind genau die Konstruktion, bei der eine davon vergessen wird und das Ziffernpad
+auf einem verlorenen Brett weiterläuft.
+
+Der Zähler steht im Spielstand (`GameSnapshot`, Format Version 3). Sonst wären drei neue
+Versuche nur einen App-Neustart entfernt. Version 2 wird weiter gelesen und bekommt „noch
+keine Fehler" — wer beim Update mitten im Rätsel steckt, soll es behalten.
 
 **Es gibt genau ein Gate.** Die Konflikte werden immer berechnet — die Gelöst-Erkennung
 braucht sie —, aber `SudokuViewModel.publish()` reicht dem Brett bei abgeschalteter

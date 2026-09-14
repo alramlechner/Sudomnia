@@ -16,6 +16,7 @@ import name.lechners.sudomnia.data.GameSnapshot
 import name.lechners.sudomnia.data.Settings
 import name.lechners.sudomnia.data.Stats
 import name.lechners.sudomnia.data.SudomniaPrefs
+import name.lechners.sudomnia.game.MistakeTally
 import name.lechners.sudomnia.game.SudokuGame
 import name.lechners.sudomnia.rules.Hint
 import name.lechners.sudomnia.rules.HintFinder
@@ -62,6 +63,8 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
     private var aidsCleanRun = true
     /** A hint is being computed. Guards against a double tap counting two hints. */
     private var hintPending = false
+    /** Per game: wrong entries so far. Only ever fed while [Settings.warnOnWrong] is on. */
+    private var mistakes = MistakeTally()
 
     /**
      * The two reasons the clock may stand still, kept apart on purpose.
@@ -95,6 +98,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         countedStart = true
         hintsUsed = saved.hintsUsed
         aidsCleanRun = !saved.aidsUsed
+        mistakes = MistakeTally(saved.mistakes)
         accumulatedMs = saved.elapsedMs
         publish()
         syncTimer()
@@ -130,6 +134,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             hintsUsed = 0
             aidsCleanRun = true
             hintPending = false
+            mistakes = MistakeTally()
             publish()
             saveGame()
             syncTimer()
@@ -149,13 +154,28 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
      *
      * Tapping the digit that is already there clears the cell -- that toggle lives
      * in [SudokuGame.setDigit] and is what makes the pressed-looking key honest.
+     *
+     * This is also where a wrong entry is caught, when the player asked for that
+     * (`Settings.warnOnWrong`). It has to be here and not in [onBoardChanged]: undo,
+     * redo and discarding a branch all go through that funnel, and replaying a move
+     * is not making it.
      */
     fun onDigit(digit: Int) {
         val g = game ?: return
+        if (mistakes.lost) return
         val cell = selected
         if (cell < 0 || g.isGiven(cell)) return
         g.setDigit(cell, digit)
-        onBoardChanged()
+
+        // Inside a trial branch nothing is checked. The branch exists precisely to
+        // assume a digit and follow where it leads, so a wrong one there is the tool
+        // working, not the player slipping -- charging a life for it would make the
+        // two features contradict each other.
+        val before = mistakes
+        if (settings.warnOnWrong && !g.inBranch) {
+            mistakes = mistakes.after(g.valueAt(cell), g.puzzle.solution[cell])
+        }
+        onBoardChanged(wrongCell = if (mistakes != before) cell else -1)
     }
 
     /** Adds or removes a single pencil mark on the selected cell. */
@@ -321,10 +341,14 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
      * It owns three things that must not be spread out: a hint expires (one computed
      * against an older board is not merely stale, it can be wrong), the win is counted
      * exactly once, and the game is saved.
+     *
+     * @param wrongCell set by [onDigit] when that entry was the wrong digit. It is
+     *   cleared by every other change, so the warning lasts exactly as long as the
+     *   position it was about.
      */
-    private fun onBoardChanged() {
+    private fun onBoardChanged(wrongCell: Int = -1) {
         val wasSolved = _ui.value.solved
-        _ui.value = _ui.value.copy(hint = null, hintDeadEnd = false)
+        _ui.value = _ui.value.copy(hint = null, hintDeadEnd = false, wrongCell = wrongCell)
 
         val g = game
         if (g != null && !countedStart) {
@@ -335,6 +359,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
 
         publish()
         if (!wasSolved && _ui.value.solved) onSolved()
+        if (mistakes.lost) syncTimer()
         saveGame()
     }
 
@@ -371,6 +396,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
                 aidsUsed = !aidsCleanRun,
                 counted = countedSolved,
                 branchAt = g.branchStart,
+                mistakes = mistakes.count,
             )
         )
     }
@@ -455,6 +481,8 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             inBranch = g.inBranch,
             branchCells = trial.count { it },
             solved = solved,
+            mistakes = mistakes.count,
+            lost = mistakes.lost,
             settings = settings,
             stats = stats,
             hintsUsed = hintsUsed,
@@ -486,7 +514,8 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
      */
     private fun syncTimer() {
         val g = game
-        if (g != null && !g.isSolved() && visible && !manuallyPaused) startTimer() else stopTimer()
+        val over = g == null || g.isSolved() || mistakes.lost
+        if (!over && visible && !manuallyPaused) startTimer() else stopTimer()
     }
 
     private fun startTimer() {

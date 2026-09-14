@@ -32,6 +32,14 @@
     <string name="solved_body">%1$s · %2$s</string>
     <string name="solved_new_game">Next puzzle</string>
 
+    <!-- Lost: only reachable with the wrong-entry warning switched on -->
+    <string name="lost_title">Game over</string>
+    <string name="lost_body">%1$d wrong entries.</string>
+    <plurals name="wrong_entry">
+        <item quantity="one">That digit is wrong. %1$d attempt left.</item>
+        <item quantity="other">That digit is wrong. %1$d attempts left.</item>
+    </plurals>
+
     <!-- Pause: stops the clock and hides the board -->
     <string name="paused_pause">Pause</string>
     <string name="paused_title">Paused</string>
@@ -113,6 +121,8 @@
     <string name="setting_peers_hint">Tints the units of the selected cell</string>
     <string name="setting_dim_digits">Dim finished digits</string>
     <string name="setting_dim_digits_hint">Greys out a digit on the keypad once it has been placed nine times</string>
+    <string name="setting_warn_wrong">Flag wrong entries</string>
+    <string name="setting_warn_wrong_hint">Checks every digit against the solution and says so straight away. %1$d wrong entries end the game.</string>
     <string name="settings_done">Done</string>
     <string name="no_aids">without aids</string>
     <string name="full_but_wrong">The grid is full, but not yet right.</string>

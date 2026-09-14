@@ -17,6 +17,16 @@ class SettingsTest {
     }
 
     /**
+     * The one aid that is off by default. It reads the stored solution rather than the
+     * rules, and switching it on is what makes a game losable -- that is not something
+     * to hand someone who never asked for it.
+     */
+    @Test
+    fun theWrongEntryWarningIsOffByDefault() {
+        assertFalse(Settings().warnOnWrong)
+    }
+
+    /**
      * The marker in the header must mean what it says: it may only appear when
      * nothing at all is being given away. One aid left on is still help.
      */
@@ -29,5 +39,6 @@ class SettingsTest {
         assertFalse(off.copy(highlightSameDigit = true).allAidsOff)
         assertFalse(off.copy(highlightPeers = true).allAidsOff)
         assertFalse(off.copy(dimCompletedDigits = true).allAidsOff)
+        assertFalse(off.copy(warnOnWrong = true).allAidsOff)
     }
 }

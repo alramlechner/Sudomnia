@@ -22,12 +22,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import name.lechners.sudomnia.R
 import name.lechners.sudomnia.data.Settings
+import name.lechners.sudomnia.game.MistakeTally
 import name.lechners.sudomnia.rules.Level
 import name.lechners.sudomnia.ui.board.SudokuBoard
 import name.lechners.sudomnia.ui.theme.AppBackground
@@ -75,7 +77,7 @@ fun GameScreen(
                 clueCount = state.clueCount,
                 elapsed = timer.format(),
                 settings = state.settings,
-                canPause = !state.generating && !state.solved && !state.paused,
+                canPause = !state.generating && !state.finished && !state.paused,
                 onPause = onPause,
                 onNewGame = { showLevelPicker = true },
                 onSettings = { showSettings = true },
@@ -90,6 +92,18 @@ fun GameScreen(
                 onAdvance = onHint,
                 onDismiss = onDismissHint,
             )
+
+            // The wrong-entry warning, and only while the entry is still the last
+            // thing that happened. It counts the strikes out loud: a warning that did
+            // not say what it costs would spring the third one as a surprise.
+            if (state.wrongCell >= 0 && !state.lost) {
+                val left = MistakeTally.LIMIT - state.mistakes
+                Text(
+                    text = pluralStringResource(R.plurals.wrong_entry, left, left),
+                    color = InkConflict,
+                    fontSize = 14.sp,
+                )
+            }
 
             // Only ever visible with conflict marking off. Says that something is
             // wrong without saying where -- otherwise finishing a grid incorrectly
@@ -143,7 +157,7 @@ fun GameScreen(
             BranchBar(
                 inBranch = state.inBranch,
                 cells = state.branchCells,
-                enabled = !state.generating && !state.solved && !state.paused,
+                enabled = !state.generating && !state.finished && !state.paused,
                 onBegin = onBeginBranch,
                 onCommit = onCommitBranch,
                 onDiscard = onDiscardBranch,
@@ -152,7 +166,7 @@ fun GameScreen(
             // Two permanent rows, no mode switch: pick a cell, then decide. The
             // rows go dead without an editable cell, which is how the order is
             // taught -- see Keypad.kt.
-            val canEdit = state.selectionEditable && !state.generating && !state.solved &&
+            val canEdit = state.selectionEditable && !state.generating && !state.finished &&
                 !state.paused
             DigitPad(
                 remaining = state.remaining,
@@ -180,14 +194,17 @@ fun GameScreen(
                 }
                 TextButton(
                     onClick = onHint,
-                    enabled = !state.generating && !state.solved && !state.paused,
+                    enabled = !state.generating && !state.finished && !state.paused,
                 ) {
                     Text(stringResource(R.string.hint))
                 }
-                TextButton(onClick = onUndo, enabled = state.canUndo) {
+                // Undo stays live on a solved board -- unsolving it is allowed, and the
+                // win is counted once either way. On a lost one it does not: three
+                // wrong entries you can take back are not three strikes.
+                TextButton(onClick = onUndo, enabled = state.canUndo && !state.lost) {
                     Text(stringResource(R.string.undo))
                 }
-                TextButton(onClick = onRedo, enabled = state.canRedo) {
+                TextButton(onClick = onRedo, enabled = state.canRedo && !state.lost) {
                     Text(stringResource(R.string.redo))
                 }
             }
@@ -197,6 +214,14 @@ fun GameScreen(
         // the only thing on screen is the way back.
         if (state.paused) {
             PauseOverlay(level = state.level, elapsed = timer.format(), onResume = onResume)
+        }
+
+        if (state.lost) {
+            LostOverlay(
+                level = state.level,
+                elapsed = timer.format(),
+                onNewGame = { showLevelPicker = true },
+            )
         }
 
         if (state.solved) {

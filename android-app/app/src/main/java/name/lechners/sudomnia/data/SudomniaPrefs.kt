@@ -34,6 +34,7 @@ class SudomniaPrefs(context: Context) {
             highlightSameDigit = prefs.getBoolean(KEY_SAME_DIGIT, d.highlightSameDigit),
             highlightPeers = prefs.getBoolean(KEY_PEERS, d.highlightPeers),
             dimCompletedDigits = prefs.getBoolean(KEY_DIM_DIGITS, d.dimCompletedDigits),
+            warnOnWrong = prefs.getBoolean(KEY_WARN_WRONG, d.warnOnWrong),
         )
     }
 
@@ -43,6 +44,7 @@ class SudomniaPrefs(context: Context) {
             putBoolean(KEY_SAME_DIGIT, settings.highlightSameDigit)
             putBoolean(KEY_PEERS, settings.highlightPeers)
             putBoolean(KEY_DIM_DIGITS, settings.dimCompletedDigits)
+            putBoolean(KEY_WARN_WRONG, settings.warnOnWrong)
             putInt(KEY_VERSION, CURRENT_VERSION)
         }
     }
@@ -100,14 +102,18 @@ class SudomniaPrefs(context: Context) {
     private companion object {
         const val FILE = "sudomnia"
         // 1: nur Einstellungen. 2: Statistik und laufendes Spiel kamen dazu -- beides
-        // war vorher nicht vorhanden, es ist also nichts zu wandeln.
-        const val CURRENT_VERSION = 2
+        // war vorher nicht vorhanden, es ist also nichts zu wandeln. 3: warnOnWrong,
+        // ein neuer Schalter mit Vorgabe "aus" -- der fehlende Schluessel liefert
+        // genau diese Vorgabe, zu wandeln ist also wieder nichts. Die Zahl haelt nur
+        // fest, dass dieser Stand den Schalter kennt.
+        const val CURRENT_VERSION = 3
 
         const val KEY_VERSION = "settings_version"
         const val KEY_CONFLICTS = "show_conflicts"
         const val KEY_SAME_DIGIT = "highlight_same_digit"
         const val KEY_PEERS = "highlight_peers"
         const val KEY_DIM_DIGITS = "dim_completed_digits"
+        const val KEY_WARN_WRONG = "warn_on_wrong"
         const val KEY_GAME = "current_game"
     }
 }

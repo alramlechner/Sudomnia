@@ -29,6 +29,8 @@ data class GameSnapshot(
     val counted: Boolean,
     /** Start of the open trial branch in the edit list, -1 if none. */
     val branchAt: Int = -1,
+    /** Wrong entries made so far; three end the game. */
+    val mistakes: Int = 0,
 ) {
 
     fun encode(): String = listOf(
@@ -42,6 +44,7 @@ data class GameSnapshot(
         if (aidsUsed) "1" else "0",
         if (counted) "1" else "0",
         branchAt.toString(),
+        mistakes.toString(),
         edits.joinToString(EDIT_SEP),
     ).joinToString(FIELD_SEP)
 
@@ -65,7 +68,7 @@ data class GameSnapshot(
     }
 
     companion object {
-        private const val VERSION = 2
+        private const val VERSION = 3
         private const val FIELD_SEP = "|"
         private const val EDIT_SEP = ";"
         private const val CHANGE_SEP = ","
@@ -79,10 +82,11 @@ data class GameSnapshot(
             if (text.isNullOrEmpty()) return null
             val f = text.split(FIELD_SEP)
             val version = f[0].toIntOrNull() ?: return null
-            // Version 1 knew no trial branch and had one field less. It is still read
-            // rather than dropped: whoever updates mid-puzzle keeps their game.
+            // Version 1 knew no trial branch, version 2 no mistake count -- one field
+            // less each. Both are still read rather than dropped: whoever updates
+            // mid-puzzle keeps their game.
             if (version !in 1..VERSION) return null
-            if (f.size != if (version == 1) 10 else 11) return null
+            if (f.size != when (version) { 1 -> 10; 2 -> 11; else -> 12 }) return null
             val level = Level.entries.firstOrNull { it.name == f[3] } ?: return null
             return GameSnapshot(
                 givens = f[1],
@@ -95,6 +99,7 @@ data class GameSnapshot(
                 aidsUsed = f[7] == "1",
                 counted = f[8] == "1",
                 branchAt = if (version == 1) -1 else f[9].toIntOrNull() ?: return null,
+                mistakes = if (version < 3) 0 else f[10].toIntOrNull() ?: return null,
             )
         }
     }

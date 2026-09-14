@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import name.lechners.sudomnia.BuildConfig
 import name.lechners.sudomnia.R
 import name.lechners.sudomnia.data.Settings
+import name.lechners.sudomnia.game.MistakeTally
 import name.lechners.sudomnia.ui.theme.TextPrimary
 import name.lechners.sudomnia.ui.theme.TextSecondary
 import androidx.compose.ui.platform.LocalContext
@@ -72,6 +73,19 @@ fun SettingsDialog(
                     hint = stringResource(R.string.setting_dim_digits_hint),
                     checked = settings.dimCompletedDigits,
                     onChange = { onChange(settings.copy(dimCompletedDigits = it)) },
+                )
+                // Last, and behind a rule of its own: the four above comment on the
+                // rules, this one reads the answer. The hint has to say what it costs,
+                // because switching it on is what makes the game losable.
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                AidSwitch(
+                    title = stringResource(R.string.setting_warn_wrong),
+                    hint = stringResource(
+                        R.string.setting_warn_wrong_hint,
+                        MistakeTally.LIMIT,
+                    ),
+                    checked = settings.warnOnWrong,
+                    onChange = { onChange(settings.copy(warnOnWrong = it)) },
                 )
                 HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
                 UpdateRow(

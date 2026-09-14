@@ -16,14 +16,20 @@ package name.lechners.sudomnia.data
  * @param highlightPeers tints the row, column and box of the selected cell
  * @param dimCompletedDigits greys out a keypad digit once it has been placed nine
  *   times -- a small piece of counting the app does for you
+ * @param warnOnWrong compares every entry against the stored solution and says so
+ *   when it differs. The only aid that reads the answer rather than the rules, which
+ *   is why it is the only one that is off by default -- and why it costs something:
+ *   three wrong entries end the game.
  */
 data class Settings(
     val showConflicts: Boolean = true,
     val highlightSameDigit: Boolean = true,
     val highlightPeers: Boolean = true,
     val dimCompletedDigits: Boolean = true,
+    val warnOnWrong: Boolean = false,
 ) {
     /** True if nothing is being given away -- drives the "no aids" marker in the UI. */
     val allAidsOff: Boolean
-        get() = !showConflicts && !highlightSameDigit && !highlightPeers && !dimCompletedDigits
+        get() = !showConflicts && !highlightSameDigit && !highlightPeers &&
+            !dimCompletedDigits && !warnOnWrong
 }

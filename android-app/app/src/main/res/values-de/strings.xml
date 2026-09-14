@@ -32,6 +32,14 @@
     <string name="solved_body">%1$s · %2$s</string>
     <string name="solved_new_game">Nächstes Rätsel</string>
 
+    <!-- Verloren: nur erreichbar, wenn die Warnung vor falschen Eingaben an ist -->
+    <string name="lost_title">Spiel verloren</string>
+    <string name="lost_body">%1$d falsche Eingaben.</string>
+    <plurals name="wrong_entry">
+        <item quantity="one">Diese Ziffer ist falsch. Noch %1$d Versuch.</item>
+        <item quantity="other">Diese Ziffer ist falsch. Noch %1$d Versuche.</item>
+    </plurals>
+
     <!-- Pause: haelt die Uhr an und blendet das Brett aus -->
     <string name="paused_pause">Pause</string>
     <string name="paused_title">Pausiert</string>
@@ -113,6 +121,8 @@
     <string name="setting_peers_hint">Färbt die Einheiten des gewählten Feldes</string>
     <string name="setting_dim_digits">Fertige Ziffern ausgrauen</string>
     <string name="setting_dim_digits_hint">Graut eine Ziffer im Ziffernpad aus, wenn sie neunmal gesetzt ist</string>
+    <string name="setting_warn_wrong">Falsche Eingaben melden</string>
+    <string name="setting_warn_wrong_hint">Prüft jede Ziffer gegen die Lösung und sagt sofort Bescheid. %1$d falsche Eingaben beenden das Spiel.</string>
     <string name="settings_done">Fertig</string>
     <string name="no_aids">ohne Hilfen</string>
     <string name="full_but_wrong">Das Gitter ist voll, aber noch nicht richtig.</string>

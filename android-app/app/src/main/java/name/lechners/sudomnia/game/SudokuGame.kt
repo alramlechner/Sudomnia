@@ -14,7 +14,12 @@ import name.lechners.sudomnia.rules.Units
  * compare against the stored solution, even though it has it. A conflict is a
  * statement about the rules that the player could have made themselves; flagging a
  * deviation from the solution would be the app quietly solving the puzzle for them.
- * That line is deliberate.
+ * That line is deliberate, and it still holds here.
+ *
+ * Crossing it is a thing the player can ask for by name -- `Settings.warnOnWrong`,
+ * off by default -- and even then it happens in the view model, against
+ * [MistakeTally], never in this class. Keeping the comparison out of the model is
+ * what stops it from leaking into the conflict marking, the solved test or the hint.
  *
  * ### Trial branches
  *

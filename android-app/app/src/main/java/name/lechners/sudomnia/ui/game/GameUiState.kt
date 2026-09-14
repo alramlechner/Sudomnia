@@ -40,6 +40,18 @@ data class GameUiState(
     /** How many cells carry a trial digit -- what the branch bar counts out. */
     val branchCells: Int = 0,
     val solved: Boolean = false,
+    /** Wrong entries this game, counted only while the warning aid is on. */
+    val mistakes: Int = 0,
+    /** The third wrong entry has been made: the game is over and nothing more can be entered. */
+    val lost: Boolean = false,
+    /**
+     * The cell the last entry got wrong, -1 if the last change was fine.
+     *
+     * It lives here rather than in [BoardState] because it is a message, not a colour:
+     * the board already draws the entry, and pointing at the cell would turn a one-line
+     * "that is not it" into a permanent "here is what to fix".
+     */
+    val wrongCell: Int = -1,
     val settings: Settings = Settings(),
     val stats: Stats = Stats.EMPTY,
     val hint: HintState? = null,
@@ -57,7 +69,16 @@ data class GameUiState(
      * which is the line the setting is about.
      */
     val fullButWrong: Boolean = false,
-)
+) {
+    /**
+     * The game is over, one way or the other.
+     *
+     * Everything that used to ask `solved` in order to go dead -- clock, keypad, hint,
+     * pause, branch bar -- asks this instead. Two flags to check in six places is how
+     * one of them gets forgotten and the keypad stays live on a lost board.
+     */
+    val finished: Boolean get() = solved || lost
+}
 
 /** How much of the current step has been revealed: where it is, then why. */
 enum class HintStage { LOCATE, REVEAL }
