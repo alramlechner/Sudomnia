@@ -1,9 +1,32 @@
 # Screenshots
 
-**Noch keine.** Sie fehlen als Einzige unter den Play-Assets, und sie sind das
-Einzige, was hier nicht erzeugt werden kann: Google verlangt Screenshots der
-echten App, und ein aus den Vektorquellen gerendertes Modell würde sie falsch
-darstellen. Sie müssen auf einem Gerät aufgenommen werden.
+Aufgenommen auf einem 10"-Tablet (1840 × 2944, ~340 dpi, Lenovo TB370FU) mit
+`adb exec-out screencap`. Nichts hier ist aus den Vektorquellen gerendert:
+Google verlangt Screenshots der echten App, und ein Modell würde sie falsch
+darstellen.
+
+## Tablet (`tablet/`)
+
+Sprachwechsel nur der App, nicht des Geräts, über
+`cmd locale set-app-locales name.lechners.sudomnia --user 0 --locales <de|en|es>`
+(Android 13+, kein Reboot, kein Geräte-Sprachwechsel nötig).
+
+| Datei | Zeigt |
+|---|---|
+| `01-notes-conflict-de.png` | Notizen in einer Zelle, eine davon rot markiert — Konflikt mit einer bereits gesetzten Ziffer in Zeile/Spalte/Block |
+| `02-hint-reasoning-de.png` | Ein Tipp mit ausgeschriebener Begründung ("Verstecktes Single — in Zeile 7 ist nur hier noch Platz für die 2") — **das Bild, das diese App von anderen unterscheidet** |
+| `03-branch-en.png` / `-de.png` / `-es.png` | Ein offener Zweig: die provisorische Ziffer (gelb/gold), die Leiste mit Verwerfen/Übernehmen — in allen drei Sprachen |
+| `04-aids-en.png` / `-de.png` / `-es.png` | Der Hilfen-Dialog, jeder Schalter einzeln abschaltbar — in allen drei Sprachen |
+| `05-stats-es.png` | Die Statistik mit den vier Stufen, echte Werte aus vorherigen Partien |
+
+**Seitenverhältnis:** alle Aufnahmen sind 1840 × 2944 (Verhältnis 1,6:1),
+damit unter Plays Grenze von 2:1 — kein Zuschnitt nötig.
+
+## Was noch fehlt
+
+- **Handy-Screenshots.** Play verlangt 2–8 Stück, mind. 320 px kurze Kante;
+  keiner der Tablet-Screenshots erfüllt das. Auf einem Handy-Gerät nachholen.
+- **7"-Tablet-Satz.** Play unterscheidet 7" von 10"; alles oben ist 10"-Klasse.
 
 ## Was Play verlangt
 
@@ -16,16 +39,6 @@ darstellen. Sie müssen auf einem Gerät aufgenommen werden.
 **Seitenverhältnis:** die lange Kante darf höchstens doppelt so lang sein wie die
 kurze. Ein Rohbild moderner Handys liegt oft bei 2,23:1 und fällt damit durch —
 dann zuschneiden.
-
-## Vorgeschlagene Reihenfolge
-
-1. Ein Gitter mitten im Spiel, mit Notizen, eine Ziffer hervorgehoben.
-2. Ein Tipp mit seiner Begründung, die gestrichenen Kandidaten sichtbar
-   durchgestrichen. **Das ist das Bild, das diese App von anderen unterscheidet** —
-   es sollte an zweiter Stelle stehen, nicht weiter hinten.
-3. Ein offener Zweig: die gelben Felder und die Leiste mit Verwerfen / Übernehmen.
-4. Der Hilfen-Dialog, der zeigt, dass sich jede Anzeige abschalten lässt.
-5. Die Statistik mit den vier Stufen.
 
 ## Aufnehmen
 

@@ -123,12 +123,6 @@ https://alramlechner.github.io/Sudomnia/privacy.html
 | Feature graphic, 1024×500 PNG | `store/play-feature-1024x500-en.png` | ready |
 | Phone screenshots (2–8, min 320px) | — | **must be taken on a device** |
 | 7" tablet screenshots (up to 8) | — | **must be taken on a device** |
-| 10" tablet screenshots (up to 8) | — | **must be taken on a device** |
+| 10" tablet screenshots (up to 8) | `store/screenshots/tablet/*.png` | ready — notes/conflicts, a hint with its reasoning, an open branch and the aids dialog in en/de/es, statistics |
 
-Suggested set, in this order:
-
-1. A grid mid-game with pencil marks, one digit highlighted.
-2. A hint showing its reasoning, with the struck-out candidates visible.
-3. An open branch: the yellow cells and the bar with Discard / Keep.
-4. The aids dialog, showing that every one of them can be switched off.
-5. The statistics with the four levels.
+Full inventory and what each one shows: `store/screenshots/README.md`.
