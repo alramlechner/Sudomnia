@@ -3,6 +3,20 @@
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [1.0.0] – 2026-09-18
+
+Erste Veroeffentlichung.
+
+### Neu
+- **Spanisch** als dritte Sprache, neben Englisch (Standard) und Deutsch --
+  App, Store-Eintrag und Feature-Grafik.
+
+### Geaendert
+- Kontaktadresse `sudomnia@lechners.name` ergaenzt (Impressum, Datenschutz,
+  Vorschlag im Fehlerbericht).
+- Der Hostname des Update-Servers steht nicht mehr im Repo; `BASE_URL` kommt
+  jetzt aus der untracked `local.properties`.
+
 ## [0.6.0] – 2026-09-14
 
 ### Neu

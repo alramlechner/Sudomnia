@@ -87,9 +87,10 @@ AAB=app/build/outputs/bundle/playRelease/app-play-release.aab
 # Mit dem Upload-Schluessel signiert, nicht mit einem Debug-Schluessel
 jarsigner -verify -verbose:summary -certs "$AAB" | grep "Signed by"
 
-# Beide Sprachen wirklich drin (je ein String, der nur dort vorkommt)
+# Alle drei Sprachen wirklich drin (je ein String, der nur dort vorkommt)
 unzip -p "$AAB" base/resources.pb | grep -ac "Verstecktes Single"   # de
 unzip -p "$AAB" base/resources.pb | grep -ac "Hidden single"        # en
+unzip -p "$AAB" base/resources.pb | grep -ac "Único oculto"         # es
 
 # Die Selbst-Aktualisierung ist NICHT drin
 unzip -p "$AAB" base/dex/classes.dex | grep -ac "sudomnia/update/UpdateClient"   # muss 0 sein
@@ -142,11 +143,12 @@ Play Console: **Test and release → Production** (oder ein Testkanal) → *Crea
 release* → das `.aab` hochladen → Release-Notes → ausrollen.
 
 Release-Notes kommen aus `CHANGELOG.md`, gekürzt. Play erlaubt 500 Zeichen je
-Sprache, und `en-US` und `de-DE` brauchen jeweils einen eigenen Text.
+Sprache, und `en-US`, `de-DE` und `es-ES` brauchen jeweils einen eigenen Text.
 
-Der Store-Eintrag selbst steht in `store/listing-en.md` und `store/listing-de.md`
-— einschließlich der Data-Safety-Antworten und der Einordnung. Diese Dateien mit
-dem gleichziehen, was in der Console wirklich eingetragen ist, sonst wird das
+Der Store-Eintrag selbst steht in `store/listing-en.md`, `store/listing-de.md`
+und `store/listing-es.md` — einschließlich der Data-Safety-Antworten und der
+Einordnung (die nur einmal gilt, nicht je Sprache). Diese Dateien mit dem
+gleichziehen, was in der Console wirklich eingetragen ist, sonst wird das
 nächste Release aus einer veralteten Quelle bearbeitet.
 
 ---
