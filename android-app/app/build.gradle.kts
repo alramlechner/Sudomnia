@@ -13,6 +13,17 @@ val versionProps = Properties().apply {
     file("../../version.properties").inputStream().use { load(it) }
 }
 
+// The update host name is a per-deployment setting, not something that belongs in the
+// repository -- it names this developer's own server. It lives in the untracked
+// local.properties (see .gitignore) under "sudomnia.updateHost"; a fresh clone falls
+// back to a placeholder that resolves nowhere (RFC 2606), so the selfhosted flavour
+// still compiles, it just cannot reach an update server until configured.
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.isFile) f.inputStream().use { load(it) }
+}
+val updateHost = localProps.getProperty("sudomnia.updateHost") ?: "sudomnia.invalid"
+
 android {
     namespace = "name.lechners.sudomnia"
     compileSdk = 36
@@ -45,7 +56,11 @@ android {
     flavorDimensions += "distribution"
     productFlavors {
         create("play") { dimension = "distribution" }
-        create("selfhosted") { dimension = "distribution" }
+        create("selfhosted") {
+            dimension = "distribution"
+            // See updateHost above -- UpdateClient.BASE_URL reads this via BuildConfig.
+            buildConfigField("String", "UPDATE_HOST", "\"$updateHost\"")
+        }
     }
 
     // Belt and braces next to the play { } block below: the Play tasks of the

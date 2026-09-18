@@ -574,9 +574,10 @@ dieses APKs. Verlieren wir ihn, kostet das eine Zeile in einer Textdatei und ein
 
 ### Drei Dinge, die nicht verhandelbar sind
 
-- **Hostname statt IP.** Jetty prüft SNI gegen das Serverzertifikat, dessen SAN nur
-  `sudomnia.invalid` enthält. Eine IP-Adresse wird mit HTTP 400 beantwortet, bevor Filter
-  oder Servlet überhaupt laufen. Der Name löst innen wie außen auf.
+- **Hostname statt IP.** Jetty prüft SNI gegen das Serverzertifikat, dessen SAN nur auf
+  den einen konfigurierten Hostnamen lautet (`sudomnia.updateHost` in `local.properties`,
+  nicht im Repo -- siehe RELEASING.md). Eine IP-Adresse wird mit HTTP 400 beantwortet,
+  bevor Filter oder Servlet überhaupt laufen. Der Name löst innen wie außen auf.
 - **Der Trust-Anker ist das gepinnte Serverzertifikat** (`res/raw/server_cert.pem`), nicht
   der System-Truststore: die CA ist privat, Android kennt sie nicht. Nebeneffekt: eine
   kompromittierte öffentliche CA kann den Server nicht nachbauen.

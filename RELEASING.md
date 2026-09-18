@@ -24,7 +24,8 @@ Play-Tasks in `build.gradle.kts` abgeschaltet, zusätzlich zu diesem Absatz.
 | Android SDK | `ANDROID_HOME` gesetzt, build-tools 35 vorhanden |
 | Signieren | `android-app/keystore.properties`, nicht im Repo — Vorlage: `keystore.properties.example` |
 | Play-Upload | `android-app/play-service-account.json`, nicht im Repo — Vorlage: `play-service-account.json.example`. Nur für den automatisierten Upload nötig. |
-| selfhosted | `android-app/app/src/selfhosted/res/raw/sudomnia_client.p12`, nicht im Repo (siehe unten) |
+| selfhosted | `android-app/app/src/selfhosted/res/raw/{sudomnia_client.p12,server_cert.pem}`, nicht im Repo (siehe unten) |
+| selfhosted | `android-app/local.properties`: `sudomnia.updateHost=<dein-hostname>` (siehe unten) |
 
 Der Upload-Schlüssel gehört **nicht** ins Repository. Ihn zu verlieren kostet nicht
 die App (Play App Signing hält den eigentlichen Signaturschlüssel), aber Google
@@ -185,13 +186,28 @@ und schreibt `latest.json`, das die installierten Apps abfragen. Ein Neustart de
 EnergyControl-Servers ist dafür nicht nötig; die Apps sehen die neue Version
 innerhalb von 15 Minuten.
 
-### Das Client-Zertifikat
+### Der Hostname
 
-`android-app/app/src/selfhosted/res/raw/sudomnia_client.p12` ist git-ignoriert.
-**Ohne sie übersetzt die selfhosted-Variante nicht** — `UpdateClient` referenziert
-`R.raw.sudomnia_client` ganz normal. Das ist Absicht: ein fehlender Schlüssel soll
-beim Bauen auffallen und nicht erst auf dem Gerät. Die `play`-Variante braucht sie
-nicht, ein frischer Clone übersetzt die also ohne jedes Geheimnis.
+`UpdateClient.BASE_URL` nennt keinen Hostnamen im Quellcode mehr. Er kommt über
+`BuildConfig.UPDATE_HOST` aus der untracked `android-app/local.properties`:
+
+```properties
+sudomnia.updateHost=<dein-hostname>
+```
+
+Fehlt der Eintrag, fällt der Build auf `sudomnia.invalid` zurück (RFC 2606, löst
+absichtlich nirgendwo auf) — die `selfhosted`-Variante übersetzt also auch ohne diese
+Zeile, kann dann aber keinen Server erreichen. Ein frischer Clone verrät so nicht,
+welcher Host dahintersteckt.
+
+### Das Client-Zertifikat und das gepinnte Serverzertifikat
+
+`android-app/app/src/selfhosted/res/raw/sudomnia_client.p12` **und**
+`.../server_cert.pem` sind git-ignoriert. **Ohne sie übersetzt die
+selfhosted-Variante nicht** — `UpdateClient` referenziert `R.raw.sudomnia_client` und
+`R.raw.server_cert` ganz normal. Das ist Absicht: ein fehlender Schlüssel soll beim
+Bauen auffallen und nicht erst auf dem Gerät. Die `play`-Variante braucht keins von
+beidem, ein frischer Clone übersetzt die also ohne jedes Geheimnis.
 
 Neu ausstellen (auf dem Server-Host; schreibt zugleich die Seriennummer in die
 Allow-List des Servers und das gepinnte Serverzertifikat in `res/raw/`):

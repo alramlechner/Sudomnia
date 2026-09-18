@@ -128,18 +128,19 @@ im Haus. Der ganze Ablauf samt Prüfung des hochgeladenen Bundles steht in
 keinen eigenen Update-Weg und darf auch keinen haben.
 
 **Die Fassung für die Geräte im Haus** (`selfhosted`) fragt beim Start und danach alle
-15 Minuten `https://sudomnia.invalid:8443/api/v1/sudomnia/app/latest.json` ab. Ist dort
-ein höherer `version_code` hinterlegt, erscheint über dem Brett ein Streifen „Version
-x.y.z ist da"; ein Tipp darauf lädt die APK, prüft ihre SHA-256 und übergibt sie dem
-Paketinstaller. Dieselbe Funktion steckt unten im Hilfen-Dialog, dort auch als „jetzt
-nachsehen".
+15 Minuten `https://<konfigurierter Host>:8443/api/v1/sudomnia/app/latest.json` ab. Ist
+dort ein höherer `version_code` hinterlegt, erscheint über dem Brett ein Streifen
+„Version x.y.z ist da"; ein Tipp darauf lädt die APK, prüft ihre SHA-256 und übergibt
+sie dem Paketinstaller. Dieselbe Funktion steckt unten im Hilfen-Dialog, dort auch als
+„jetzt nachsehen". Der Hostname selbst steht nicht im Repo, sondern in der jeweils
+eigenen, nicht committeten `local.properties` (`sudomnia.updateHost`, siehe
+RELEASING.md).
 
 Der Weg läuft über den mTLS-Port des Servers — **das Update funktioniert deshalb auch
 von unterwegs, ohne VPN.** Das dafür nötige Client-Zertifikat liegt fest in der App
 (`app/src/selfhosted/res/raw/sudomnia_client.p12`, nicht im Repo); es ist serverseitig
 auf genau diesen einen Download beschränkt und öffnet sonst nichts. Wenn es klemmt, gibt
-es im Heimnetz den Notweg `http://sudomnia.invalid:8082/sudomnia/app/download` im
-Browser.
+es im Heimnetz den Notweg über den plain-HTTP-Port desselben Hosts im Browser.
 
 Nur diese Fassung hat deshalb zwei Berechtigungen: `INTERNET` und
 `REQUEST_INSTALL_PACKAGES`. Beide werden ausschließlich hierfür verwendet — das Spiel
