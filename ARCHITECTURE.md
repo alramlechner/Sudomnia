@@ -656,6 +656,11 @@ schlimmer als der Absturz.
 Einzelspieler-Sudoku eine Netzwerkabhängigkeit und eine Datenschutzgeschichte; hier sieht
 der Spieler jedes Mal, was das Gerät verlässt, und wählt das Ziel selbst.
 
+`EXTRA_EMAIL` schlägt `sudomnia@lechners.name` als Empfänger vor, egal welche
+Mail-App aus der Teilen-Auswahl gewählt wird — nur ein Vorschlag, den die
+empfangende App vorausfüllen darf, keine feste Zieladresse. Jede andere Art von
+App aus der Auswahl ignoriert das Feld einfach.
+
 Die Datei ist ein Ringpuffer: über 64 KB wird die ältere Hälfte verworfen. Und
 `log()` fängt seine eigenen Ausnahmen — die Diagnose darf nie das sein, was die App
 kaputtmacht.

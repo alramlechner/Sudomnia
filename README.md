@@ -203,3 +203,8 @@ keine davon** — ein frischer Clone übersetzt ihn ohne jedes Geheimnis:
 Siehe [CONTRIBUTING.md](CONTRIBUTING.md). Datenschutz: [PRIVACY.md](PRIVACY.md).
 Änderungen: [CHANGELOG.md](CHANGELOG.md). Projektseite:
 [alramlechner.github.io/Sudomnia](https://alramlechner.github.io/Sudomnia/).
+
+## Impressum
+
+`sudomnia@lechners.name` — die Adresse, die der Fehlerbericht in der App als
+Empfänger vorschlägt, und an die alles andere zu diesem Projekt geht.

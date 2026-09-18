@@ -21,6 +21,8 @@ import java.util.Locale
  * living room has no logcat. So: everything interesting is appended to one text file,
  * and a button in the settings hands that file to the share sheet. Where it goes from
  * there -- Proton Drive, mail, whatever -- is the player's decision, every single time.
+ * [EXTRA_EMAIL] only suggests [REPORT_EMAIL] to whichever mail app is picked there; it
+ * does not narrow the chooser or change who decides where the report actually goes.
  *
  * Nothing is ever sent by itself. There is no upload path in this class on purpose.
  */
@@ -28,6 +30,9 @@ object DiagnosticsLog {
 
     private const val FILE_NAME = "sudomnia-log.txt"
     private const val REPORT_NAME = "sudomnia-report.txt"
+
+    /** Only a hint the receiving mail app may prefill -- see [shareIntent]. */
+    private const val REPORT_EMAIL = "sudomnia@lechners.name"
 
     /** Above this the file is halved. A ring buffer in a file, cheaply. */
     private const val MAX_BYTES = 64 * 1024
@@ -96,6 +101,7 @@ object DiagnosticsLog {
 
         val send = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
+            putExtra(Intent.EXTRA_EMAIL, arrayOf(REPORT_EMAIL))
             putExtra(Intent.EXTRA_SUBJECT, "Sudomnia ${BuildConfig.VERSION_NAME} — Fehlerbericht")
             putExtra(Intent.EXTRA_STREAM, uri)
             putExtra(Intent.EXTRA_TEXT, body.takeLast(4000))

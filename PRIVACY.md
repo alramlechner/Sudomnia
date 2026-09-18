@@ -33,6 +33,11 @@ wird **nur** verschickt, wenn du im Hilfen-Dialog auf „Teilen" tippst — dann
 wählst du selbst das Ziel. Die App hat keinen Upload-Weg; es gibt keinen
 Crash-Reporter und keine Analytics.
 
+Wählst du eine Mail-App, wird ihr `sudomnia@lechners.name` als Empfänger
+vorgeschlagen — ein Vorschlag, den die App übernehmen oder ignorieren kann,
+keine feste Zieladresse. Jede andere Art von App aus der Teilen-Auswahl
+ignoriert das komplett.
+
 ## Kinder
 
 Die App enthält keine Werbung, keine Käufe, keine nutzergenerierten Inhalte und
@@ -40,4 +45,5 @@ keine Kommunikationsfunktionen. Sie erhebt von niemandem Daten, in keinem Alter.
 
 ## Kontakt
 
-Fragen oder ein Fehler in diesem Text: <https://github.com/alramlechner/Sudomnia/issues>
+`sudomnia@lechners.name` — oder Fragen zu diesem Text bzw. ein Fehler darin als Issue:
+<https://github.com/alramlechner/Sudomnia/issues>
