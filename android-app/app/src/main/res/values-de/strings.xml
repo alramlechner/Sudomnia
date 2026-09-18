@@ -2,9 +2,9 @@
 <!--
     Deutsche Uebersetzung. Die Vorlage ist values/strings.xml (Englisch, Standard).
 
-    Beide Dateien muessen denselben Satz an Namen haben: fehlt hier einer, faellt die
-    App mitten im Satz auf Englisch zurueck, und das ist schlechter als eine der
-    beiden Sprachen ganz.
+    Alle Sprachdateien (auch values-es) muessen denselben Satz an Namen haben: fehlt
+    hier einer, faellt die App mitten im Satz auf Englisch zurueck, und das ist
+    schlechter als eine der Sprachen ganz.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Sudomnia</string>

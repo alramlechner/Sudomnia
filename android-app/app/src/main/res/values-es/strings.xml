@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Traducción al español. La plantilla es values/strings.xml (inglés, predeterminado).
+
+    Ambos archivos deben tener el mismo conjunto de nombres: si falta uno aquí, la
+    app cae a mitad de frase al inglés, y eso es peor que cualquiera de los dos
+    idiomas por separado.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Sudomnia</string>
+
+    <string name="new_game">Nueva partida</string>
+    <string name="choose_level">Dificultad</string>
+    <string name="level_easy">Fácil</string>
+    <string name="level_medium">Medio</string>
+    <string name="level_hard">Difícil</string>
+    <string name="level_expert">Experto</string>
+
+    <plurals name="clue_count">
+        <item quantity="one">%1$d dato inicial</item>
+        <item quantity="many">%1$d datos iniciales</item>
+        <item quantity="other">%1$d datos iniciales</item>
+    </plurals>
+
+    <string name="generating">Generando sudoku…</string>
+    <string name="pad_notes">Notas</string>
+    <string name="erase">Borrar</string>
+    <string name="undo">Deshacer</string>
+    <string name="redo">Rehacer</string>
+    <string name="cancel">Cancelar</string>
+
+    <string name="solved_title">¡Resuelto!</string>
+    <string name="solved_body">%1$s · %2$s</string>
+    <string name="solved_new_game">Siguiente sudoku</string>
+
+    <!-- Perdida: solo se llega aquí con el aviso de entradas incorrectas activado -->
+    <string name="lost_title">Partida perdida</string>
+    <string name="lost_body">%1$d entradas incorrectas.</string>
+    <plurals name="wrong_entry">
+        <item quantity="one">Esa cifra es incorrecta. Queda %1$d intento.</item>
+        <item quantity="many">Esa cifra es incorrecta. Quedan %1$d intentos.</item>
+        <item quantity="other">Esa cifra es incorrecta. Quedan %1$d intentos.</item>
+    </plurals>
+
+    <!-- Pausa: detiene el reloj y oculta el tablero -->
+    <string name="paused_pause">Pausa</string>
+    <string name="paused_title">En pausa</string>
+    <string name="paused_resume">Continuar</string>
+
+    <!-- Rama: un intento de prueba para cuando ninguna celda está ya forzada -->
+    <string name="branch_start">Iniciar rama</string>
+    <string name="branch_empty">Rama abierta: introduce tu intento</string>
+    <plurals name="branch_cells">
+        <item quantity="one">Rama · %1$d celda de prueba</item>
+        <item quantity="many">Rama · %1$d celdas de prueba</item>
+        <item quantity="other">Rama · %1$d celdas de prueba</item>
+    </plurals>
+    <string name="branch_discard">Descartar</string>
+    <string name="branch_commit">Conservar</string>
+
+    <!-- Pista. Una cadena por cada peldaño de la escalera: la pista explica la
+         técnica que realmente usó, así que deben coincidir con rules/Technique.kt. -->
+    <string name="hint">Pista</string>
+    <string name="hint_show_why">¿Por qué?</string>
+    <string name="hint_next">Siguiente</string>
+    <string name="hint_apply">Introducir</string>
+    <string name="hint_dismiss">Cerrar</string>
+    <string name="hint_dead_end">Con las entradas actuales, este sudoku ya no se puede resolver. Deshaz algunos movimientos.</string>
+
+    <string name="hint_locate_place">Esta celda se puede deducir ahora mismo.</string>
+    <string name="hint_locate_strike">Aquí se puede tachar algo.</string>
+    <string name="hint_locate_reveal" tools:ignore="PluralsCandidate">Ahora mismo nada está forzado. Con %1$d candidatos, esta celda tiene el menor número.</string>
+    <string name="hint_reveal_bare" tools:ignore="PluralsCandidate">Aquí va el %1$d.</string>
+
+    <string name="technique_hidden_single">Único oculto</string>
+    <string name="technique_naked_single">Único desnudo</string>
+    <string name="technique_locked_candidates">Candidatos bloqueados</string>
+    <string name="technique_naked_pair">Par desnudo</string>
+    <string name="technique_hidden_pair">Par oculto</string>
+    <string name="technique_naked_triple">Trío desnudo</string>
+    <string name="technique_hidden_triple">Trío oculto</string>
+    <string name="technique_x_wing">X-Wing</string>
+    <string name="technique_swordfish">Pez espada</string>
+    <string name="technique_simple_colouring">Coloreado simple</string>
+    <string name="technique_xy_wing">XY-Wing</string>
+
+    <string name="why_hidden_single">En %1$s, este es el único lugar que queda para el %2$d.</string>
+    <string name="why_naked_single" tools:ignore="PluralsCandidate">Todas las demás cifras ya están en la fila, la columna o la caja de esta celda. Solo queda el %1$d.</string>
+    <string name="why_locked_candidates" tools:ignore="PluralsCandidate">En %1$s el %2$d solo cabe en celdas que también están en %3$s, así que puede eliminarse del resto de %3$s.</string>
+    <string name="why_naked_subset">Estas celdas de %1$s no contienen entre todas más que %2$s, así que esas cifras pueden eliminarse del resto de %1$s.</string>
+    <string name="why_hidden_subset">En %1$s las cifras %2$s solo caben en estas celdas, así que todo lo demás puede eliminarse de ellas.</string>
+    <string name="why_fish" tools:ignore="PluralsCandidate">El %1$d ocupa estas líneas en las mismas posiciones, así que puede eliminarse de las celdas marcadas.</string>
+    <string name="why_simple_colouring" tools:ignore="PluralsCandidate">Sigue el %1$d por las unidades donde solo le quedan dos lugares: las celdas marcadas quedan descartadas en cualquier caso.</string>
+    <string name="why_xy_wing" tools:ignore="PluralsCandidate">Sea cual sea la cifra que tome el pivote, un ala se convierte en %1$d — así que el %1$d puede eliminarse de toda celda que vea ambas alas.</string>
+
+    <string name="unit_row">fila %1$d</string>
+    <string name="unit_col">columna %1$d</string>
+    <string name="unit_box">caja %1$d</string>
+
+    <string name="stats">Estadísticas</string>
+    <string name="stats_solved">Resueltos</string>
+    <string name="stats_started">Iniciados</string>
+    <string name="stats_best">Mejor tiempo</string>
+    <string name="stats_no_aids">sin ayudas</string>
+    <string name="stats_no_hints">sin pistas</string>
+    <string name="stats_none">–</string>
+    <string name="stats_total">Resueltos en total: %1$d</string>
+    <string name="stats_reset">Restablecer</string>
+    <string name="stats_reset_ask">¿Borrar todos los contadores?</string>
+    <string name="stats_reset_yes">Borrar</string>
+    <string name="solved_no_hints">sin pistas</string>
+    <plurals name="solved_hints">
+        <item quantity="one">%1$d pista</item>
+        <item quantity="many">%1$d pistas</item>
+        <item quantity="other">%1$d pistas</item>
+    </plurals>
+
+    <string name="settings">Ayudas</string>
+    <string name="settings_intro">Cada una de estas indicaciones te quita parte del trabajo. Desactiva las que quieras hacer tú mismo.</string>
+    <string name="setting_conflicts">Mostrar conflictos</string>
+    <string name="setting_conflicts_hint">Te dice al instante si una cifra es posible en una celda — también en las notas a lápiz</string>
+    <string name="setting_same_digit">Resaltar la misma cifra</string>
+    <string name="setting_same_digit_hint">Colorea todas las celdas con la misma cifra que la seleccionada</string>
+    <string name="setting_peers">Resaltar fila, columna, caja</string>
+    <string name="setting_peers_hint">Colorea las unidades de la celda seleccionada</string>
+    <string name="setting_dim_digits">Atenuar cifras completas</string>
+    <string name="setting_dim_digits_hint">Atenúa una cifra en el teclado en cuanto se ha colocado nueve veces</string>
+    <string name="setting_warn_wrong">Avisar de entradas incorrectas</string>
+    <string name="setting_warn_wrong_hint">Comprueba cada cifra contra la solución y avisa al instante. %1$d entradas incorrectas terminan la partida.</string>
+    <string name="settings_done">Hecho</string>
+    <string name="no_aids">sin ayudas</string>
+    <string name="full_but_wrong">El tablero está lleno, pero todavía no es correcto.</string>
+
+    <!-- Actualización -->
+    <string name="update_banner">La versión %1$s ya está aquí</string>
+    <string name="update_banner_loading">Descargando la versión %1$s…</string>
+    <string name="update_install">Instalar</string>
+    <string name="update_check">Buscar actualizaciones</string>
+    <string name="update_checking">Buscando…</string>
+    <string name="update_downloading">Descargando…</string>
+    <string name="update_version">Versión de la app %1$s</string>
+    <string name="update_current">Actualizada</string>
+    <string name="update_failed">Fallo: %1$s</string>
+    <string name="update_available_note">Versión %1$s disponible</string>
+
+    <!-- Diagnóstico -->
+    <string name="diag_title">Informe de error</string>
+    <string name="diag_hint">Comparte el registro y los informes de fallos cuando algo se atasque</string>
+    <string name="diag_share">Compartir</string>
+
+</resources>

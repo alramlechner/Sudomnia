@@ -6,7 +6,7 @@ Renders the Google Play assets from the same geometry as the app icon.
 
 Produces:
     store/play-icon-512.svg      + .png   512x512, the icon Play shows everywhere
-    store/play-feature-1024x500-en/-de.svg + .png   1024x500, one per listing language
+    store/play-feature-1024x500-en/-de/-es.svg + .png   1024x500, one per listing language
 
 ### Why this is a script and not two exported files
 
@@ -124,6 +124,7 @@ def main():
     # One per listing language, like the listings themselves.
     write("play-feature-1024x500-en", feature_svg("Sudoku. No guessing. No ads. No account."), 1024, 500)
     write("play-feature-1024x500-de", feature_svg("Sudoku. Kein Raten. Keine Werbung. Kein Konto."), 1024, 500)
+    write("play-feature-1024x500-es", feature_svg("Sudoku. Sin adivinar. Sin anuncios. Sin cuenta."), 1024, 500)
 
 
 if __name__ == "__main__":

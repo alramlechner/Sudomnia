@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    English is the default locale; the German translation lives in values-de.
+    English is the default locale; translations live in values-de and values-es.
     The app was German-only until 0.5.0; see CHANGELOG.
 
-    Keep the two files in step. A string added here and forgotten there falls back
-    to English mid-sentence, which is worse than either language on its own.
+    Keep all files in step. A string added here and forgotten there falls back
+    to English mid-sentence, which is worse than any one language on its own.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Sudomnia</string>
