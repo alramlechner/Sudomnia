@@ -1,25 +1,25 @@
 #!/bin/bash
-# Startet den Rätsel-Generator im Hintergrund mit niedrigster CPU-/IO-Priorität,
-# damit EnergyControl und alle anderen Dienste auf dem Pi jederzeit vorgehen.
+# Starts the puzzle generator in the background at the lowest CPU/IO priority,
+# so EnergyControl and every other service on the Pi always takes precedence.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 PIDFILE="run/generator.pid"
 LOGFILE="run/generator.log"
-# installDist erzeugt ein Startskript mit korrektem Classpath (Kotlin-Stdlib etc.)
-# -- lieber das verwenden als "java -jar" auf ein Jar ohne Klassenpfad.
+# installDist produces a launcher script with the correct classpath (Kotlin stdlib
+# etc.) -- prefer that over "java -jar" on a jar without a classpath.
 LAUNCHER="build/install/sudomnia-generator-cli/bin/sudomnia-generator-cli"
 
 if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
-    echo "Läuft bereits (PID $(cat "$PIDFILE"))."
+    echo "Already running (PID $(cat "$PIDFILE"))."
     exit 1
 fi
 
 if [ ! -f "$LAUNCHER" ]; then
-    echo "Nicht gebaut -- führe zuerst './gradlew installDist' aus."
+    echo "Not built -- run './gradlew installDist' first."
     exit 1
 fi
 
 nohup nice -n 19 ionice -c 3 "$LAUNCHER" "$@" > "$LOGFILE" 2>&1 &
 echo $! > "$PIDFILE"
-echo "Gestartet (PID $(cat "$PIDFILE")), Log: $LOGFILE"
+echo "Started (PID $(cat "$PIDFILE")), log: $LOGFILE"

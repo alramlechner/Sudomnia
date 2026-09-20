@@ -1,666 +1,644 @@
-# Sudomnia — Architektur
+# Sudomnia — Architecture
 
-Stand 0.4.3 (Prototyp). Schwesterprojekt zu [Chessomnia](https://github.com/alramlechner/Chessomnia);
-Build-Setup, Paketschichtung und Testphilosophie sind von dort übernommen.
+Status 0.4.3 (prototype). Sister project to [Chessomnia](https://github.com/alramlechner/Chessomnia);
+build setup, package layering and test philosophy are carried over from there.
 
 ---
 
-## 1. Schichten
+## 1. Layers
 
 ```
-rules/   reines Kotlin, keine Android-Importe   -> auf der JVM testbar
+rules/   pure Kotlin, no Android imports   -> testable on the JVM
   |
-game/    laufende Partie (Eingaben, Notizen, Undo)
+game/    running game (inputs, notes, undo)
   |
-data/    Einstellungen, Statistik, Spielstand (SharedPreferences)
+data/    settings, statistics, save state (SharedPreferences)
   |
-ui/      Compose, ein Screen, ein ViewModel
+ui/      Compose, one screen, one ViewModel
 
-update/  Update-Prüfung  -- hängt an keiner der anderen Schichten
-diag/    Fehlerprotokoll -- von überall beschreibbar, hängt an nichts
+update/  update check  -- depends on none of the other layers
+diag/    error log -- writable from anywhere, depends on nothing
 ```
 
-Ein Gradle-Modul, Namespace `name.lechners.sudomnia`, minSdk 30 / targetSdk 36, JDK 17.
-Abhängigkeiten: core-ktx, Compose BOM, activity-compose, lifecycle-viewmodel-compose, junit.
-Kein Room, kein DI-Framework, keine HTTP-Bibliothek.
+One Gradle module, namespace `name.lechners.sudomnia`, minSdk 30 / targetSdk 36, JDK 17.
+Dependencies: core-ktx, Compose BOM, activity-compose, lifecycle-viewmodel-compose, junit.
+No Room, no DI framework, no HTTP library.
 
-**Zwei Varianten, und der Unterschied ist nicht ein Schalter.** `play` ist die Fassung
-für Google Play: **keine einzige Berechtigung**, kein Netzwerkcode, kein Zertifikat.
-`selfhosted` ist die Fassung für die Geräte im Haus und enthält die
-Selbst-Aktualisierung mit `INTERNET` und `REQUEST_INSTALL_PACKAGES` (§11). Google
-verbietet Apps aus dem Store, sich auf einem anderen Weg selbst zu aktualisieren — der
-Play-Build enthält den Code deshalb nicht bloß deaktiviert, sondern **gar nicht**.
-Genau das war `update/` immer schon zugedacht: ein eigenes Paket ohne Verbindung zu
-`rules/`, `game/` oder `data/`.
+**Two flavours, and the difference is not a switch.** `play` is the Google Play build:
+**not a single permission**, no network code, no certificate. `selfhosted` is the build
+for the devices at home and contains the self-update, with `INTERNET` and
+`REQUEST_INSTALL_PACKAGES` (§11). Google forbids apps from the store updating themselves
+any other way — the Play build therefore doesn't just have that code disabled, it
+**doesn't contain it at all**. That is exactly what `update/` was always meant for: its
+own package with no connection to `rules/`, `game/` or `data/`.
 
-Getrennt wird über Gradle-Quellverzeichnisse, nicht über ein `if`:
+The split happens via Gradle source directories, not an `if`:
 
 ```
-src/main/…/update/UpdateState.kt        reine Daten, die die Oberfläche zeichnet
-src/main/…/update/UpdateController.kt   was die Oberfläche braucht -- drei Mitglieder
-src/play/…/update/UpdateSupport.kt      liefert null. Das ist die ganze Datei.
+src/main/…/update/UpdateState.kt        pure data that the UI renders
+src/main/…/update/UpdateController.kt   what the UI needs -- three members
+src/play/…/update/UpdateSupport.kt      returns null. That's the whole file.
 src/selfhosted/…/update/UpdateSupport.kt + UpdateClient/UpdateViewModel/ReleaseInfo
 ```
 
-`UpdateSupport` gibt es genau einmal pro Variante und nirgends in `main` — es ist die
-einzige Stelle, die weiß, welche der beiden gebaut wird. Der Nebeneffekt ist genauso
-wichtig wie die Store-Regel: **ein frischer Clone übersetzt `play` ohne jedes
-Geheimnis.** Vorher scheiterte er an `R.raw.sudomnia_client`, und das ist für ein
-quelloffenes Projekt keine Kleinigkeit, sondern die Eintrittsschwelle.
+`UpdateSupport` exists exactly once per flavour and nowhere in `main` — it is the only
+place that knows which of the two is being built. The side effect matters just as much as
+the store rule: **a fresh clone compiles `play` without any secret.** Before, it failed on
+`R.raw.sudomnia_client`, and for an open-source project that is not a minor detail but the
+barrier to entry.
 
 ---
 
-## 2. Wie ein Rätsel entsteht
+## 2. How a puzzle is made
 
-Zufällig Zahlen hinsetzen funktioniert nicht — das ergibt fast immer ein unlösbares
-oder ein mehrdeutiges Gitter. Stattdessen wird **weggegraben**:
+Placing random digits doesn't work — that almost always yields an unsolvable or an
+ambiguous grid. Instead, the puzzle is **dug out**:
 
-1. `GridGenerator` erzeugt ein vollständiges gültiges Gitter. Beschleunigung: die
-   Boxen 1, 5 und 9 teilen keine Zeile, Spalte oder Box, lassen sich also vorab als
-   drei unabhängige Zufallspermutationen von 1–9 füllen. Danach backtrackt die Suche
-   praktisch nicht mehr. ~50–200 µs.
-2. `Digger` leert Felder in zufälliger Reihenfolge und nimmt jede Entfernung zurück,
-   die die Eindeutigkeit zerstört. **Eindeutigkeit ist damit konstruktiv garantiert,
-   nicht nachträglich geprüft.**
-3. `PuzzleFactory` setzt beides zusammen und liefert ein `Puzzle`.
+1. `GridGenerator` produces a complete valid grid. Speed-up: boxes 1, 5 and 9 share no
+   row, column or box with each other, so they can be filled up front as three
+   independent random permutations of 1–9. After that, the search practically never
+   backtracks. ~50–200 µs.
+2. `Digger` empties cells in random order and undoes any removal that destroys
+   uniqueness. **Uniqueness is thereby guaranteed by construction, not checked
+   afterwards.**
+3. `PuzzleFactory` combines both and delivers a `Puzzle`.
 
-### Eindeutigkeitsprüfung
+### Uniqueness check
 
-`Solver` ist Constraint-Propagation (Naked + Hidden Singles) plus MRV-Backtracking,
-allokationsfrei: Kandidaten sind 9-Bit-Masken in `IntArray`s, Backtracking stellt
-einen vorab angelegten Snapshot wieder her statt einen Änderungs-Trail abzuspielen.
+`Solver` is constraint propagation (naked + hidden singles) plus MRV backtracking,
+allocation-free: candidates are 9-bit masks in `IntArray`s, and backtracking restores a
+pre-allocated snapshot instead of replaying a change trail.
 
-Die eine Operation, auf der alles aufbaut:
+The one operation everything is built on:
 
 ```kotlin
 fun countSolutions(givens: IntArray, limit: Int = 2, out: IntArray? = null): Int
 ```
 
-`limit = 2` beantwortet „ist die Lösung eindeutig?".
+`limit = 2` answers "is the solution unique?"
 
-Der Digger fragt allerdings nicht so, sondern: *„gibt es eine Lösung mit einer anderen
-Ziffer in diesem Feld?"* — für jeden Kandidaten ein Lauf mit `limit = 1`. Fast alle
-enden nach wenigen Propagationsschritten im Widerspruch, weil das Restgitter massiv
-überbestimmt ist. Grob Faktor 3 schneller als volles Zählen.
+The digger, however, doesn't ask it that way; it asks: *"is there a solution with a
+different digit in this cell?"* — one run with `limit = 1` per candidate. Almost all of
+them end in a contradiction after a few propagation steps, because the remaining grid is
+massively overdetermined. Roughly a factor of 3 faster than counting solutions fully.
 
-**Warum Bitmasken und nicht `Set<Int>`:** ein Rätsel kostet ~80 Solver-Aufrufe; mit
-einem `HashSet` pro Feld wären das sechsstellige Allokationszahlen pro Rätsel.
-`Integer.bitCount` und `numberOfTrailingZeros` sind unter ART einzelne ARM64-Befehle.
+**Why bitmasks and not `Set<Int>`:** a puzzle costs ~80 solver calls; with a `HashSet` per
+cell that would be a six-figure number of allocations per puzzle. `Integer.bitCount` and
+`numberOfTrailingZeros` are single ARM64 instructions under ART.
 
-**Warum kein Dancing Links:** DLX ist auf den härtesten Rätseln schneller, braucht aber
-~3.240 Knotenobjekte pro Lauf. Bei 80 Läufen pro Rätsel sind das ~260.000 Objekte —
-GC-Druck, während daneben eine Compose-UI zeichnet. DLX ist als *unabhängiges
-Test-Orakel* vorgesehen, nicht für die Produktion.
+**Why not Dancing Links:** DLX is faster on the hardest puzzles, but needs ~3,240 node
+objects per run. At 80 runs per puzzle that's ~260,000 objects — GC pressure while a
+Compose UI is drawing next to it. DLX is intended as an *independent test oracle*, not for
+production.
 
 ---
 
-## 3. Schwierigkeit
+## 3. Difficulty
 
-Die Anzahl der Vorgaben ist ein schlechter Indikator. Gemessen an diesem Generator
-landen maximal ausgegrabene Singles-Rätsel und Rätsel, die echte Techniken brauchen,
-**auf dieselbe Kommastelle** bei ~24,5 Vorgaben. Die Zahl trennt sie überhaupt nicht.
+The clue count is a poor indicator. Measured against this generator, maximally dug
+singles-only puzzles and puzzles that need real techniques land **on the same decimal
+place** at ~24.5 clues. The number doesn't separate them at all.
 
-Die Stufe kommt deshalb aus der **Technikleiter**: `HumanSolver` löst das Rätsel so,
-wie ein Mensch es täte — nur mit Techniken, die sich in einem Satz erklären lassen,
-und **ohne je zu raten**. Die höchste Sprosse, die dabei gebraucht wird, ist die
-Stufe (`Grader`).
+The level therefore comes from the **technique ladder**: `HumanSolver` solves the puzzle
+the way a person would — using only techniques that can be explained in one sentence, and
+**never by guessing**. The highest rung needed is the level (`Grader`).
 
-| Sprosse | Was man sieht |
+| Rung | What you see |
 |---|---|
-| Hidden Single | in dieser Einheit ist nur noch ein Platz für die 5 |
-| Naked Single | in diesem Feld ist nur noch eine Ziffer möglich |
-| Locked Candidates | im Block liegt die 7 nur in einer Zeile → raus aus dem Rest der Zeile |
-| Naked Pair/Triple | zwei (drei) Felder teilen sich zwei (drei) Ziffern |
-| Hidden Pair/Triple | zwei (drei) Ziffern können nur in zwei (drei) Felder |
-| X-Wing, Swordfish | dieselbe Ziffer in denselben zwei (drei) Spalten zweier (dreier) Zeilen |
-| Simple Colouring | Zweierketten einer Ziffer, zweifarbig verfolgt |
-| XY-Wing | Angelpunkt {x,y} mit zwei Flügeln {x,z} und {y,z} |
+| Hidden Single | in this unit, only one place is left for the 5 |
+| Naked Single | in this cell, only one digit is still possible |
+| Locked Candidates | in the box, the 7 sits only in one row → out of the rest of the row |
+| Naked Pair/Triple | two (three) cells share two (three) digits |
+| Hidden Pair/Triple | two (three) digits can only go in two (three) cells |
+| X-Wing, Swordfish | the same digit in the same two (three) columns of two (three) rows |
+| Simple Colouring | two-colour chains of one digit, followed by colour |
+| XY-Wing | a pivot {x,y} with two wings {x,z} and {y,z} |
 
-### Die vier Bänder
+### The four bands
 
-| Stufe | Regel | Ø Vorgaben | Ø Schritte | ms/Rätsel |
+| Level | Rule | Avg. clues | Avg. steps | ms/puzzle |
 |---|---|---|---|---|
-| **Leicht** | Singles genügen, ≥ 36 Vorgaben bleiben stehen | 36,0 | 45 | 2,3 |
-| **Mittel** | Singles genügen, maximal ausgegraben | 24,8 | 56 | 3,3 |
-| **Schwer** | Locked Candidates oder ein Subset nötig | 24,4 | 61 | 13,6 |
-| **Experte** | X-Wing, Colouring oder XY-Wing nötig | 24,8 | 63 | 25,5 |
+| **Easy** | singles suffice, ≥ 36 clues stay on the board | 36.0 | 45 | 2.3 |
+| **Medium** | singles suffice, dug out to the max | 24.8 | 56 | 3.3 |
+| **Hard** | locked candidates or a subset needed | 24.4 | 61 | 13.6 |
+| **Expert** | X-Wing, colouring or XY-Wing needed | 24.8 | 63 | 25.5 |
 
-Gemessen über je 100 Rätsel mit `generator-cli --mode grade` auf einem Raspberry Pi 5.
-Das Werkzeug ist der Grund, dass hier Zahlen und keine Vermutungen stehen — nach jeder
-Änderung an `Digger`, `Technique` oder `HumanSolver` gehört es neu laufen gelassen.
+Measured over 100 puzzles each with `generator-cli --mode grade` on a Raspberry Pi 5. The
+tool is why there are numbers here instead of guesses — after any change to `Digger`,
+`Technique` or `HumanSolver` it should be run again.
 
-### Was die Leiter wirklich geändert hat
+### What the ladder actually changed
 
-Nicht die Etiketten, sondern die Rätsel. Die alte „Schwer"-Stufe hieß „Singles
-genügen nicht" und nahm sonst alles, was eindeutig war. Die Messung über 150 solcher
-Rätsel: **53 % waren mit keiner Technik der Leiter lösbar** — sie verlangten
-Forcing Chains oder in der Praxis Raten. Der Spieler konnte nicht unterscheiden, ob er
-etwas übersieht oder ob es nichts zu sehen gibt.
+Not the labels — the puzzles. The old "Hard" level meant "singles don't suffice" and
+otherwise took anything that was unique. Measuring across 150 such puzzles: **53% could
+not be solved by any technique on the ladder** — they required forcing chains or, in
+practice, guessing. The player had no way to tell whether they were missing something or
+whether there was nothing to see.
 
-Der Digger nimmt eine Entfernung jetzt zurück, sobald die Leiter das Rätsel nicht mehr
-zu Ende bringt. **Jedes ausgelieferte Rätsel ist ohne Raten lösbar** — das ist die
-Zusage, auf der der „Zweig" (§4) als *freiwilliges* Werkzeug überhaupt erst Sinn ergibt.
+The digger now undoes a removal as soon as the ladder can no longer finish the puzzle.
+**Every delivered puzzle is solvable without guessing** — that is the promise that makes
+"branch" (§4) make sense at all as a *voluntary* tool.
 
-### Was das kostet
+### What that costs
 
-Die Schranke ist zugleich die Abkürzung: der Digger prüft nach jeder Entfernung nur
-gegen die *Decke des angepeilten Bandes*. Leicht und Mittel bleiben deshalb beim
-schnellen Singles-Orakel (`SinglesSolver` mit `Grid.propagate`, ein Durchlauf statt
-Schritt für Schritt), und nur Experte bezahlt die volle Leiter — 25 ms je Rätsel,
-mit Erzeugung.
+The boundary is also the shortcut: after each removal, the digger only checks against the
+*ceiling of the targeted band*. Easy and Medium therefore stay on the fast singles oracle
+(`SinglesSolver` with `Grid.propagate`, one pass instead of step by step), and only Expert
+pays for the full ladder — 25 ms per puzzle, generation included.
 
-### Verworfen: „Naked Singles" vs. „Hidden Singles" als Stufengrenze
+### Discarded: "naked singles" vs. "hidden singles" as the level boundary
 
-Der erste Entwurf trennte Leicht (nur Naked Singles) von Mittel (Hidden Singles
-nötig). Das ist aus menschlicher Sicht **falsch herum**: ein Naked Single („dieses
-Feld hat nur noch einen Kandidaten") verlangt, alle 20 Nachbarn zu prüfen und acht
-Ziffern auszuschließen. Ein Hidden Single („in diesem Block ist nur noch ein Platz für
-die 5") findet man durch Abscannen von drei Linien — es ist die erste Technik, die
-jede Anleitung zeigt. Maschinell billig und menschlich billig laufen hier
-gegeneinander. Dieselbe Überlegung bestimmt die Reihenfolge in `Technique`.
+The first draft separated Easy (naked singles only) from Medium (hidden singles needed).
+That is **backwards** from a human point of view: a naked single ("this cell has only one
+candidate left") requires checking all 20 neighbours and ruling out eight digits. A hidden
+single ("in this box, only one place is left for the 5") is found by scanning three lines
+— it is the first technique every guide shows. Cheap for a machine and cheap for a human
+run against each other here. The same reasoning determines the order in `Technique`.
 
-### Verworfen: Forcing Chains, Nice Loops, ALS
+### Discarded: forcing chains, nice loops, ALS
 
-Sie lösen mehr Rätsel — aber die Erklärung für einen solchen Schritt ist ein Absatz,
-kein Satz. Ein Tipp, dem niemand folgen kann, ist schlechter als ein ehrliches „hier
-ist gerade nichts erzwungen". Rätsel, die sie brauchen, werden nicht ausgeliefert.
+They solve more puzzles — but the explanation for such a step is a paragraph, not a
+sentence. A hint nobody can follow is worse than an honest "nothing is forced right now."
+Puzzles that need them are not delivered.
 
-Uniqueness-Techniken (Unique Rectangle) fehlen aus einem anderen Grund: sie
-argumentieren mit „das Rätsel hat genau eine Lösung" — eine Tatsache über den
-Setzenden, nicht über das Gitter. Sie würden den Solver außerdem als *Prüfer* der
-Eindeutigkeit unbrauchbar machen, und genau dafür braucht ihn der Generator.
+Uniqueness techniques (unique rectangle) are missing for a different reason: they argue
+from "the puzzle has exactly one solution" — a fact about the setter, not about the grid.
+They would also make the solver useless as a *checker* of uniqueness, which is exactly
+what the generator needs it for.
 
-## 4. Die laufende Partie
+## 4. The running game
 
-`SudokuGame` hält Eingaben, Notizen und die Undo-Historie.
+`SudokuGame` holds inputs, notes and the undo history.
 
-**Persistiert wird später der Startzustand plus die Bearbeitungsliste**, nicht eine
-Zustandskopie — dasselbe Prinzip wie Chessomnias Zugliste. Deshalb ist eine
-Bearbeitung (`Edit`) schon jetzt eine *Liste* von Feldänderungen: das Setzen einer
-Ziffer löscht sie zugleich aus den Notizen aller 20 Nachbarn, und Undo muss beides
-zurücknehmen.
+**What gets persisted later is the starting state plus the edit list**, not a copy of the
+state — the same principle as Chessomnia's move list. That's why an edit (`Edit`) is
+already a *list* of cell changes: setting a digit also clears it from the notes of all 20
+neighbours, and undo has to reverse both.
 
-### Zweige: ein Versuch auf Probe
+### Branches: a trial attempt
 
-Auf „Schwer" ist regelmäßig kein Feld mehr erzwungen (§5) — der Weg weiter ist, eine
-Ziffer anzunehmen und die Folgen zu verfolgen. `beginBranch()` setzt dazu eine Marke
-in die Bearbeitungsliste; alles danach ist vorläufig, bis `commitBranch()` es behält
-oder `discardBranch()` den ganzen Versuch zurücknimmt.
+On "Hard", it's common for no cell to be forced anymore (§5) — the way forward is to
+assume a digit and follow the consequences. `beginBranch()` sets a marker in the edit list
+for this; everything after it is provisional until `commitBranch()` keeps it or
+`discardBranch()` undoes the whole attempt.
 
-**Ein Zweig ist nur diese Marke** — kein zweites Brett, keine Zustandskopie. Verwerfen
-ist Undo bis zur Marke und danach ein Abschneiden der Liste. Damit stellt es Notizen
-und die bei Nachbarn gestrichenen Kandidaten genauso exakt wieder her wie der
-Rückgängig-Knopf, ohne dass dafür eine Zeile geschrieben werden musste; wäre der Zweig
-eine Kopie des Bretts, wären es zwei Wahrheiten über denselben Spielstand.
+**A branch is only this marker** — no second board, no copy of the state. Discarding is
+undo down to the marker followed by truncating the list. This restores notes and the
+candidates struck from neighbours exactly as precisely as the undo button, without a
+single extra line having to be written for it; if the branch were a copy of the board,
+there would be two truths about the same save state.
 
-Drei Regeln hängen daran:
+Three rules follow from this:
 
-- **Undo hält an der Marke.** Sonst stünde der Zweig um Bearbeitungen herum offen, die
-  gar nicht mehr zu ihm gehören, und „alles zurück" hätte keinen definierten Umfang.
-  Nach dem Übernehmen fällt die Grenze sofort weg.
-- **Der Redo-Zweig wird beim *Öffnen* verworfen**, nicht beim Verwerfen. Dann ist
-  Verwerfen ein reines Abschneiden auf die Marke und kann keine Bearbeitungen von
-  *vor* dem Zweig wiederbeleben.
-- **Zweige verschachteln nicht.** Ein zweites `beginBranch()` ist wirkungslos. Ein
-  Stapel wäre billig zu haben, aber „welchen Zweig verwerfe ich gerade?" ist eine
-  Frage, die die Oberfläche dann beantworten müsste — und der Fall, um den es geht,
-  ist eine Annahme und ihre Folgen.
+- **Undo stops at the marker.** Otherwise the branch would stand open around edits that
+  no longer belong to it, and "undo everything" would have no defined scope. The boundary
+  disappears immediately once the branch is committed.
+- **The redo stack is discarded when a branch is *opened***, not when it's discarded. That
+  keeps discarding a pure truncation to the marker, and it can never revive edits from
+  *before* the branch.
+- **Branches don't nest.** A second `beginBranch()` has no effect. A stack would be cheap
+  to build, but "which branch am I discarding right now?" is a question the UI would then
+  have to answer — and the case this is about is one assumption and its consequences.
 
-`trialCells()` liefert die Felder, deren **Ziffer** sich seit der Marke geändert hat —
-das ist, was gelb wird. Notizen zählen bewusst nicht: eine gesetzte Ziffer streicht
-sich aus den Notizen von bis zu 20 Nachbarn, die alle einzufärben verteilte den
-Versuch über ein Viertel des Bretts. Eine wieder geleerte Zelle fällt aus der Liste
-heraus, weil dann nichts vom Versuch mehr darin steht.
+`trialCells()` returns the cells whose **digit** has changed since the marker — that is
+what turns yellow. Notes deliberately don't count: setting a digit clears it from the
+notes of up to 20 neighbours, and colouring all of those would spread the attempt over a
+quarter of the board. A cell that's emptied again drops out of the list, because nothing
+of the attempt is left in it.
 
-**Ob der Versuch gescheitert ist, sagt der vorhandene Tipp**: er prüft ohnehin als
-Erstes, ob das Brett noch lösbar ist (§5), und meldet sonst genau das. Der Zweig
-braucht dafür keine eigene Prüfung — und vor allem kein automatisches „das war
-falsch", das dem Spieler die Arbeit abnähme, die er gerade tun wollte.
+**Whether the attempt has failed is answered by the existing hint**: it already checks
+first whether the board is still solvable (§5), and reports exactly that otherwise. The
+branch needs no check of its own for this — and above all no automatic "that was wrong"
+that would take away the work the player was trying to do.
 
-**Konflikte, keine Fehler.** Markiert wird eine Ziffer, die in Zeile, Spalte oder Block
-doppelt vorkommt — eine Aussage über die Regeln, die der Spieler selbst treffen könnte.
-Ein Abgleich mit der gespeicherten Lösung wäre etwas anderes: die App würde das Rätsel
-still mitlösen. Diese Grenze ist Absicht — und sie gilt in `SudokuGame` weiterhin
-ausnahmslos. Überschreiten kann sie nur der Spieler selbst, indem er die Warnung vor
-falschen Eingaben einschaltet (§7); der Vergleich steht dann im ViewModel, nicht im
-Modell.
+**Conflicts, not errors.** What gets marked is a digit that appears twice in a row,
+column or box — a statement about the rules that the player could work out themselves. A
+comparison against the stored solution would be something else entirely: the app would
+be silently solving the puzzle along with the player. This boundary is deliberate — and it
+still holds without exception in `SudokuGame`. Only the player can cross it, by turning on
+the warning for wrong entries (§7); the comparison then lives in the ViewModel, not in the
+model.
 
-**Auch Notizen.** `noteConflicts()` markiert einen Bleistift-Kandidaten, dessen Ziffer
-in der Nachbarschaft schon gesetzt ist — dieselbe Aussage über dieselbe Regel, nur über
-eine Notiz statt über eine Eingabe. Zwei *Notizen* derselben Ziffer in einer Einheit
-sind dagegen kein Konflikt: beide dürfen Kandidaten sein, dafür sind Notizen da.
+**Notes too.** `noteConflicts()` marks a pencil candidate whose digit is already set in
+the neighbourhood — the same statement about the same rule, just about a note instead of
+an entry. Two *notes* of the same digit in one unit, on the other hand, are not a
+conflict: both are allowed to be candidates, that's what notes are for.
 
-Die Lücke gab es nur, weil das Setzen einer Ziffer sie aus den Notizen aller 20
-Nachbarn streicht — ein unmöglicher Kandidat kann also nur entstehen, wenn er
-*nachträglich* notiert wird. Genau in dem Moment will man es wissen.
+The gap only existed because setting a digit clears it from the notes of all 20
+neighbours — an impossible candidate can therefore only arise if it is *noted
+afterwards*. That's exactly the moment you want to know about it.
 
-`isSolved()` prüft „voll und konfliktfrei" und konsultiert die Lösung ebenfalls nicht —
-bei einem eindeutig lösbaren Rätsel ist das dasselbe.
+`isSolved()` checks "full and conflict-free" and likewise doesn't consult the solution —
+for a uniquely solvable puzzle, that's the same thing.
 
 ---
 
-## 5. Tipp
+## 5. Hint
 
-Der Tipp ist **ein Schritt der Technikleiter, genommen vom Brett, wie es dasteht**
-(`HumanSolver.nextSteps`) — derselbe Code, der die Stufe misst. Er kann deshalb immer
-sagen *warum*, und er sagt nur Dinge, die der Spieler selbst hätte sehen können.
+The hint is **one step of the technique ladder, taken from the board as it stands**
+(`HumanSolver.nextSteps`) — the same code that measures the level. It can therefore always
+say *why*, and it only ever says things the player could have seen themselves.
 
-`rules/Hint.kt` beantwortet „was jetzt?" in dieser Reihenfolge:
+`rules/Hint.kt` answers "what now?" in this order:
 
-1. `grid.load(board)` scheitert → **tot** (zwei gleiche Ziffern in einer Einheit)
-2. `solver.countSolutions(board, limit = 1) == 0` → **tot**
-3. die Kette der Leiter bis zur nächsten setzbaren Ziffer
-4. sonst `bestBranchCell()` → blank aufdecken
+1. `grid.load(board)` fails → **dead** (two equal digits in one unit)
+2. `solver.countSolutions(board, limit = 1) == 0` → **dead**
+3. the ladder's chain up to the next settable digit
+4. otherwise `bestBranchCell()` → reveal a blank
 
-### Warum eine Kette und nicht ein Schritt
+### Why a chain and not one step
 
-Eine Elimination ändert das Brett nicht. Zeigt man dem Spieler eine einzelne, kommt
-beim nächsten Druck dieselbe wieder — für immer. Die Kette läuft deshalb bis zu dem
-Schritt, der wirklich eine Ziffer setzt: „streich das weg, dann das, und jetzt ist die
-7 erzwungen." Jeder Druck rückt einen Schritt weiter, jeder Schritt hat zwei Stufen
-(*wo* — dann *warum*), und am Ende steht „Eintragen".
+An elimination doesn't change the board. Show the player a single one, and the next press
+shows the same one again — forever. The chain therefore runs up to the step that actually
+sets a digit: "cross this out, then that, and now the 7 is forced." Each press advances one
+step, each step has two stages (*where* — then *why*), and it ends with "enter."
 
-Gemessen über 2.563 Tipps in allen vier Bändern: **2.514 Ketten sind ein einziger
-Schritt**, 49 sind länger, die längste war 20. Die Obergrenze in `nextSteps` ist
-entsprechend keine gestaltete Länge, sondern nur eine Abbruchbedingung.
+Measured across 2,563 hints in all four bands: **2,514 chains are a single step**, 49 are
+longer, the longest was 20. The upper bound in `nextSteps` is accordingly not a designed
+length but only a cutoff condition.
 
-### Was der Tipp nicht tut
+### What the hint does not do
 
-**Er fasst die Notizen des Spielers nicht an.** Eine Elimination wird gezeigt und dann
-geschlossen; es gibt kein „Eintragen" dafür. Kandidaten wegzustreichen, die der Spieler
-nie notiert hat, wäre eine Änderung, die er nicht sehen kann — und die Notizen sind
-seine.
+**It does not touch the player's notes.** An elimination is shown and then closed off;
+there is no "enter" for it. Crossing out candidates the player never noted would be a
+change they can't see — and the notes are theirs.
 
-**Die Notizen fließen auch nicht ein**, `find()` nimmt sie gar nicht entgegen. Notizen
-sind unvollständig, veralten und können falsch sein; ein Tipp, der darauf rechnet, wäre
-beweisbar falsch, und der Spieler hätte keine Chance das zu merken — für ihn ist die
-App die Autorität. Der Kandidatenstand aus `Grid.load(board)` ist dagegen kanonisch.
+**Notes don't feed into it either**, `find()` doesn't even accept them. Notes are
+incomplete, go stale and can be wrong; a hint that relied on them would be provably wrong,
+and the player would have no way to notice — to them, the app is the authority. The
+candidate state from `Grid.load(board)` is canonical instead.
 
-**Schritt 2 ist Vorbedingung, keine Zusatzfunktion.** Auf einem toten Brett wäre jede
-Herleitung ein Argument innerhalb eines Widerspruchs. Der Test ist exakt, nicht
-heuristisch: das Rätsel hat genau eine Lösung, also ist das Brett genau dann tot, wenn
-eine Eingabe abweicht. Angezeigt wird nur *dass*, nie *wo* — der Ausweg ist der
-vorhandene Rückgängig-Knopf.
+**Step 2 is a precondition, not an extra feature.** On a dead board, any derivation would
+be an argument inside a contradiction. The test is exact, not heuristic: the puzzle has
+exactly one solution, so the board is dead exactly when one entry deviates from it. Only
+*that* is shown, never *where* — the way out is the existing undo button.
 
-### Die blanke Aufdeckung ist übrig geblieben, nicht geblieben nötig
+### Revealing a blank is a leftover, not a continuing need
 
-Sie ist für Rätsel aus diesem Generator unerreichbar geworden: jedes ist mit der Leiter
-lösbar (§3), und der Test `everyHintIsExplainable` spielt jedes Rätsel jeder Stufe
-allein über den Tipp-Knopf durch, ohne je eine Aufdeckung zu sehen. Sie bleibt für zwei
-Fälle, die nicht hypothetisch sind: ein Spielstand aus einer älteren Version, dessen
-Rätsel ohne diese Zusage ausgegraben wurde, und ein Brett, das der Spieler mit eigenen
-korrekten Zügen in eine Stellung gebracht hat, die die Leiter nicht knackt.
+It has become unreachable for puzzles from this generator: every one is solvable by the
+ladder (§3), and the test `everyHintIsExplainable` plays every puzzle of every level
+through using only the hint button, without ever seeing a reveal. It remains for two cases
+that are not hypothetical: a save from an older version whose puzzle was dug out without
+this guarantee, and a board the player has brought, through their own correct moves, into
+a position the ladder can't crack.
 
-### Was das ersetzt hat
+### What this replaced
 
-Vorher konnte der Tipp genau zwei Dinge begründen — Hidden und Naked Single — und
-deckte sonst blank auf. Auf „Schwer" lief **jedes** Rätsel mit Singles allein fest, das
-war die Definition der Stufe; der Tipp konnte dort also grundsätzlich nur aufdecken.
-Gemessen wurde damals, wie weit eine Aufdeckung trägt (17 weitere erzwungene Felder,
-rund zwei Aufdeckungen je Rätsel). Genau diese Zahl war das Argument, die Technikleiter
-zu bauen.
+Before, the hint could justify exactly two things — hidden and naked single — and
+otherwise revealed a blank. On "Hard", **every** puzzle got stuck with singles alone, that
+was the definition of the level; the hint there could therefore only ever reveal. What was
+measured back then was how far a reveal carries (17 further forced cells, roughly two
+reveals per puzzle). That very number was the argument for building the technique ladder.
 
-## 6. Statistik und Spielstand
+## 6. Statistics and save state
 
-Zählregeln in `data/Stats.kt` als **reine Funktionen** — im ViewModel wären sie ungetestet,
-weil das Projekt kein Robolectric hat.
+Counting rules in `data/Stats.kt` as **pure functions** — in the ViewModel they would be
+untested, because the project has no Robolectric.
 
-- `started` beim ersten Spielzug, nicht bei der Erzeugung: bloßes Durchblättern der Stufen
-  soll die Zahl nicht aufblähen.
-- `solved` genau einmal. Voraussetzung dafür war eine Aufräumarbeit: „gelöst" wurde vorher
-  an **zwei** Stellen unabhängig berechnet (im ViewModel und in `SudokuGame`). Jetzt ist
-  `SudokuGame.isSolved()` die einzige Definition, und `SudokuViewModel.onBoardChanged()`
-  der einzige Übergangspunkt — zusätzlich abgesichert durch `countedSolved`, damit
-  Lösen → Rückgängig → Wiederholen nicht doppelt zählt.
-- Abzeichen *ohne Hilfen*: alle vier Schalter waren die **ganze Partie** über aus.
-  `aidsCleanRun` wird unwiderruflich gelöscht, sobald eine Hilfe an war — kurz vor dem
-  letzten Feld umzuschalten erschleicht nichts.
+- `started` on the first move, not on generation: merely flipping through the levels
+  should not inflate the count.
+- `solved` exactly once. This required a cleanup first: "solved" used to be computed
+  independently in **two** places (in the ViewModel and in `SudokuGame`). Now
+  `SudokuGame.isSolved()` is the single definition, and
+  `SudokuViewModel.onBoardChanged()` the single transition point — further guarded by
+  `countedSolved`, so that solve → undo → redo doesn't count twice.
+- The *no aids* badge: all four toggles were off for the **entire game**. `aidsCleanRun`
+  is irrevocably cleared the moment any aid was on — flipping it back off just before the
+  last cell earns nothing.
 
-`data/GameSnapshot.kt` speichert **Vorgaben + Bearbeitungsliste**, nicht eine Zustandskopie.
-Damit kommen Ziffern, Notizen und Undo-Stack in einem Schritt zurück und können nicht
-auseinanderlaufen. `decode()` ist nullbar und wird validiert (Lösung gültig, Vorgaben passen
-dazu); bei jeder Unstimmigkeit wird der Spielstand verworfen statt halb kaputt geladen.
-Gelesen wird **synchron im ViewModel-Konstruktor**, aus demselben Grund wie die
-Einstellungen — sonst blitzt beim Start kurz ein neues Rätsel auf.
+`data/GameSnapshot.kt` stores **givens + edit list**, not a copy of the state. That means
+digits, notes and undo stack come back in one step and can never drift apart. `decode()`
+is nullable and validated (solution valid, givens match it); on any inconsistency, the
+save is discarded rather than loaded half-broken. It's read **synchronously in the
+ViewModel constructor**, for the same reason as the settings — otherwise a new puzzle
+would briefly flash on startup.
 
-Ein offener Zweig ist eine einzelne Zahl in diesem Datensatz (die Marke), der Fehlerzähler
-der Warnung (§7) eine zweite; das ist Format Version 3. Die Versionen 1 und 2 werden
-weiterhin gelesen und bekommen „kein Zweig" beziehungsweise „noch keine Fehler" — wer beim
-Update mitten im Rätsel steckt, verliert es sonst für ein Feld, das es damals nicht gab.
+An open branch is a single number in this record (the marker), the mistake counter for
+the warning (§7) a second one; that's format version 3. Versions 1 and 2 are still read
+and get "no branch" and "no mistakes yet" respectively — otherwise anyone mid-puzzle
+during an update would lose it over a field that didn't exist back then.
 
-`onBoardChanged()` ist der einzige Trichter für Brettänderungen und besitzt drei Dinge, die
-nicht verstreut werden dürfen: der Tipp verfällt (einer gegen ein älteres Brett gerechnet
-ist nicht bloß veraltet, er kann falsch sein), der Sieg wird gezählt, das Spiel gespeichert.
+`onBoardChanged()` is the single funnel for board changes and owns three things that must
+not be scattered: the hint expires (one computed against an older board isn't just stale,
+it can be wrong), the win is counted, the game is saved.
 
 ---
 
-## 7. Abschaltbare Hilfen
+## 7. Aids that can be switched off
 
-Vier Anzeigen nehmen dem Spieler Arbeit ab, und jede ist einzeln abschaltbar
-(`data/Settings.kt`): Konflikte anzeigen, gleiche Ziffer hervorheben, Zeile/Spalte/Block
-hervorheben, fertige Ziffern im Ziffernpad ausgrauen.
+Four displays take work off the player's hands, and each can be switched off individually
+(`data/Settings.kt`): show conflicts, highlight the same digit, highlight row/column/box,
+grey out finished digits on the digit pad.
 
-Die erste ist die eigentliche: sie sagt sofort, ob eine Ziffer im Feld überhaupt möglich
-ist, und erledigt damit die halbe Denkarbeit. Aus heißt, dass die App schweigt.
+The first is the real one: it tells you instantly whether a digit is even possible in a
+cell, doing half the thinking for you. Off means the app stays quiet.
 
-### Die fünfte Hilfe ist von anderer Art
+### The fifth aid is of a different kind
 
-`warnOnWrong` vergleicht jede Eingabe mit der gespeicherten Lösung und sagt sofort, wenn
-sie abweicht. Die vier anderen reden über die *Regeln* — was dasteht, kann der Spieler
-selbst nachprüfen. Diese liest die *Antwort*. Daraus folgt alles Übrige:
+`warnOnWrong` compares every entry against the stored solution and immediately says when
+it deviates. The other four talk about the *rules* — what's on the board, the player could
+verify themselves. This one reads the *answer*. Everything else follows from that:
 
-- **Sie ist als einzige standardmäßig aus.** Eine Hilfe, die mitlöst, gibt man niemandem,
-  der nicht danach gefragt hat.
-- **Sie kostet etwas.** Drei falsche Eingaben beenden die Partie (`game/MistakeTally.kt`,
-  `LIMIT = 3`). Ohne Preis wäre sie kein Kompromiss, sondern ein Solver mit Extraschritten:
-  man tippt durch, bis es grün bleibt. Der Hinweistext im Einstellungsdialog nennt den
-  Preis deshalb mit, und die Warnung zählt die verbleibenden Versuche laut mit — die
-  dritte darf keine Überraschung sein.
-- **Sie zählt in `allAidsOff` mit**, also verwirkt sie das Abzeichen „ohne Hilfen" wie
-  jede andere.
+- **It's the only one off by default.** An aid that solves along with you is not something
+  you hand to someone who hasn't asked for it.
+- **It costs something.** Three wrong entries end the game (`game/MistakeTally.kt`,
+  `LIMIT = 3`). Without a cost, it wouldn't be a compromise but a solver with extra steps:
+  you'd tap through until it stays green. The hint text in the settings dialog therefore
+  states the cost, and the warning counts down the remaining attempts out loud — the third
+  one must not be a surprise.
+- **It counts toward `allAidsOff`**, so it forfeits the "no aids" badge like any other.
 
-**Gezählt wird in `onDigit`, nicht in `onBoardChanged`.** Durch den Trichter laufen auch
-Rückgängig, Wiederholen und das Verwerfen eines Zweiges — einen Zug zurückzuspielen ist
-aber nicht, ihn zu machen. Aus demselben Grund geht der Zähler nur nach oben: ließe sich
-ein Versuch per Rückgängig zurückkaufen, wäre der Preis keiner. Auf einem verlorenen Brett
-sind Rückgängig und Wiederholen deshalb tot, auf einem gelösten weiterhin nicht.
+**It's counted in `onDigit`, not in `onBoardChanged`.** Undo, redo and discarding a branch
+also pass through that funnel — but replaying a move back is not the same as making it.
+For the same reason, the counter only goes up: if an attempt could be bought back via
+undo, the cost wouldn't be one. Undo and redo are therefore dead on a lost board, but
+still not on a solved one.
 
-**Im Zweig wird nicht geprüft.** Ein Zweig (§4) ist ausdrücklich eine Annahme, die falsch
-sein darf — das ist sein Zweck. Dafür einen Versuch abzuziehen, ließe die beiden Funktionen
-einander widersprechen.
+**No check happens inside a branch.** A branch (§4) is explicitly an assumption that is
+allowed to be wrong — that's its whole purpose. Deducting an attempt for it would put the
+two features at odds with each other.
 
-**Ein `finished` statt zweier Flags.** Uhr, Ziffernpad, Tipp, Pause und Zweigleiste fragen
-nicht mehr `solved`, sondern `GameUiState.finished` (`solved || lost`). Zwei Flags an sechs
-Stellen sind genau die Konstruktion, bei der eine davon vergessen wird und das Ziffernpad
-auf einem verlorenen Brett weiterläuft.
+**One `finished` instead of two flags.** The clock, digit pad, hint, pause and branch bar
+no longer ask `solved`, but `GameUiState.finished` (`solved || lost`). Two flags in six
+places is exactly the setup where one gets forgotten and the digit pad keeps working on a
+lost board.
 
-Der Zähler steht im Spielstand (`GameSnapshot`, Format Version 3). Sonst wären drei neue
-Versuche nur einen App-Neustart entfernt. Version 2 wird weiter gelesen und bekommt „noch
-keine Fehler" — wer beim Update mitten im Rätsel steckt, soll es behalten.
+The counter lives in the save state (`GameSnapshot`, format version 3). Otherwise three
+fresh attempts would be just an app restart away. Version 2 is still read and gets "no
+mistakes yet" — anyone mid-puzzle during an update should get to keep it.
 
-**Es gibt genau ein Gate.** Die Konflikte werden immer berechnet — die Gelöst-Erkennung
-braucht sie —, aber `SudokuViewModel.publish()` reicht dem Brett bei abgeschalteter
-Anzeige ein durchweg leeres Array; das Brett erfährt den Unterschied nie. Die
-Notiz-Konflikte laufen durch dasselbe Gate und werden bei abgeschalteter Anzeige gar
-nicht erst berechnet: sie sind, anders als die der Eingaben, für nichts anderes gut. Diese
-Entscheidung im ViewModel zu treffen statt im Zeichencode bedeutet, dass es genau eine
-Stelle gibt, an der die App die Lösung verraten könnte, statt einer pro Zeichendurchgang.
+**There is exactly one gate.** Conflicts are always computed — solved detection needs
+them — but `SudokuViewModel.publish()` hands the board a uniformly empty array whenever
+the display is off; the board never learns the difference. Note conflicts go through the
+same gate and, when the display is off, are not even computed: unlike the ones for
+entries, they're not good for anything else. Making this decision in the ViewModel rather
+than in the drawing code means there's exactly one place where the app could give away the
+solution, instead of one per render pass.
 
-Ein Nebeneffekt musste eigens behandelt werden: mit abgeschalteter Konfliktanzeige wird
-ein voll, aber falsch ausgefülltes Gitter sonst mit **gar nichts** quittiert, was sich
-wie ein Fehler der App anfühlt. `fullButWrong` blendet dann eine Zeile ein, die sagt
-*dass* etwas nicht stimmt, ohne zu sagen *wo* — genau die Grenze, um die es bei der
-Einstellung geht.
+One side effect had to be handled separately: with conflict marking off, a grid that's
+full but wrong would otherwise get **no feedback at all**, which feels like a bug in the
+app. `fullButWrong` then shows a line saying *that* something is wrong, without saying
+*where* — exactly the boundary this setting is about.
 
-Gespeichert wird über `SudomniaPrefs` in SharedPreferences, **synchron im
-ViewModel-Konstruktor** gelesen: schon der erste Frame zeigt die eigenen Einstellungen.
-Ein DataStore-Flow würde einen Frame mit den Standardwerten zeichnen und sich dann
-korrigieren — sichtbar als Flackern genau an dem Schalter, den jemand gerade umgelegt
-hat. Das Feld `settings_version` existiert, damit sich eine später geänderte Vorgabe von
-einem bewusst gesetzten Wert unterscheiden lässt.
+Saved via `SudomniaPrefs` in SharedPreferences, read **synchronously in the ViewModel
+constructor**: the very first frame already shows your own settings. A DataStore flow
+would draw one frame with the defaults and then correct itself — visible as a flicker
+right at the switch someone just flipped. The `settings_version` field exists so a
+default that changes later can be told apart from a value the user deliberately set.
 
 ---
 
 ## 8. Icon
 
-`tools/generate_app_icon.py` erzeugt Hinter-, Vordergrund- und Monochrom-Ebene aus einer
-Quelle. Das Zeichen ist ein 3×3-Block — die Box-Struktur, an der man ein Sudoku erkennt;
-das volle 9×9-Gitter wäre bei Launcher-Größe grauer Brei.
+`tools/generate_app_icon.py` generates the background, foreground and monochrome layers
+from one source. The mark is a 3×3 block — the box structure by which a Sudoku is
+recognised; the full 9×9 grid would be grey mush at launcher size.
 
-Gefüllt sind die drei Zellen auf der Diagonalen. Das ist kein beliebiges Muster: die
-Boxen 1, 5 und 9 sind die einzigen drei, die keine Einheit miteinander teilen — genau
-deshalb füllt `GridGenerator` sie zuerst mit drei unabhängigen Zufallspermutationen. Das
-Icon zeigt die eine strukturelle Tatsache, auf der der Generator aufgebaut ist.
+The three cells on the diagonal are filled in. That's not an arbitrary pattern: boxes 1,
+5 and 9 are the only three that share no unit with each other — which is exactly why
+`GridGenerator` fills them first with three independent random permutations. The icon
+shows the one structural fact the generator is built on.
 
-Launcher-Masken geben den 72dp-Kreis um die Mitte des 108dp-Rasters frei, ein
-quadratisches Zeichen darf also höchstens 72/√2 = 50,9dp breit sein. Der Block ist 50dp.
-Die Farbe der leeren Zellen wurde **bei 48dp gerendert ausgewählt**, nicht bei voller
-Größe beurteilt: eine Stufe über dem Hintergrund löst sich klein auf, zwei Stufen
-darüber konkurrieren die leeren Zellen mit den gefüllten und die Diagonale verliert.
-
----
-
-## 9. Oberfläche
-
-Ein Screen, kein Navigationsgraph; die Stufenwahl ist ein Dialog.
-
-### Die Eingabe hat keinen Modus
-
-Der erste Entwurf hatte ein Ziffernpad plus einen Schalter „Notizen". Das erzwingt die
-Reihenfolge *entscheiden → Feld → Ziffer*. Spieler denken andersherum: sie schauen auf ein
-Feld und wissen erst dann, ob sie die Lösung haben oder Kandidaten sammeln wollen. Und der
-teuerste Fall war der häufigste — drei Kandidaten notieren hieß umschalten, drei Taps,
-zurückschalten, und wer das Zurückschalten vergaß, trug beim nächsten Feld eine Notiz statt
-einer Ziffer ein.
-
-Jetzt stehen **zwei Reihen dauerhaft** unter dem Brett: oben die großen Ziffern, darunter
-die flachen Notiz-Tasten. Was ein Tap bedeutet, entscheidet damit *welche* Taste getroffen
-wird, nicht ein vorher gesetzter Zustand. Drei Notizen sind drei Taps.
-
-Drei Details, die daran hängen:
-
-- **Die Notiz-Tasten sind zustandsbehaftet.** Eine gefüllte Taste heißt „diese Notiz steht
-  im gewählten Feld". Die Reihe ist damit zugleich die Anzeige des Kandidatenstands, und
-  eine Notiz wieder wegzunehmen ist derselbe Tap wie sie zu setzen.
-- **Beide Reihen sind sichtbar tot, solange kein bearbeitbares Feld gewählt ist.** Vorher
-  passierte bei einem Tap ins Leere einfach nichts — das ist genau die Rückmeldung, die die
-  neue Reihenfolge nicht vermittelt. Die Notizreihe geht zusätzlich aus, sobald im Feld eine
-  Ziffer steht: `SudokuGame.toggleNote` ignoriert diesen Fall ohnehin, und stillschweigend
-  geschluckte Taps sind schlimmer als graue Tasten.
-- **Die Ziffer im gewählten Feld wird als gedrückte Taste gezeigt.** Sie nochmal zu tippen
-  löscht das Feld — dieser Toggle steckt schon in `SudokuGame.setDigit`, die Hervorhebung
-  macht ihn nur sichtbar.
-
-`SudokuGame` blieb dabei unverändert: `setDigit` / `toggleNote` / `clearCell` waren immer
-schon feldbezogen. Weg ist nur der Modus im ViewModel — der einzige Zustand, den es dafür je
-gab.
-
-- **Das Gitter ist ein einziges `Canvas`**, nicht 81 Composables. Zeichnen und
-  Antippen gehen durch dasselbe `BoardGeometry` — getrennt hergeleitet driften sie,
-  und Tipps landen am Rand ein Feld daneben.
-- Text über `nativeCanvas` mit wiederverwendeten `Paint`-Objekten statt `TextMeasurer`:
-  bis zu 81 Ziffern plus 9 Notizen je Feld pro Frame.
-- **`BoardState` schreibt `equals`/`hashCode` von Hand aus.** Als data class würden die
-  `IntArray`-Felder per Identität verglichen, Compose würde die Neuzeichnung
-  überspringen und das Brett stünde still. Genau dieser Bug ist Chessomnia einmal
-  passiert.
-- **Die Farbgebung der Hervorhebungen ist gemessen, nicht geschätzt.** Der Tint für
-  Zeile/Spalte/Block deckt 21 Felder ab, die Gleiche-Ziffer-Hervorhebung höchstens
-  neun — und Letztere ist das, wonach gesucht wird. Mit dem ursprünglichen Paar
-  (Kreuz `#E2EDF4`, Grün `#CFE6B8`) las sich das Brett als „großes blaues Kreuz" und
-  die gleichen Ziffern verschwanden darin. Ermittelt durch Nachbau des Zeichencodes
-  und Rendern echter Stellungen, nicht durch Beurteilen am Quelltext. Jetzt: Kreuz
-  schwächer (`#EDF3F8`), Grün kräftiger (`#A9D98A`).
-- **Vorläufige Ziffern werden zweifach markiert**: gelbe Zelle *und* dunkelgelbe
-  Ziffer. Die Zellfarbe allein reicht nicht — ein Zweigfeld, das gerade gewählt ist
-  oder die hervorgehobene Ziffer trägt, wird in *deren* Farbe gezeichnet, und „das ist
-  nur ein Versuch" darf dabei nicht verschwinden. In der Rangfolge der Zellfarben steht
-  Gelb über der Gleiche-Ziffer-Hervorhebung, nach derselben Regel wie dort: wer weniger
-  Felder färbt, gewinnt.
-- **Die hervorgehobene Ziffer wird auch in den Notizen hervorgehoben** (fett, dunkelgrün).
-  Ohne das leuchten die gesetzten Ziffern auf, aber die *notierten* — meist genau die,
-  über die gerade nachgedacht wird — muss man mit dem Auge suchen.
-- **Der Timer hat einen eigenen `StateFlow`.** Läge er im Brett-Zustand, würde das
-  81-Feld-Canvas zweimal pro Sekunde neu gezeichnet.
-- **Ob die Uhr läuft, entscheidet genau eine Funktion** (`SudokuViewModel.syncTimer`):
-  ein Spiel ist geladen, es ist nicht gelöst, die App ist sichtbar, der Spieler hat
-  nicht pausiert. Jeder Aufrufer ändert eine dieser Tatsachen und fragt neu. Verstreute
-  `startTimer()`-Aufrufe waren genau der Fehler, aus dem die Uhr nachts auf dunklem
-  Bildschirm weiterlief — sie wurde nur bei „neues Spiel" und „gelöst" angehalten,
-  Lebenszyklus-Ereignisse kannte niemand. `startTimer()` steigt jetzt zusätzlich aus,
-  wenn die Uhr schon läuft: sonst würde `startedAt` vorrücken, während `accumulatedMs`
-  den alten Stand hält, und die Zeit dazwischen wäre weg.
-- **Zwei Gründe für eine stehende Uhr, absichtlich getrennt.** Die Pause des Spielers
-  blendet das Brett aus; „App nicht sichtbar" (`MainActivity.onStart`/`onStop`) hält
-  nur die Uhr an und löst sich beim Zurückkommen von selbst auf — eine Tippquittung
-  für jede beantwortete Benachrichtigung wäre eine Maut. `onStop` speichert außerdem:
-  im Hintergrund kann der Prozess sterben, und sonst überlebte nur die Zeit bis zur
-  letzten Brettänderung.
-- **Die Pause blendet das Brett wirklich aus**, statt es hinter einem halbdurchsichtigen
-  Schleier zu lassen: eine stehende Uhr vor einem lesbaren Gitter ist geschenkte
-  Denkzeit, und Denken ist das ganze Spiel. Verdeckt wird auch das Ziffernpad — die
-  Notizreihe ist der Kandidatenstand des gewählten Feldes.
-- Die Brettseite wird als `min(maxWidth, maxHeight)` ausgeschrieben, **nicht** als
-  `fillMaxHeight().aspectRatio(1f)` — letzteres leitet die Breite aus der Höhe ab und
-  liefert bereitwillig ein Brett breiter als der Bildschirm.
-- Die verstrichene Zeit wird aus `SystemClock.elapsedRealtime()` *abgeleitet*, nicht je
-  Tick hochgezählt — ein verspäteter Tick kann die Anzeige damit nicht verschieben.
+Launcher masks expose the 72dp circle around the centre of the 108dp grid, so a square
+mark can be at most 72/√2 = 50.9dp wide. The block is 50dp. The colour of the empty cells
+was **chosen as rendered at 48dp**, not judged at full size: one step above the background
+dissolves at small sizes, two steps above and the empty cells start competing with the
+filled ones, and the diagonal is lost.
 
 ---
 
-## 10. Wie Korrektheit sichergestellt wird
+## 9. UI
 
-Nur JVM-Unit-Tests, kein Robolectric, keine Instrumented-Tests. `rules/` und `game/`
-haben keine Android-Importe.
+One screen, no navigation graph; the level picker is a dialog.
 
-1. **Veröffentlichte Rätsel mit bekannter Lösung** (`ReferencePuzzles`): Project Euler
-   96 Nr. 1, ein 17-Vorgaben-Rätsel, AI Escargot. Die Lösungen stammen aus einem
-   unabhängigen Norvig-artigen Solver, nicht aus diesem Code — das ist die eine Stelle,
-   an der Korrektheit nicht von der eigenen Implementierung abhängt.
-2. **Eine mathematische Invariante:** fehlen zwei Ziffern vollständig aus den Vorgaben,
-   sind sie in jeder Lösung vertauschbar, es gibt also mindestens zwei Lösungen. Ein
-   Solver, der hier „eindeutig" meldet, ist kaputt — und genau dieser Fehler würde
-   unlösbare Rätsel ausliefern.
-3. **Jedes erzeugte Rätsel hat genau eine Lösung**, über alle Stufen.
-4. **Minimalität:** aus einem Schwer-Rätsel lässt sich keine weitere Vorgabe entfernen,
-   ohne die Eindeutigkeit zu verlieren.
-5. **Undo stellt Ziffern *und* Notizen exakt wieder her**, über zufällige Zugfolgen.
-6. **Mittelpunkt jedes Feldes findet sein Feld zurück** — Zeichnen und Antippen stimmen
-   überein.
-7. **Ein Tipp nennt nie die falsche Ziffer** — über viele Rätsel und viele Spielstände
-   geprüft. Fiele das je um, setzte die App auf Knopfdruck eine garantiert falsche Zahl.
-8. **Ist etwas zwingend, wird es begründet** statt blank aufgedeckt.
-9. **Eine falsche Eingabe wird als tot erkannt**, bevor irgendetwas verraten wird.
-10. **Ein Spielstand übersteht Kodieren und Zurückspielen** samt Notizen und Undo-Tiefe;
-    kaputte Daten liefern `null`, statt beim Start zu werfen. Das gilt auch für einen
-    offenen Zweig — und ein Spielstand im alten Format lädt weiterhin.
-11. **Ein verworfener Zweig stellt Ziffern *und* Notizen exakt wieder her**, über
-    zufällige Zugfolgen — dieselbe Prüfung wie für Undo, weil es dieselbe Mechanik ist.
+### Input has no mode
 
-`-DsudokuDeep=1` lässt dieselben Tests mit dem Zehnfachen an Rätseln laufen: ~2.500
-erzeugte Rätsel, auf einem Raspberry Pi 5 in unter 90 Sekunden inklusive Kompilieren.
-Erzeugung ist damit klar schnell genug, um auf dem Gerät zu laufen — eine
-Vorab-Berechnung auf einem PC wird erst für die Kalibrierung des echten Graders und
-für das ausgelieferte Rätsel-Paket gebraucht.
+The first draft had a digit pad plus a "notes" toggle. That forces the order *decide →
+cell → digit*. Players think the other way around: they look at a cell and only then know
+whether they have the answer or want to collect candidates. And the most expensive case
+was the most common one — noting three candidates meant toggling, three taps, toggling
+back, and anyone who forgot to toggle back entered a note instead of a digit on the next
+cell.
 
-**Bekannte Lücke:** ohne das DLX-Zweitorakel prüft der Generatortest die Eindeutigkeit
-mit demselben Solver, der sie erzeugt hat — teilweise zirkulär. Abgefedert durch die
-Referenzrätsel und die Invariante aus Punkt 2; Stichproben wurden zusätzlich gegen eine
-unabhängige Python-Implementierung geprüft. Der volle Kreuzvergleich gegen Dancing
-Links steht aus.
+Now **two rows sit permanently** under the board: the large digits on top, the flat note
+buttons below. What a tap means is now decided by *which* button is hit, not by a
+previously set state. Three notes are three taps.
+
+Three details hang off this:
+
+- **The note buttons are stateful.** A filled button means "this note is set in the
+  selected cell." The row is therefore also the readout of the candidate state, and
+  removing a note again is the same tap as setting it.
+- **Both rows are visibly dead while no editable cell is selected.** Before, a tap into
+  empty space simply did nothing — exactly the feedback the new order doesn't otherwise
+  convey. The note row additionally goes dark as soon as a cell holds a digit:
+  `SudokuGame.toggleNote` ignores that case anyway, and silently swallowed taps are worse
+  than grey buttons.
+- **The digit in the selected cell is shown as a pressed button.** Tapping it again clears
+  the cell — that toggle already lives in `SudokuGame.setDigit`; the highlight only makes
+  it visible.
+
+`SudokuGame` stayed unchanged for this: `setDigit` / `toggleNote` / `clearCell` were
+always cell-scoped. What's gone is only the mode in the ViewModel — the only state that
+ever existed for it.
+
+- **The grid is a single `Canvas`**, not 81 composables. Drawing and tap handling both go
+  through the same `BoardGeometry` — derived separately, they'd drift, and taps would land
+  a cell off at the edge.
+- Text via `nativeCanvas` with reused `Paint` objects instead of `TextMeasurer`: up to 81
+  digits plus 9 notes per cell, per frame.
+- **`BoardState` writes `equals`/`hashCode` by hand.** As a data class, the `IntArray`
+  fields would be compared by identity, Compose would skip the redraw, and the board would
+  stand still. This exact bug happened to Chessomnia once.
+- **The colouring of the highlights is measured, not guessed.** The tint for row/column/box
+  covers 21 cells, the same-digit highlight at most nine — and the latter is what you're
+  actually looking for. With the original pair (cross `#E2EDF4`, green `#CFE6B8`), the
+  board read as "one big blue cross" and the matching digits disappeared into it.
+  Determined by rebuilding the drawing code and rendering real positions, not by judging
+  the source. Now: the cross is weaker (`#EDF3F8`), the green stronger (`#A9D98A`).
+- **Provisional digits are marked twice**: a yellow cell *and* a dark-yellow digit. The
+  cell colour alone isn't enough — a branch cell that happens to be selected or carries
+  the highlighted digit is drawn in *that* colour instead, and "this is only a trial" must
+  not disappear underneath it. In the priority order of cell colours, yellow sits above
+  the same-digit highlight, by the same rule as there: whoever colours fewer cells wins.
+- **The highlighted digit is also highlighted in the notes** (bold, dark green). Without
+  this, the entered digits light up, but the *noted* ones — usually exactly the ones being
+  thought about — have to be hunted for by eye.
+- **The timer has its own `StateFlow`.** If it lived in the board state, the 81-cell
+  canvas would redraw twice a second.
+- **Whether the clock runs is decided by exactly one function** (`SudokuViewModel.syncTimer`):
+  a game is loaded, it's not solved, the app is visible, the player hasn't paused. Every
+  caller changes one of those facts and asks again. Scattered `startTimer()` calls were
+  exactly the bug that had the clock keep running overnight on a dark screen — it was only
+  stopped on "new game" and "solved," nobody accounted for lifecycle events.
+  `startTimer()` now also bails out if the clock is already running: otherwise
+  `startedAt` would move forward while `accumulatedMs` held the old value, and the time in
+  between would be lost.
+- **Two reasons for a stopped clock, deliberately kept separate.** The player's pause
+  hides the board; "app not visible" (`MainActivity.onStart`/`onStop`) only stops the
+  clock and resolves itself on its own when you come back — a tap-to-acknowledge for
+  every answered notification would be a toll. `onStop` also saves: in the background the
+  process can die, and otherwise only the time up to the last board change would survive.
+- **Pause really hides the board**, rather than leaving it behind a semi-transparent veil:
+  a stopped clock in front of a readable grid is free thinking time, and thinking is the
+  whole game. The digit pad is hidden too — the note row is the candidate readout of the
+  selected cell.
+- The board's side length is computed as `min(maxWidth, maxHeight)`, **not** as
+  `fillMaxHeight().aspectRatio(1f)` — the latter derives width from height and will
+  happily produce a board wider than the screen.
+- The elapsed time is *derived* from `SystemClock.elapsedRealtime()`, not counted up per
+  tick — so a late tick can't shift the display.
+
+---
+
+## 10. How correctness is ensured
+
+Only JVM unit tests, no Robolectric, no instrumented tests. `rules/` and `game/` have no
+Android imports.
+
+1. **Published puzzles with known solutions** (`ReferencePuzzles`): Project Euler 96 no.
+   1, a 17-clue puzzle, AI Escargot. The solutions come from an independent
+   Norvig-style solver, not from this code — this is the one place where correctness
+   doesn't depend on this implementation itself.
+2. **A mathematical invariant:** if two digits are entirely missing from the givens, they
+   are interchangeable in every solution, so there are at least two solutions. A solver
+   that reports "unique" here is broken — and this exact bug would ship unsolvable
+   puzzles.
+3. **Every generated puzzle has exactly one solution**, across all levels.
+4. **Minimality:** no further given can be removed from a Hard puzzle without losing
+   uniqueness.
+5. **Undo restores digits *and* notes exactly**, across random move sequences.
+6. **The centre of every cell finds its way back to that cell** — drawing and tapping
+   agree.
+7. **A hint never names the wrong digit** — checked across many puzzles and many save
+   states. If that ever broke, the app would enter a guaranteed-wrong number at the tap
+   of a button.
+8. **Whatever is forced is justified**, instead of revealed blank.
+9. **A wrong entry is recognised as dead** before anything is given away.
+10. **A save state survives encoding and playback** including notes and undo depth;
+    corrupted data returns `null` instead of throwing on startup. This also holds for an
+    open branch — and a save in the old format keeps loading.
+11. **A discarded branch restores digits *and* notes exactly**, across random move
+    sequences — the same check as for undo, because it's the same mechanism.
+
+`-DsudokuDeep=1` runs the same tests with ten times as many puzzles: ~2,500 generated
+puzzles, on a Raspberry Pi 5 in under 90 seconds including compilation. Generation is
+therefore clearly fast enough to run on-device — a precomputation on a PC is only needed
+for calibrating the real grader and for the shipped puzzle package.
+
+**Known gap:** without the DLX second oracle, the generator test checks uniqueness with
+the same solver that produced it — partially circular. Cushioned by the reference puzzles
+and the invariant from point 2; samples were additionally checked against an independent
+Python implementation. The full cross-check against Dancing Links is still outstanding.
 
 ---
 
 ## 11. Update
 
-Die App holt sich neue Versionen selbst vom EnergyControl-Server im Haus. Beim Start und
-danach alle 15 Minuten, `update/UpdateViewModel`.
+The app fetches new versions itself from the EnergyControl server at home. On startup and
+every 15 minutes after that, `update/UpdateViewModel`.
 
-### Warum mTLS und nicht der einfache Weg
+### Why mTLS and not the simple way
 
-Die Schwesterprojekte (Oystra, MyMoney) laden ihr APK über `http://…:8082`. Das geht hier
-nicht: das Update soll **auch von unterwegs ohne VPN** funktionieren, und von außen ist am
-Router genau ein Port offen — 8443, der mTLS-Connector. Also braucht die App ein
-Client-Zertifikat, und das kann sie sich nirgends abholen (es gibt keinen Login und kein
-Pairing wie bei MyMoney): es liegt fest in der APK, `res/raw/sudomnia_client.p12`,
-ausgestellt einmalig von der MiniCa des Servers.
+The sister projects (Oystra, MyMoney) load their APK over `http://…:8082`. That doesn't
+work here: the update is supposed to work **from outside the house too, without a VPN**,
+and from outside exactly one port is open on the router — 8443, the mTLS connector. So the
+app needs a client certificate, and there's nowhere for it to fetch one (there's no login
+and no pairing like in MyMoney): it's baked into the APK,
+`res/raw/sudomnia_client.p12`, issued once by the server's MiniCa.
 
-**Ein in der APK ausgeliefertes Schlüsselpaar ist extrahierbar** — daraus folgt der Rest des
-Entwurfs. Es steht bewusst *nicht* in MyMoneys `device`-Tabelle, denn dort eingetragen wäre
-es ein Vollzugang zur MyMoney-REST-API mit sämtlichen Finanzdaten. Stattdessen prüft auf dem
-Server ein eigener Filter (`StaticCertAuthFilter`) nur auf `/api/v1/sudomnia/*` gegen eine
-Liste zugelassener Seriennummern. Der Schlüssel öffnet damit genau eine Sache: den Download
-dieses APKs. Verlieren wir ihn, kostet das eine Zeile in einer Textdatei und einen Neustart.
+**A key pair shipped inside the APK is extractable** — the rest of the design follows from
+that. It deliberately does *not* live in MyMoney's `device` table, because an entry there
+would be full access to the MyMoney REST API with all financial data. Instead, a dedicated
+filter on the server (`StaticCertAuthFilter`) only checks `/api/v1/sudomnia/*` against a
+list of allowed serial numbers. The key thus opens exactly one thing: the download of this
+APK. Losing it costs one line in a text file and a restart.
 
-### Drei Dinge, die nicht verhandelbar sind
+### Three things that are not negotiable
 
-- **Hostname statt IP.** Jetty prüft SNI gegen das Serverzertifikat, dessen SAN nur auf
-  den einen konfigurierten Hostnamen lautet (`sudomnia.updateHost` in `local.properties`,
-  nicht im Repo -- siehe RELEASING.md). Eine IP-Adresse wird mit HTTP 400 beantwortet,
-  bevor Filter oder Servlet überhaupt laufen. Der Name löst innen wie außen auf.
-- **Der Trust-Anker ist das gepinnte Serverzertifikat** (`res/raw/server_cert.pem`), nicht
-  der System-Truststore: die CA ist privat, Android kennt sie nicht. Nebeneffekt: eine
-  kompromittierte öffentliche CA kann den Server nicht nachbauen.
-- **Die SHA-256 aus `latest.json` wird geprüft.** Oystra und MyMoney schreiben den Hash und
-  sehen ihn nie an; im LAN war das vertretbar, über das offene Internet nicht. Bei
-  Abweichung wird die Datei gelöscht, damit dem Paketinstaller nie ein halber Download
-  vorgelegt wird.
+- **Hostname, not IP.** Jetty checks SNI against the server certificate, whose SAN names
+  only the one configured hostname (`sudomnia.updateHost` in `local.properties`, not in
+  the repo -- see RELEASING.md). An IP address gets HTTP 400 before any filter or servlet
+  even runs. The name resolves both inside and outside the house.
+- **The trust anchor is the pinned server certificate** (`res/raw/server_cert.pem`), not
+  the system trust store: the CA is private, Android doesn't know it. Side effect: a
+  compromised public CA cannot impersonate the server.
+- **The SHA-256 from `latest.json` is checked.** Oystra and MyMoney write the hash and
+  never look at it again; that was acceptable on the LAN, not over the open internet. On a
+  mismatch, the file is deleted, so the package installer is never handed a half download.
 
-### Ein leeres PKCS12-Passwort ist auf Android kein Passwort
+### An empty PKCS12 password is not a password on Android
 
-Der erste Wurf legte das Client-Zertifikat mit leerem Passwort ab — MyMoney macht das so,
-und auf der JVM funktioniert es. Auf dem Tablet scheiterte der Aktualisieren-Knopf mit
-`IllegalArgumentException: password empty`. Grund: das JDK schreibt PKCS12 seit 8u301 mit
-PBES2/PBKDF2, und Androids BouncyCastle lehnt in PBKDF2 ein Passwort der Länge 0 ab.
-MyMoney fällt das nicht auf, weil dessen P12 *auf dem Gerät* entsteht, mit dem alten
-PKCS12-Verfahren.
+The first attempt stored the client certificate with an empty password — that's how
+MyMoney does it, and it works on the JVM. On the tablet, the update button failed with
+`IllegalArgumentException: password empty`. Reason: since 8u301, the JDK writes PKCS12
+with PBES2/PBKDF2, and Android's BouncyCastle rejects a zero-length password in PBKDF2.
+MyMoney doesn't hit this because its P12 is created *on the device*, with the old PKCS12
+scheme.
 
-Zwei Konsequenzen, beide in `SudomniaClientCertTool`: das Passwort ist nicht leer
-(`sudomnia` — es liegt in jeder APK und schützt nichts, die Zugangskontrolle ist die
-Seriennummern-Liste auf dem Server), und die Datei wird bewusst mit den *alten*
-PKCS12-Verfahren geschrieben (3DES/RC2-40/HmacSHA1), weil sich das hier nicht auf einem
-Gerät testen lässt und die alten Verfahren jedes Android liest. Kryptografisch kostet das
-nichts, weil die Datei ohnehin öffentlich ist.
+Two consequences, both in `SudomniaClientCertTool`: the password isn't empty (`sudomnia`
+— it ships in every APK and protects nothing, access control is the serial-number list on
+the server), and the file is deliberately written with the *old* PKCS12 scheme
+(3DES/RC2-40/HmacSHA1), because this can't be tested on a device here and the old scheme
+is readable by every Android version. Cryptographically that costs nothing, because the
+file is public anyway.
 
-### Der Schluessel liegt nicht im Repo
+### The key does not live in the repo
 
-`sudomnia_client.p12` ist git-ignoriert. Damit uebersetzt ein frischer Clone nicht --
-bewusst: die Referenz bleibt ein normales `R.raw.sudomnia_client`, ein fehlender
-Schluessel faellt also beim Bauen auf, an einer offensichtlichen Stelle, statt auf
-irgendeinem Tablet. Die Alternative waere ein Nachschlagen zur Laufzeit gewesen; das
-haette Compile-Zeit-Sicherheit gegen Bequemlichkeit fuer Forks getauscht, die die
-Update-Funktion ohnehin nicht brauchen koennen -- der Server dahinter steht nur hier.
-Das gepinnte Serverzertifikat ist oeffentlich und bleibt im Repo.
+`sudomnia_client.p12` is git-ignored. A fresh clone therefore does not compile --
+deliberately: the reference stays an ordinary `R.raw.sudomnia_client`, so a missing key
+shows up while building, in an obvious place, rather than on some tablet. The alternative
+would have been a runtime lookup; that would have traded compile-time safety for
+convenience for forks that can't use the update feature anyway -- the server behind it
+only exists here. The pinned server certificate is public and stays in the repo.
 
-### Zustand statt Text
+### State, not text
 
-`UpdateState` ist eine sealed interface, kein gerenderter Satz plus Busy-Flag. Oystra hatte
-Letzteres und hat dafür fünf Releases lang (1.0.53–1.0.57) Updates gemeldet, die niemand
-installieren konnte — aus einem String lässt sich der Knopf nicht ableiten. Die eine Frage,
-die die Oberfläche stellt, heißt `installableVersion`.
+`UpdateState` is a sealed interface, not a rendered sentence plus a busy flag. Oystra had
+the latter and, for five releases (1.0.53–1.0.57), reported updates nobody could install
+— a button can't be derived from a string. The one question the UI asks is
+`installableVersion`.
 
-Zwei Regeln, die aus dem Betrieb kommen und beide im Code kommentiert sind: ein
-fehlgeschlagener **Hintergrund**-Check überschreibt einen bereits gefundenen Fund nicht (das
-Tablet verliert regelmäßig das WLAN, der Knopf darf nicht unter dem Finger verschwinden),
-und vor dem Start des Paketinstallers geht der Zustand zurück auf „verfügbar" — bricht man
-dort ab, steht der Knopf wieder da.
+Two rules that came out of operating this, both commented in the code: a failed
+**background** check does not overwrite an already-found result (the tablet regularly
+loses Wi-Fi, and the button must not vanish under someone's finger), and before the
+package installer launches, the state goes back to "available" — if that gets cancelled,
+the button is there again.
 
-`ReleaseInfo.parse` ist die einzige testbare Stelle des Ganzen und deshalb bewusst
-freigeschnitten: reine Funktion, `org.json`, kein Android-Typ. Getestet wird nicht das
-Glückliche, sondern dass ein unvollständiges oder gar kein Manifest `null` liefert — die App
-darf auf ein Dokument, das sie nicht verstanden hat, nicht handeln.
+`ReleaseInfo.parse` is the one testable part of the whole thing and deliberately carved
+out for it: a pure function, `org.json`, no Android type. What's tested isn't the happy
+path but that an incomplete manifest, or none at all, returns `null` — the app must not
+act on a document it didn't understand.
 
-### Veröffentlichen
+### Releasing
 
-`deploy.sh` im Repo-Wurzelverzeichnis: Version in `version.properties` hochzählen, signiertes
-Release bauen, APK nach `/var/lib/sudomnia/apk/` legen, `latest.json` schreiben. Die
-Reihenfolge (erst committen/pushen, dann bauen) ist von Oystra übernommen und hat dort einen
-konkreten Grund: so gehört zu jeder ausgelieferten APK ein Commit, den es auch im Remote
-gibt. Solange Sudomnia kein Git-Repo ist, überspringt das Skript den Block.
+`deploy.sh` in the repo root: bump the version in `version.properties`, build a signed
+release, put the APK in `/var/lib/sudomnia/apk/`, write `latest.json`. The order (commit
+and push first, then build) is carried over from Oystra and has a concrete reason there:
+that way every shipped APK corresponds to a commit that also exists on the remote. As long
+as Sudomnia isn't a git repo, the script skips that step.
 
 ---
 
-## 12. Wenn etwas klemmt: `diag/`
+## 12. When something goes wrong: `diag/`
 
-Ein Tablet im Wohnzimmer hat kein Logcat. „Der Aktualisieren-Knopf sagt
-IllegalArgumentException" ist als Fehlerbericht wertlos — genau daran hat der erste
-Update-Versuch einen Tag verloren.
+A tablet in the living room has no logcat. "The update button says
+IllegalArgumentException" is worthless as a bug report — that's exactly what cost the
+first update attempt a whole day.
 
-`DiagnosticsLog` ist deshalb eine Textdatei in `filesDir` plus ein Knopf im Hilfen-Dialog,
-der sie an die Teilen-Auswahl übergibt. Abstürze landen über einen
-`UncaughtExceptionHandler` automatisch darin; der vorherige Handler wird **verkettet, nicht
-ersetzt** — ihn zu schlucken würde die App hängen lassen statt sterben, und das ist
-schlimmer als der Absturz.
+`DiagnosticsLog` is therefore a text file in `filesDir` plus a button in the aids dialog
+that hands it to the share sheet. Crashes land in it automatically via an
+`UncaughtExceptionHandler`; the previous handler is **chained, not replaced** — swallowing
+it would leave the app hanging instead of dying, and that's worse than the crash.
 
-**Es gibt bewusst keinen Upload-Weg in dieser Klasse.** Ein Crash-Reporter wäre für ein
-Einzelspieler-Sudoku eine Netzwerkabhängigkeit und eine Datenschutzgeschichte; hier sieht
-der Spieler jedes Mal, was das Gerät verlässt, und wählt das Ziel selbst.
+**There is deliberately no upload path in this class.** A crash reporter would be a
+network dependency and a privacy story for a single-player Sudoku; here the player sees
+every time what leaves the device, and chooses the destination themselves.
 
-`EXTRA_EMAIL` schlägt `sudomnia@lechners.name` als Empfänger vor, egal welche
-Mail-App aus der Teilen-Auswahl gewählt wird — nur ein Vorschlag, den die
-empfangende App vorausfüllen darf, keine feste Zieladresse. Jede andere Art von
-App aus der Auswahl ignoriert das Feld einfach.
+`EXTRA_EMAIL` suggests `sudomnia@lechners.name` as the recipient, regardless of which
+mail app is chosen from the share sheet — only a suggestion that the receiving app may
+pre-fill, not a fixed destination address. Any other kind of app from the chooser simply
+ignores the field.
 
-Die Datei ist ein Ringpuffer: über 64 KB wird die ältere Hälfte verworfen. Und
-`log()` fängt seine eigenen Ausnahmen — die Diagnose darf nie das sein, was die App
-kaputtmacht.
+The file is a ring buffer: past 64 KB, the older half is discarded. And `log()` catches
+its own exceptions — diagnostics must never be what breaks the app.

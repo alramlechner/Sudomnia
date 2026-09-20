@@ -5,20 +5,19 @@ This product includes software developed as part of the Sudomnia project.
 Licensed under the Apache License, Version 2.0 (see LICENSE).
 
 --------------------------------------------------------------------------
-Drittinhalte / Third-party content
+Third-party content
 --------------------------------------------------------------------------
 
-Bibliotheken
-    AndroidX (Core, Activity, Lifecycle) und Jetpack Compose stehen unter der
-    Apache License 2.0. Volltext: licenses/Apache-2.0.txt
+Libraries
+    AndroidX (Core, Activity, Lifecycle) and Jetpack Compose are licensed
+    under the Apache License 2.0. Full text: licenses/Apache-2.0.txt
 
-Raetsel
-    Keine. Sudomnia erzeugt jedes Raetsel selbst (siehe ARCHITECTURE.md,
-    Abschnitt 2); es wird keine Raetsel-Sammlung mitgeliefert oder
-    weiterverwendet.
+Puzzles
+    None. Sudomnia generates every puzzle itself (see ARCHITECTURE.md,
+    section 2); no puzzle collection is shipped or reused.
 
-Referenzraetsel im Test (app/src/test/.../ReferencePuzzles.kt)
-    Drei veroeffentlichte Raetsel: Project Euler 96 Nr. 1, ein bekanntes
-    17-Vorgaben-Raetsel und "AI Escargot". Einzelne Sudoku-Gitter sind reine
-    Faktenlage und nicht schutzfaehig; sie liegen ausserdem ausschliesslich
-    im Testpfad und werden nicht mit der App ausgeliefert.
+Reference puzzles in tests (app/src/test/.../ReferencePuzzles.kt)
+    Three published puzzles: Project Euler 96 no. 1, a well-known 17-clue
+    puzzle, and "AI Escargot". Individual Sudoku grids are pure facts and
+    not copyrightable; they also live exclusively in the test path and are
+    not shipped with the app.

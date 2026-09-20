@@ -1,15 +1,15 @@
 #!/bin/bash
-# Sudomnia Release-Skript: Version-Bump + Build + Ablage auf dem EnergyControl-Server.
+# Sudomnia release script: version bump + build + drop onto the EnergyControl server.
 # Usage: ./deploy.sh [--notes "release text"] [--no-bump]
 #
-# --no-bump  Versionsnummer nicht ändern (z.B. wenn schon manuell erhöht)
-# --notes    Text für release_notes in latest.json
+# --no-bump  don't change the version number (e.g. if already bumped by hand)
+# --notes    text for release_notes in latest.json
 #
-# Reihenfolge wie bei Oystra: version.properties wird committet und gepusht, BEVOR
-# gebaut wird. Sonst kann ein fehlgeschlagener Push eine APK zurücklassen, deren Version
-# in keinem Commit steht. Ein fehlgeschlagener Build kostet umgekehrt nur eine
-# übersprungene Nummer, und das ist folgenlos. Solange Sudomnia kein Git-Repo ist, wird
-# der ganze Block übersprungen -- er greift automatisch, sobald es eins wird.
+# Order as in Oystra: version.properties is committed and pushed BEFORE building.
+# Otherwise a failed push could leave behind an APK whose version is in no commit.
+# A failed build, conversely, only costs a skipped number, which has no consequences.
+# As long as Sudomnia isn't a git repo, the whole block is skipped -- it kicks in
+# automatically once it becomes one.
 
 set -e
 
@@ -25,7 +25,7 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --notes) NOTES="$2"; shift 2 ;;
         --no-bump) BUMP=false; shift ;;
-        *) echo "Unbekannter Parameter: $1"; exit 1 ;;
+        *) echo "Unknown parameter: $1"; exit 1 ;;
     esac
 done
 
@@ -39,49 +39,49 @@ if $BUMP; then
     NEW_CODE=$((CURRENT_CODE + 1))
     NEW_NAME="${MAJOR}.${MINOR}.$((PATCH + 1))"
 
-    echo "Version-Bump: $CURRENT_NAME ($CURRENT_CODE) -> $NEW_NAME ($NEW_CODE)"
-    # Die Kommentarzeilen der Datei bleiben erhalten -- sie erklären, warum die Version
-    # nur hier steht und nicht in build.gradle.kts.
+    echo "Version bump: $CURRENT_NAME ($CURRENT_CODE) -> $NEW_NAME ($NEW_CODE)"
+    # The comment lines in the file are preserved -- they explain why the version
+    # lives only here and not in build.gradle.kts.
     sed -i -e "s/^VERSION_CODE=.*/VERSION_CODE=${NEW_CODE}/" \
            -e "s/^VERSION_NAME=.*/VERSION_NAME=${NEW_NAME}/" "$VERSION_FILE"
 else
     NEW_CODE=$CURRENT_CODE
     NEW_NAME=$CURRENT_NAME
-    echo "Kein Version-Bump: bleibt $NEW_NAME ($NEW_CODE)"
+    echo "No version bump: staying at $NEW_NAME ($NEW_CODE)"
 fi
 
-# --- version.properties committen und pushen, falls das hier ein Repo ist -----------
+# --- commit and push version.properties, if this is a repo --------------------------
 cd "$SCRIPT_DIR"
 if git rev-parse --git-dir >/dev/null 2>&1; then
     if ! git diff --quiet -- "$VERSION_FILE"; then
         echo ""
-        echo "==> Committe und pushe version.properties ($NEW_NAME)..."
-        # Pfadbegrenzt: andere offene Änderungen im Arbeitsbaum gehen den Release nichts an.
+        echo "==> Committing and pushing version.properties ($NEW_NAME)..."
+        # Path-scoped: other open changes in the working tree are none of the release's business.
         git commit -q -m "App: Version $NEW_NAME ($NEW_CODE)" -- "$VERSION_FILE"
         if git remote | grep -q .; then
             if ! git push -q 2>/dev/null; then
-                echo "    Push abgelehnt, versuche rebase auf den aktuellen Stand..."
+                echo "    Push rejected, trying rebase onto the current state..."
                 if ! git pull -q --rebase --autostash || ! git push -q; then
                     echo ""
-                    echo "FEHLER: version.properties konnte nicht gepusht werden."
-                    echo "Es wird NICHT gebaut - sonst entstünde eine APK, deren Version in"
-                    echo "keinem Commit steht. Bitte 'git pull' klären und erneut aufrufen."
+                    echo "ERROR: could not push version.properties."
+                    echo "NOT building - otherwise an APK would result whose version is in"
+                    echo "no commit. Please resolve with 'git pull' and run again."
                     exit 1
                 fi
             fi
-            echo "    $(git rev-parse --short HEAD) gepusht"
+            echo "    $(git rev-parse --short HEAD) pushed"
         fi
     fi
 else
-    echo "(kein Git-Repo - Commit/Push übersprungen)"
+    echo "(not a git repo - commit/push skipped)"
 fi
 
 echo ""
-echo "==> Baue APK (Java 17 ist Pflicht, neuere JDKs zerlegen den Kotlin-Compiler)..."
+echo "==> Building APK (Java 17 is mandatory, newer JDKs break the Kotlin compiler)..."
 cd "$GRADLE_DIR"
-# Die selfhosted-Variante: nur sie enthaelt die Selbst-Aktualisierung, die dieses
-# Skript ueberhaupt beliefert. Die play-Variante hat weder den Code noch die
-# Berechtigungen dafuer -- siehe app/build.gradle.kts und RELEASING.md.
+# The selfhosted flavour: only it contains the self-update that this script even
+# delivers. The play flavour has neither the code nor the permissions for it --
+# see app/build.gradle.kts and RELEASING.md.
 JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64 \
   PATH=/usr/lib/jvm/java-17-openjdk-arm64/bin:$PATH \
   ANDROID_HOME=/home/pi/android-sdk \
@@ -90,15 +90,15 @@ JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64 \
 APK_SRC="$GRADLE_DIR/app/build/outputs/apk/selfhosted/release/app-selfhosted-release.apk"
 APK_DST="$APK_DIR/sudomnia-${NEW_NAME}.apk"
 
-# Ein unsigniertes Release kann keine installierte Version aktualisieren -- lieber hier
-# abbrechen als auf dem Tablet mit INSTALL_PARSE_FAILED_NO_CERTIFICATES.
+# An unsigned release can't update an installed version -- better to abort here
+# than on the tablet with INSTALL_PARSE_FAILED_NO_CERTIFICATES.
 if [ ! -f "$APK_SRC" ]; then
-    echo "FEHLER: $APK_SRC fehlt (keystore.properties vorhanden?)"
+    echo "ERROR: $APK_SRC missing (keystore.properties present?)"
     exit 1
 fi
 
 echo ""
-echo "==> Deploye $APK_DST..."
+echo "==> Deploying $APK_DST..."
 mkdir -p "$APK_DIR"
 cp "$APK_SRC" "$APK_DST"
 SHA=$(sha256sum "$APK_DST" | cut -d' ' -f1)
@@ -118,5 +118,5 @@ echo ""
 echo "✓ sudomnia-${NEW_NAME}.apk deployed"
 echo "  SHA256: $SHA"
 echo "  latest.json: $APK_DIR/latest.json"
-echo "  extern:  https://<sudomnia.updateHost>:8443/api/v1/sudomnia/app/latest.json (mTLS)"
-echo "  im LAN:  http://<sudomnia.updateHost>:8082/sudomnia/app/download"
+echo "  external: https://<sudomnia.updateHost>:8443/api/v1/sudomnia/app/latest.json (mTLS)"
+echo "  on the LAN: http://<sudomnia.updateHost>:8082/sudomnia/app/download"

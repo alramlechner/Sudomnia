@@ -43,21 +43,21 @@ class HumanSolverTest {
                     checked++
                     if (step.technique.places) {
                         assertEquals(
-                            "${step.technique} setzt die falsche Ziffer in Feld ${step.cell}",
+                            "${step.technique} places the wrong digit in cell ${step.cell}",
                             puzzle.solution[step.cell],
                             step.digit,
                         )
                     }
                     for (e in step.eliminations) {
                         assertTrue(
-                            "${step.technique} streicht die richtige Ziffer ${e.digit} aus Feld ${e.cell}",
+                            "${step.technique} strikes the correct digit ${e.digit} from cell ${e.cell}",
                             puzzle.solution[e.cell] != e.digit,
                         )
                     }
                 }
             }
         }
-        assertTrue("es wurden ueberhaupt Schritte geprueft", checked > 500)
+        assertTrue("steps were actually checked at all", checked > 500)
     }
 
     /**
@@ -84,7 +84,7 @@ class HumanSolverTest {
             }
         }
         val missing = Technique.entries.filter { it !in seen && it !in RARE }
-        assertTrue("nie angewandt: $missing (gesehen: $seen)", missing.isEmpty())
+        assertTrue("never used: $missing (seen: $seen)", missing.isEmpty())
     }
 
     /**
@@ -101,7 +101,7 @@ class HumanSolverTest {
             solution = "937451286416238957582769413625813749349675821871942635763584192198327564254196378",
             wanted = Technique.SWORDFISH,
         )
-        assertTrue("der Schwertfisch muss zuschlagen", fired > 0)
+        assertTrue("the swordfish must fire", fired > 0)
     }
 
     /** Same idea for the hidden triple -- the other rung too rare to generate. */
@@ -112,7 +112,7 @@ class HumanSolverTest {
             solution = "213768549589342617674159823738215496426897135195634782867423951942571368351986274",
             wanted = Technique.HIDDEN_TRIPLE,
         )
-        assertTrue("das versteckte Tripel muss zuschlagen", fired > 0)
+        assertTrue("the hidden triple must fire", fired > 0)
     }
 
     /**
@@ -128,12 +128,12 @@ class HumanSolverTest {
             if (step.technique.places) assertEquals(truth[step.cell], step.digit)
             for (e in step.eliminations) {
                 assertTrue(
-                    "${step.technique} streicht die richtige ${e.digit} aus Feld ${e.cell}",
+                    "${step.technique} strikes the correct ${e.digit} from cell ${e.cell}",
                     truth[e.cell] != e.digit,
                 )
             }
         }
-        assertTrue("das Raetsel muss ohne Raten aufgehen", result.solved)
+        assertTrue("the puzzle must work out without guessing", result.solved)
         return fired
     }
 
@@ -147,7 +147,7 @@ class HumanSolverTest {
         repeat(rounds(10)) {
             val puzzle = factory.generate(Level.EASY, rnd)
             val result = solver.solve(puzzle.givens, allow = Technique.NAKED_SINGLE)
-            assertTrue("Leicht muss mit Singles allein aufgehen", result.solved)
+            assertTrue("Easy must work out with singles alone", result.solved)
         }
     }
 
@@ -174,17 +174,17 @@ class HumanSolverTest {
                 if (step.technique.places) placed[step.cell] = step.digit
                 for (e in step.eliminations) {
                     assertTrue(
-                        "${case.name}: ${step.technique} streicht die richtige ${e.digit} aus Feld ${e.cell}",
+                        "${case.name}: ${step.technique} strikes the correct ${e.digit} from cell ${e.cell}",
                         solution[e.cell] != e.digit,
                     )
                 }
             }
             for (c in 0 until Units.CELLS) {
-                if (placed[c] != 0) assertEquals("${case.name}, Feld $c", solution[c], placed[c])
+                if (placed[c] != 0) assertEquals("${case.name}, cell $c", solution[c], placed[c])
             }
             if (result.solved) solved++
         }
-        assertTrue("mindestens das Euler-Raetsel muss die Leiter schaffen", solved >= 1)
+        assertTrue("at least the Euler puzzle must make it through the ladder", solved >= 1)
     }
 
     /**
@@ -205,10 +205,10 @@ class HumanSolverTest {
                 if (hardest == null || step.technique.score > hardest!!.score) hardest = step.technique
             }
             assertTrue(
-                "ueber der Schranke gearbeitet: $hardest",
+                "worked above the ceiling: $hardest",
                 hardest == null || hardest!!.score <= Technique.LOCKED_CANDIDATES.score,
             )
-            if (!capped.solved) assertTrue(true)   // erwartbar, kein Fehler
+            if (!capped.solved) assertTrue(true)   // expected, not an error
         }
     }
 }

@@ -1,11 +1,11 @@
-# Mitarbeit
+# Contributing
 
-Sudomnia ist ein privates Projekt, das oeffentlich liegt. Pull Requests sind
-willkommen, aber ohne Zusage auf Tempo oder Aufnahme.
+Sudomnia is a private project that happens to be public. Pull requests are
+welcome, but without any promise on pace or acceptance.
 
-## Bauen
+## Building
 
-Java 17 ist Pflicht; neuere JDKs bringen den Kotlin-Compiler zum Absturz.
+Java 17 is mandatory; newer JDKs crash the Kotlin compiler.
 
 ```bash
 cd android-app
@@ -13,38 +13,39 @@ cd android-app
 ./gradlew assemblePlayDebug
 ```
 
-**Es gibt zwei Varianten** (`flavorDimensions "distribution"`):
+**There are two flavours** (`flavorDimensions "distribution"`):
 
-| Variante | Was drin ist | Wofuer |
+| Flavour | What's in it | What it's for |
 |---|---|---|
-| `play` | kein `update/`, keine einzige Berechtigung | Google Play, und der Standard beim Entwickeln |
-| `selfhosted` | Selbst-Aktualisierung vom Haus-Server, `INTERNET` + `REQUEST_INSTALL_PACKAGES` | die privaten Geraete, `deploy.sh` |
+| `play` | no `update/`, not a single permission | Google Play, and the default while developing |
+| `selfhosted` | self-update from the house server, `INTERNET` + `REQUEST_INSTALL_PACKAGES` | the private devices, `deploy.sh` |
 
-Ein frischer Clone uebersetzt `play` vollstaendig — dort wird kein Geheimnis
-gebraucht. `selfhosted` dagegen scheitert absichtlich, solange
-`android-app/app/src/selfhosted/res/raw/sudomnia_client.p12` fehlt (privater
-Schluessel, siehe RELEASING.md): ein fehlendes Zertifikat soll beim Bauen auffallen
-und nicht erst auf dem Geraet. Ohne `keystore.properties` bleibt der Release-Build
-ausserdem unsigniert.
+A fresh clone compiles `play` completely — it needs no secret. `selfhosted`, on
+the other hand, deliberately fails as long as
+`android-app/app/src/selfhosted/res/raw/sudomnia_client.p12` is missing (a
+private key, see RELEASING.md): a missing certificate should show up while
+building, not only on the device. Without `keystore.properties`, the release
+build also stays unsigned.
 
-## Worauf beim Code geachtet wird
+## What matters in the code
 
-- **`rules/` und `game/` bleiben frei von Android-Importen.** Das ist die Bedingung
-  dafuer, dass die Korrektheit ueberhaupt getestet werden kann -- es gibt kein
-  Robolectric und keine Instrumented-Tests.
-- **Kommentare begruenden, sie beschreiben nicht.** Warum Bitmasken und nicht
-  `Set<Int>`, warum Hidden vor Naked Single, warum `BoardState` sein `equals` von Hand
-  schreibt. Was der Code tut, steht im Code.
-- **Neue Entwurfsentscheidungen gehoeren nach ARCHITECTURE.md**, und zwar mit dem
-  verworfenen Alternativvorschlag daneben.
-- Deutsche UI-Strings, englische Bezeichner und Code-Kommentare.
+- **`rules/` and `game/` stay free of Android imports.** That's the condition
+  for correctness to be testable at all — there is no Robolectric and no
+  instrumented tests.
+- **Comments justify, they don't describe.** Why bitmasks and not `Set<Int>`,
+  why hidden before naked single, why `BoardState` writes its `equals` by
+  hand. What the code does is in the code.
+- **New design decisions belong in ARCHITECTURE.md**, together with the
+  discarded alternative next to them.
+- English UI strings as the source, German and Spanish as translations, English
+  identifiers and code comments.
 
 ## Tests
 
-`./gradlew test -DsudokuDeep=1` laesst dieselben Tests mit dem Zehnfachen an Raetseln
-laufen (~2.500 Stueck). Wer am Solver, Generator oder Digger etwas aendert, sollte das
-einmal durchlaufen lassen.
+`./gradlew test -DsudokuDeep=1` runs the same tests with ten times as many
+puzzles (~2,500 of them). Anyone changing the solver, generator or digger
+should run this once.
 
-Achtung: `rules/` liegt **doppelt** im Repo -- einmal in `android-app`, einmal in
-`generator-cli`. Aenderungen muessen in beide, sonst driftet das CLI-Werkzeug
-unbemerkt weg.
+Note: `rules/` exists **twice** in the repo — once in `android-app`, once in
+`generator-cli`. Changes must go into both, or the CLI tool silently drifts
+out of sync.

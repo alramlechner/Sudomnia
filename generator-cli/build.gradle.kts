@@ -10,11 +10,11 @@ kotlin {
     jvmToolchain(17)
 }
 
-// rules/ liegt nur EINMAL im Repo, naemlich in android-app -- das Paket hat keine
-// Android-Importe, also kann dieses reine JVM-Werkzeug direkt darauf zeigen. Bis
-// 0.5.0 lagen hier byte-gleiche Kopien; die waren eine Frage der Zeit, bis eine
-// Aenderung nur auf einer Seite ankommt und das Werkzeug etwas anderes misst als
-// die App tut.
+// rules/ exists only ONCE in the repo, namely in android-app -- the package has no
+// Android imports, so this pure JVM tool can point straight at it. Up to 0.5.0 there
+// were byte-identical copies here; that was only a matter of time until a change
+// landed on one side only and the tool started measuring something different from
+// what the app does.
 sourceSets["main"].kotlin.srcDir("../android-app/app/src/main/java/name/lechners/sudomnia/rules")
 
 application {

@@ -50,10 +50,10 @@ private fun stringArg(args: Array<String>, name: String, default: String): Strin
 }
 
 fun main(args: Array<String>) {
-    // Drei Betriebsarten in einem Werkzeug, weil sie sich denselben Generator teilen:
-    //   bank   erzeugt den Raetsel-Vorrat (Vorgabe)
-    //   grade  misst die Technikleiter -- daher stammen die Zahlen in ARCHITECTURE.md
-    //   find   sucht ein Raetsel, das eine bestimmte Technik erzwingt (Test-Fixture)
+    // Three modes in one tool, because they share the same generator:
+    //   bank   generates the puzzle stock (default)
+    //   grade  measures the technique ladder -- this is where the numbers in ARCHITECTURE.md come from
+    //   find   hunts for a puzzle that forces a specific technique (test fixture)
     when (stringArg(args, "--mode", "bank")) {
         "grade" -> return grade(intArg(args, "--count", 200))
         "find" -> return find(
@@ -79,12 +79,12 @@ private fun bank(args: Array<String>) {
     val manifest = File(outDir, "manifest.txt")
     val startedAt = Instant.now()
     manifest.writeText(buildString {
-        appendLine("Sudomnia generator-cli -- Rätsel-Vorrat")
-        appendLine("Format je Zeile: givens;solution;level")
-        appendLine("  givens/solution: 81 Zeichen, '.' = leer (kompatibel mit rules/Puzzle.kt toLine()/parse())")
-        appendLine("  level: die GEMESSENE Stufe (Digger.classify), kann selten vom angepeilten Level abweichen")
-        appendLine("Gestartet: $startedAt")
-        appendLine("Ziel gesamt: $totalCount  (${targets.entries.joinToString { "${it.key}=${it.value}" }})")
+        appendLine("Sudomnia generator-cli -- puzzle stock")
+        appendLine("Format per line: givens;solution;level")
+        appendLine("  givens/solution: 81 characters, '.' = empty (compatible with rules/Puzzle.kt toLine()/parse())")
+        appendLine("  level: the MEASURED level (Digger.classify), can rarely differ from the targeted level")
+        appendLine("Started: $startedAt")
+        appendLine("Total target: $totalCount  (${targets.entries.joinToString { "${it.key}=${it.value}" }})")
         appendLine("Threads: $threadCount")
     })
 
@@ -92,7 +92,7 @@ private fun bank(args: Array<String>) {
         sinks.values.forEach { runCatching { it.close() } }
     })
 
-    println("Starte Generierung: $totalCount Rätsel, $threadCount Threads, Ziel je Level: $targets")
+    println("Starting generation: $totalCount puzzles, $threadCount threads, target per level: $targets")
 
     val workers = (1..threadCount).map { threadIndex ->
         Thread {
@@ -120,7 +120,7 @@ private fun bank(args: Array<String>) {
         while (workers.any { it.isAlive }) {
             Thread.sleep(5000)
             val done = sinks.values.sumOf { it.count }
-            println("Fortschritt: $done / $totalCount")
+            println("Progress: $done / $totalCount")
         }
     }.apply { isDaemon = true; start() }
 
@@ -130,9 +130,9 @@ private fun bank(args: Array<String>) {
     val finishedAt = Instant.now()
     val totalWritten = sinks.values.sumOf { it.count }
     manifest.appendText(buildString {
-        appendLine("Beendet: $finishedAt")
-        appendLine("Dauer: ${Duration.between(startedAt, finishedAt)}")
-        appendLine("Erzeugt gesamt: $totalWritten  (${levels.joinToString { "${it}=${sinks.getValue(it).count}" }})")
+        appendLine("Finished: $finishedAt")
+        appendLine("Duration: ${Duration.between(startedAt, finishedAt)}")
+        appendLine("Total generated: $totalWritten  (${levels.joinToString { "${it}=${sinks.getValue(it).count}" }})")
     })
-    println("Fertig: $totalWritten Rätsel in ${outDir.absolutePath}")
+    println("Done: $totalWritten puzzles in ${outDir.absolutePath}")
 }

@@ -55,7 +55,7 @@ class UpdateClient(private val context: Context) {
     /** The published release, or throws if the server cannot be reached or answers rubbish. */
     fun fetchLatest(): ReleaseInfo {
         val body = open("$BASE_URL/latest.json").use { it.readBytes().decodeToString() }
-        return ReleaseInfo.parse(body) ?: error("Unlesbares Versions-Manifest")
+        return ReleaseInfo.parse(body) ?: error("Unreadable version manifest")
     }
 
     /**
@@ -83,7 +83,7 @@ class UpdateClient(private val context: Context) {
             val actual = digest.digest().joinToString("") { "%02x".format(it) }
             if (actual != release.sha256) {
                 dest.delete()
-                error("Prüfsumme stimmt nicht")
+                error("Checksum mismatch")
             }
         }
     }

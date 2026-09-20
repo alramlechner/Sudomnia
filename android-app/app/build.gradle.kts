@@ -38,21 +38,21 @@ android {
         versionName = versionProps.getProperty("VERSION_NAME")
     }
 
-    // Zwei Auslieferungswege, zwei Varianten -- und der Unterschied ist nicht ein
-    // Schalter zur Laufzeit, sondern welche Dateien ueberhaupt uebersetzt werden.
+    // Two distribution paths, two flavours -- and the difference is not a runtime
+    // switch but which files get compiled at all.
     //
-    //   play        fuer Google Play. Ohne update/, ohne Client-Zertifikat, ohne eine
-    //               einzige Berechtigung. Play verbietet Apps aus dem Store, sich auf
-    //               einem anderen Weg selbst zu aktualisieren. Nebeneffekt, der genauso
-    //               wichtig ist: ein frischer Clone uebersetzt diese Variante ohne
-    //               jedes Geheimnis -- vorher scheiterte er an R.raw.sudomnia_client.
-    //   selfhosted  wie bisher: holt sich neue Versionen vom EnergyControl-Server im
-    //               Haus (deploy.sh baut diese Variante).
+    //   play        for Google Play. No update/, no client certificate, not a
+    //               single permission. Play forbids apps from the store updating
+    //               themselves any other way. A side effect that matters just as
+    //               much: a fresh clone compiles this flavour without any secret --
+    //               before, it failed on R.raw.sudomnia_client.
+    //   selfhosted  as before: fetches new versions from the EnergyControl server
+    //               at home (deploy.sh builds this flavour).
     //
-    // Gleiche applicationId in beiden: die Familientablets sollen zwischen Haus-APK und
-    // Store-Version wechseln koennen, ohne Statistik und laufendes Spiel zu verlieren.
-    // Das setzt voraus, dass beide mit demselben Schluessel signiert sind -- siehe
-    // RELEASING.md zu Play App Signing.
+    // Same applicationId in both: the family tablets should be able to switch
+    // between the house APK and the store version without losing statistics and
+    // the running game. That requires both to be signed with the same key -- see
+    // RELEASING.md on Play App Signing.
     flavorDimensions += "distribution"
     productFlavors {
         create("play") { dimension = "distribution" }
@@ -106,8 +106,8 @@ android {
     kotlinOptions { jvmTarget = "17" }
     buildFeatures {
         compose = true
-        // Die Einstellungen zeigen die App-Version an, und version.properties ist die
-        // einzige Quelle dafuer -- ueber BuildConfig kommt sie ohne PackageManager an.
+        // The settings screen shows the app version, and version.properties is the
+        // single source for it -- BuildConfig gets it there without a PackageManager call.
         buildConfig = true
     }
 
@@ -159,8 +159,8 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)
-    // org.json steckt in der android.jar nur als Stub, der in Unit-Tests wirft. Die
-    // Referenz-Implementierung auf dem Test-Classpath macht ReleaseInfo.parse testbar.
+    // org.json only exists in android.jar as a stub that throws in unit tests. The
+    // reference implementation on the test classpath is what makes ReleaseInfo.parse testable.
     testImplementation(libs.json)
 }
 

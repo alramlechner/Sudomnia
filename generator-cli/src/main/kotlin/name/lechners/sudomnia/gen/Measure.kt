@@ -39,15 +39,15 @@ internal fun grade(count: Int) {
             }
         }
 
-        println("--- $level ($count Raetsel, ${ms / count.toDouble()} ms je Raetsel)")
-        println("    Vorgaben:      ${"%.1f".format(clues.toDouble() / count)}")
-        println("    Schritte:      ${"%.1f".format(steps.toDouble() / count)}")
-        println("    Punkte:        ${"%.1f".format(score.toDouble() / count)}")
-        println("    ohne Raten unloesbar: $unsolved")
-        println("    hoechste noetige Technik:")
+        println("--- $level ($count puzzles, ${ms / count.toDouble()} ms per puzzle)")
+        println("    Clues:         ${"%.1f".format(clues.toDouble() / count)}")
+        println("    Steps:         ${"%.1f".format(steps.toDouble() / count)}")
+        println("    Score:         ${"%.1f".format(score.toDouble() / count)}")
+        println("    unsolvable without guessing: $unsolved")
+        println("    highest technique needed:")
         for (t in Technique.entries) hardest[t]?.let { println("        ${t.name.padEnd(18)} $it") }
-        hardest[null]?.let { println("        (gar keine)        $it") }
-        println("    Anwendungen gesamt:")
+        hardest[null]?.let { println("        (none at all)      $it") }
+        println("    total uses:")
         for (t in Technique.entries) usage[t]?.let { println("        ${t.name.padEnd(18)} $it") }
     }
 }
@@ -70,11 +70,11 @@ internal fun find(wanted: Technique, tries: Int) {
         var hit = false
         solver.solve(puzzle.givens) { if (it.technique == wanted) hit = true }
         if (hit) {
-            println("gefunden nach ${i + 1} Raetseln:")
+            println("found after ${i + 1} puzzles:")
             println("givens   = \"${puzzle.toLine().replace('.', '0')}\"")
             println("solution = \"${puzzle.solution.joinToString("") { d -> d.toString() }}\"")
             return
         }
     }
-    println("$wanted in $tries Raetseln nicht aufgetreten")
+    println("$wanted did not occur in $tries puzzles")
 }

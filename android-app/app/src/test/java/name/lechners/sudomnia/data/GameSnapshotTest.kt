@@ -51,11 +51,11 @@ class GameSnapshotTest {
         val revived = SudokuGame(restore.puzzle)
         assertTrue(revived.importHistory(restore.history, restore.applied))
 
-        assertTrue("Ziffern", game.entries.contentEquals(revived.entries))
-        assertTrue("Notizen", game.notes.contentEquals(revived.notes))
-        assertEquals("Undo-Tiefe", game.appliedCount, revived.appliedCount)
+        assertTrue("digits", game.entries.contentEquals(revived.entries))
+        assertTrue("notes", game.notes.contentEquals(revived.notes))
+        assertEquals("undo depth", game.appliedCount, revived.appliedCount)
         assertEquals(game.canUndo, revived.canUndo)
-        assertEquals("Redo-Zweig", game.canRedo, revived.canRedo)
+        assertEquals("redo branch", game.canRedo, revived.canRedo)
 
         // and the revived history really is walkable
         while (revived.canUndo) revived.undo()
@@ -98,10 +98,10 @@ class GameSnapshotTest {
         val revived = SudokuGame(restore.puzzle)
         assertTrue(revived.importHistory(restore.history, restore.applied, restore.branchAt))
 
-        assertTrue("der Zweig ist noch offen", revived.inBranch)
-        assertTrue("dieselben Felder auf Probe", game.trialCells().contentEquals(revived.trialCells()))
+        assertTrue("the branch is still open", revived.inBranch)
+        assertTrue("the same cells on trial", game.trialCells().contentEquals(revived.trialCells()))
         revived.discardBranch()
-        assertEquals("und er laesst sich weiterhin verwerfen", 0, revived.valueAt(empties[1]))
+        assertEquals("and it can still be discarded", 0, revived.valueAt(empties[1]))
         assertEquals(puzzle.solution[empties[0]], revived.valueAt(empties[0]))
     }
 
@@ -165,7 +165,7 @@ class GameSnapshotTest {
     fun aMalformedEditRowIsRejected() {
         val game = SudokuGame(PuzzleFactory().generate(Level.EASY, Random(3)))
         game.setDigit((0 until Units.CELLS).first { !game.isGiven(it) }, 4)
-        val broken = snapshotOf(game).copy(edits = listOf("1:2>3"))   // vier statt fuenf Feldern
+        val broken = snapshotOf(game).copy(edits = listOf("1:2>3"))   // four fields instead of five
         assertNull(GameSnapshot.decode(broken.encode())!!.toGame())
     }
 

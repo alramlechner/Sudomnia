@@ -72,7 +72,7 @@ class GeneratorTest {
                 val puzzle = factory.generate(level, rnd)
                 val grade = grader.grade(puzzle.givens)
                 assertTrue(
-                    "$level mit ${puzzle.clueCount} Vorgaben braucht Raten: ${puzzle.toLine()}",
+                    "$level with ${puzzle.clueCount} clues needs guessing: ${puzzle.toLine()}",
                     grade.solvableWithoutGuessing,
                 )
             }
@@ -199,7 +199,7 @@ class GeneratorTest {
                 val ambiguous = solver.countSolutions(givens, limit = 2) > 1
                 val needsGuessing = !grader.grade(givens).solvableWithoutGuessing
                 assertTrue(
-                    "Feld $c haette auch noch weg gekonnt -- weder mehrdeutig noch unloesbar",
+                    "cell $c could have been removed too -- neither ambiguous nor unsolvable",
                     ambiguous || needsGuessing,
                 )
                 givens[c] = saved

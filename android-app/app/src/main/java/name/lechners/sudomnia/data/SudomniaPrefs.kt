@@ -49,7 +49,7 @@ class SudomniaPrefs(context: Context) {
         }
     }
 
-    // --- Statistik ---------------------------------------------------------
+    // --- Statistics ---------------------------------------------------------
 
     fun loadStats(): Stats {
         val map = Level.entries.associateWith { level ->
@@ -79,7 +79,7 @@ class SudomniaPrefs(context: Context) {
 
     private fun statKey(level: Level, field: String) = "stat_${level.name}_$field"
 
-    // --- Laufendes Spiel ---------------------------------------------------
+    // --- Running game ---------------------------------------------------
 
     fun loadGame(): GameSnapshot? = GameSnapshot.decode(prefs.getString(KEY_GAME, null))
 
@@ -101,11 +101,11 @@ class SudomniaPrefs(context: Context) {
 
     private companion object {
         const val FILE = "sudomnia"
-        // 1: nur Einstellungen. 2: Statistik und laufendes Spiel kamen dazu -- beides
-        // war vorher nicht vorhanden, es ist also nichts zu wandeln. 3: warnOnWrong,
-        // ein neuer Schalter mit Vorgabe "aus" -- der fehlende Schluessel liefert
-        // genau diese Vorgabe, zu wandeln ist also wieder nichts. Die Zahl haelt nur
-        // fest, dass dieser Stand den Schalter kennt.
+        // 1: settings only. 2: statistics and the running game were added -- neither
+        // existed before, so there's nothing to migrate. 3: warnOnWrong, a new toggle
+        // defaulting to "off" -- the missing key returns exactly that default, so
+        // again nothing to migrate. The number just records that this version knows
+        // about the toggle.
         const val CURRENT_VERSION = 3
 
         const val KEY_VERSION = "settings_version"

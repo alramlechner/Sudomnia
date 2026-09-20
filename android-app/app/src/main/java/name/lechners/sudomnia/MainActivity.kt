@@ -52,9 +52,9 @@ class MainActivity : ComponentActivity() {
                 val state by vm.ui.collectAsState()
                 val timer by vm.timer.collectAsState()
 
-                // Die Selbst-Aktualisierung gibt es nur in der selfhosted-Variante;
-                // im Play-Build liefert UpdateSupport null und die App enthaelt weder
-                // Netzwerkcode noch die Berechtigung dafuer.
+                // The self-update only exists in the selfhosted flavour; in the Play
+                // build, UpdateSupport returns null and the app contains neither the
+                // network code nor the permission for it.
                 val updateController = UpdateSupport.rememberController(this@MainActivity)
                 var update: UpdateState? = null
                 if (updateController != null) update = updateController.state.collectAsState().value

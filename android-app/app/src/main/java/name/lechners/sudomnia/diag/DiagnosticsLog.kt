@@ -51,11 +51,11 @@ object DiagnosticsLog {
         if (file != null) return
         file = File(context.filesDir, FILE_NAME)
         log("App", "Start ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) " +
-            "auf ${Build.MANUFACTURER} ${Build.MODEL}, Android ${Build.VERSION.RELEASE}")
+            "on ${Build.MANUFACTURER} ${Build.MODEL}, Android ${Build.VERSION.RELEASE}")
 
         val previous = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, error ->
-            log("Absturz", "in Thread ${thread.name}", error)
+            log("Crash", "in thread ${thread.name}", error)
             previous?.uncaughtException(thread, error)
         }
     }
@@ -77,7 +77,7 @@ object DiagnosticsLog {
             f.appendText(text)
             if (f.length() > MAX_BYTES) {
                 val kept = f.readText().let { it.substring(it.length / 2) }
-                f.writeText("[…älterer Teil des Protokolls entfernt…]\n" + kept.substringAfter('\n'))
+                f.writeText("[…older part of the log removed…]\n" + kept.substringAfter('\n'))
             }
         } catch (ignored: Exception) {
             // Diagnostics must never be the thing that breaks the app.
@@ -102,12 +102,12 @@ object DiagnosticsLog {
         val send = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_EMAIL, arrayOf(REPORT_EMAIL))
-            putExtra(Intent.EXTRA_SUBJECT, "Sudomnia ${BuildConfig.VERSION_NAME} — Fehlerbericht")
+            putExtra(Intent.EXTRA_SUBJECT, "Sudomnia ${BuildConfig.VERSION_NAME} — Error report")
             putExtra(Intent.EXTRA_STREAM, uri)
             putExtra(Intent.EXTRA_TEXT, body.takeLast(4000))
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        return Intent.createChooser(send, "Fehlerbericht teilen")
+        return Intent.createChooser(send, "Share error report")
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 
@@ -117,7 +117,7 @@ object DiagnosticsLog {
         append(Build.MANUFACTURER).append(' ').append(Build.MODEL)
         append(", Android ").append(Build.VERSION.RELEASE)
         append(" (API ").append(Build.VERSION.SDK_INT).append(")\n")
-        append("Erstellt: ").append(timestamp.format(Date())).append("\n\n")
-        append(file?.takeIf { it.exists() }?.readText() ?: "(kein Protokoll)")
+        append("Created: ").append(timestamp.format(Date())).append("\n\n")
+        append(file?.takeIf { it.exists() }?.readText() ?: "(no log)")
     }
 }

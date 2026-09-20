@@ -41,27 +41,27 @@ class HintTest {
                         is Hint.Deduce -> for (step in hint.steps) {
                             if (step.technique.places) {
                                 assertEquals(
-                                    "$level, $moves gesetzt: falsche Ziffer in Zelle ${step.cell}",
+                                    "$level, $moves entered: wrong digit in cell ${step.cell}",
                                     puzzle.solution[step.cell], step.digit,
                                 )
-                                assertEquals("Tipp auf ein belegtes Feld", 0, board[step.cell])
+                                assertEquals("hint on an occupied cell", 0, board[step.cell])
                             }
                             for (e in step.eliminations) {
                                 assertTrue(
-                                    "$level, $moves gesetzt: ${step.technique} streicht die richtige ${e.digit}",
+                                    "$level, $moves entered: ${step.technique} strikes the correct ${e.digit}",
                                     puzzle.solution[e.cell] != e.digit,
                                 )
                             }
                         }
                         is Hint.Reveal -> {
                             assertEquals(
-                                "$level, $moves gesetzt: falsche Ziffer in Zelle ${hint.cell}",
+                                "$level, $moves entered: wrong digit in cell ${hint.cell}",
                                 puzzle.solution[hint.cell], hint.digit,
                             )
-                            assertEquals("Tipp auf ein belegtes Feld", 0, board[hint.cell])
+                            assertEquals("hint on an occupied cell", 0, board[hint.cell])
                         }
                         Hint.DeadEnd -> throw AssertionError(
-                            "$level, $moves korrekte Zuege: Brett faelschlich fuer tot erklaert"
+                            "$level, $moves correct moves: board wrongly declared dead"
                         )
                     }
                 }
@@ -97,7 +97,7 @@ class HintTest {
                 while (board.any { it == 0 } && guard++ < 200) {
                     val hint = finder.find(board, puzzle.solution)
                     assertTrue(
-                        "$level: blanke Aufdeckung statt Begruendung",
+                        "$level: blank reveal instead of a reason",
                         hint is Hint.Deduce,
                     )
                     val chain = (hint as Hint.Deduce).steps
@@ -105,16 +105,16 @@ class HintTest {
                     lengths[chain.size] = (lengths[chain.size] ?: 0) + 1
                     val last = hint.last
                     assertTrue(
-                        "die Kette muss beim Setzen enden (Laenge ${chain.size})",
+                        "the chain must end in a placement (length ${chain.size})",
                         last.technique.places,
                     )
                     board[last.cell] = last.digit
                     hints++
                 }
-                assertTrue("$level: Raetsel nicht durchgespielt", board.none { it == 0 })
+                assertTrue("$level: puzzle not played through", board.none { it == 0 })
             }
         }
-        println("Tipp-Ketten: laengste $longest, Verteilung ${lengths.toSortedMap()}")
+        println("hint chains: longest $longest, distribution ${lengths.toSortedMap()}")
         assertTrue(hints > 100)
     }
 
@@ -133,14 +133,14 @@ class HintTest {
             val puzzle = factory.generate(Level.EXPERT, rnd)
             val hint = finder.find(puzzle.givens, puzzle.solution)
             if (hint !is Hint.Deduce) return@repeat
-            assertTrue("die Kette endet im Setzen", hint.last.technique.places)
+            assertTrue("the chain ends in a placement", hint.last.technique.places)
             for (step in hint.steps.dropLast(1)) {
-                assertTrue("nur der letzte Schritt setzt", !step.technique.places)
-                assertTrue("ein Zwischenschritt muss etwas streichen", step.eliminations.isNotEmpty())
+                assertTrue("only the last step places", !step.technique.places)
+                assertTrue("an intermediate step must strike something", step.eliminations.isNotEmpty())
             }
             if (hint.steps.size > 1) chained++
         }
-        println("EXPERT: $chained von ${perLevel * 2} Raetseln brauchen schon im ersten Tipp mehr als einen Schritt")
+        println("EXPERT: $chained of ${perLevel * 2} puzzles already need more than one step on the first hint")
     }
 
     /** A wrong entry kills the board, and the hint has to notice before revealing anything. */

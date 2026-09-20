@@ -1,5 +1,5 @@
 #!/bin/bash
-# Zeigt Prozess-Lebendigkeit und Fortschritt je Level.
+# Shows process liveness and progress per level.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -7,17 +7,17 @@ PIDFILE="run/generator.pid"
 OUTDIR="generated-puzzles"
 
 if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
-    echo "Läuft (PID $(cat "$PIDFILE"))."
+    echo "Running (PID $(cat "$PIDFILE"))."
 else
-    echo "Läuft nicht."
+    echo "Not running."
 fi
 
 for f in easy medium hard; do
     path="$OUTDIR/$f.txt"
     if [ -f "$path" ]; then
-        echo "  $f: $(wc -l < "$path") Rätsel"
+        echo "  $f: $(wc -l < "$path") puzzles"
     else
-        echo "  $f: 0 Rätsel (noch keine Datei)"
+        echo "  $f: 0 puzzles (no file yet)"
     fi
 done
 

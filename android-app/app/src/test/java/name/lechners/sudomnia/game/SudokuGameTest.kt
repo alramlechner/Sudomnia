@@ -91,7 +91,7 @@ class SudokuGameTest {
         assertEquals(2, game.valueAt(cell))
     }
 
-    // --- Zweig -------------------------------------------------------------
+    // --- Branch -------------------------------------------------------------
 
     /** The whole point of the feature: an attempt comes back in one step, exactly. */
     @Test
@@ -118,10 +118,10 @@ class SudokuGameTest {
         game.discardBranch()
 
         assertFalse(game.inBranch)
-        assertTrue("Ziffern", entriesBefore.contentEquals(game.entries))
-        assertTrue("Notizen -- auch die von Nachbarn gestrichenen", notesBefore.contentEquals(game.notes))
+        assertTrue("digits", entriesBefore.contentEquals(game.entries))
+        assertTrue("notes -- including the ones struck from neighbours", notesBefore.contentEquals(game.notes))
         assertEquals(depthBefore, game.appliedCount)
-        assertFalse("ein verworfener Zweig darf nicht wiederholbar sein", game.canRedo)
+        assertFalse("a discarded branch must not be redoable", game.canRedo)
     }
 
     @Test
@@ -134,7 +134,7 @@ class SudokuGameTest {
 
         assertFalse(game.inBranch)
         assertEquals(4, game.valueAt(cell))
-        assertTrue("nach dem Übernehmen ist es ein Zug wie jeder andere", game.canUndo)
+        assertTrue("after committing it's a move like any other", game.canUndo)
         game.undo()
         assertEquals(0, game.valueAt(cell))
     }
@@ -150,12 +150,12 @@ class SudokuGameTest {
         game.setDigit(b, 2)
 
         assertTrue(game.undo())
-        assertFalse("die Grenze haelt", game.canUndo)
+        assertFalse("the boundary holds", game.canUndo)
         assertFalse(game.undo())
-        assertEquals("der Zug vor dem Zweig steht noch", 1, game.valueAt(a))
+        assertEquals("the move before the branch is still there", 1, game.valueAt(a))
 
         game.commitBranch()
-        assertTrue("nach dem Übernehmen faellt die Grenze", game.canUndo)
+        assertTrue("after committing the boundary disappears", game.canUndo)
     }
 
     @Test
@@ -171,18 +171,18 @@ class SudokuGameTest {
         game.beginBranch()
         game.setDigit(tried, 2)
         game.setDigit(takenBack, 3)
-        game.setDigit(takenBack, 3)        // dieselbe Ziffer nochmal: Feld wieder leer
+        game.setDigit(takenBack, 3)        // the same digit again: cell empty once more
         game.toggleNote(noted, 5)
 
         val trial = game.trialCells()
         assertTrue(trial[tried])
-        assertFalse("vor dem Zweig gesetzt", trial[kept])
-        assertFalse("wieder geleert, es steht nichts vom Versuch drin", trial[takenBack])
-        assertFalse("nur eine Notiz", trial[noted])
+        assertFalse("set before the branch", trial[kept])
+        assertFalse("emptied again, nothing of the attempt is left in it", trial[takenBack])
+        assertFalse("only a note", trial[noted])
         assertEquals(1, trial.count { it })
 
         game.discardBranch()
-        assertTrue("ausserhalb eines Zweigs ist nichts vorlaeufig", game.trialCells().none { it })
+        assertTrue("outside a branch nothing is provisional", game.trialCells().none { it })
     }
 
     @Test
@@ -192,11 +192,11 @@ class SudokuGameTest {
         val b = (0 until Units.CELLS).first { !game.isGiven(it) && it != a }
         game.beginBranch()
         game.setDigit(a, 1)
-        game.beginBranch()                 // ohne Wirkung
+        game.beginBranch()                 // has no effect
         game.setDigit(b, 2)
         game.discardBranch()
 
-        assertEquals("beide Versuche sind weg", 0, game.valueAt(a))
+        assertEquals("both attempts are gone", 0, game.valueAt(a))
         assertEquals(0, game.valueAt(b))
     }
 
@@ -213,7 +213,7 @@ class SudokuGameTest {
         assertTrue(bad[peer])
     }
 
-    // --- Konflikte in Notizen ------------------------------------------------
+    // --- Conflicts in notes ------------------------------------------------
 
     /**
      * A pencil mark that clashes with a digit already on the board is impossible, and
@@ -229,14 +229,14 @@ class SudokuGameTest {
 
         game.setDigit(cell, 6)
         game.toggleNote(peer, 6)
-        // Eine Ziffer, die in der Nachbarschaft des Feldes wirklich noch frei ist --
-        // sonst prueft der zweite Teil des Tests nur die Vorgaben des Raetsels.
+        // A digit that is really still free in the cell's neighbourhood --
+        // otherwise the second half of the test only checks the puzzle's givens.
         val free = (1..9).first { d -> d != 6 && Units.peers[peer].none { game.valueAt(it) == d } }
         game.toggleNote(peer, free)
 
         val bad = game.noteConflicts()
-        assertTrue("die 6 ist in dieser Einheit vergeben", Bits.contains(bad[peer], 6))
-        assertFalse("die $free nicht", Bits.contains(bad[peer], free))
+        assertTrue("the 6 is already taken in this unit", Bits.contains(bad[peer], 6))
+        assertFalse("but not the $free", Bits.contains(bad[peer], free))
     }
 
     /** Two pencil marks of the same digit in one unit are both still possible. */

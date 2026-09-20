@@ -33,7 +33,7 @@ class StatsTest {
         assertEquals(5_000, s[Level.MEDIUM].bestMs)
 
         s = s.withSolved(Level.MEDIUM, 9_000, false, false)
-        assertEquals("langsameres Spiel darf die Bestzeit nicht ersetzen", 5_000, s[Level.MEDIUM].bestMs)
+        assertEquals("a slower game must not replace the best time", 5_000, s[Level.MEDIUM].bestMs)
 
         s = s.withSolved(Level.MEDIUM, 3_000, false, false)
         assertEquals(3_000, s[Level.MEDIUM].bestMs)

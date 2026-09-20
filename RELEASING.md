@@ -1,114 +1,111 @@
-# Veröffentlichen
+# Releasing
 
-Sudomnia hat **zwei Auslieferungswege**, und sie sind nicht dasselbe:
+Sudomnia has **two distribution paths**, and they are not the same:
 
-| Weg | Variante | Womit |
+| Path | Flavour | Via |
 |---|---|---|
-| Google Play | `play` | `bundlePlayRelease` → AAB, hochgeladen |
-| Geräte im Haus | `selfhosted` | `./deploy.sh` → APK auf den EnergyControl-Server |
+| Google Play | `play` | `bundlePlayRelease` → AAB, uploaded |
+| Devices at home | `selfhosted` | `./deploy.sh` → APK to the EnergyControl server |
 
-Der Unterschied ist keine Einstellung zur Laufzeit: die Play-Variante enthält die
-Selbst-Aktualisierung **nicht** und hält deshalb keine einzige Berechtigung.
-Google verbietet Apps aus dem Store, sich auf einem anderen Weg selbst zu
-aktualisieren. Ein `selfhosted`-Build im Store wäre der eine Fehler in diesem
-Aufbau, der sich nicht still zurücknehmen lässt — deswegen sind seine
-Play-Tasks in `build.gradle.kts` abgeschaltet, zusätzlich zu diesem Absatz.
+The difference is not a runtime setting: the Play flavour does **not** contain the
+self-update and therefore holds not a single permission. Google forbids apps from
+the store updating themselves any other way. A `selfhosted` build in the store would
+be the one mistake in this setup that can't be quietly taken back — which is why its
+Play tasks are disabled in `build.gradle.kts`, in addition to this paragraph.
 
 ---
 
-## Voraussetzungen
+## Prerequisites
 
 | | |
 |---|---|
-| JDK | **17.** Neuere JDKs bringen den Kotlin-Compiler in diesem Projekt zum Absturz. |
-| Android SDK | `ANDROID_HOME` gesetzt, build-tools 35 vorhanden |
-| Signieren | `android-app/keystore.properties`, nicht im Repo — Vorlage: `keystore.properties.example` |
-| Play-Upload | `android-app/play-service-account.json`, nicht im Repo — Vorlage: `play-service-account.json.example`. Nur für den automatisierten Upload nötig. |
-| selfhosted | `android-app/app/src/selfhosted/res/raw/{sudomnia_client.p12,server_cert.pem}`, nicht im Repo (siehe unten) |
-| selfhosted | `android-app/local.properties`: `sudomnia.updateHost=<dein-hostname>` (siehe unten) |
+| JDK | **17.** Newer JDKs crash the Kotlin compiler in this project. |
+| Android SDK | `ANDROID_HOME` set, build-tools 35 present |
+| Signing | `android-app/keystore.properties`, not in the repo — template: `keystore.properties.example` |
+| Play upload | `android-app/play-service-account.json`, not in the repo — template: `play-service-account.json.example`. Only needed for automated upload. |
+| selfhosted | `android-app/app/src/selfhosted/res/raw/{sudomnia_client.p12,server_cert.pem}`, not in the repo (see below) |
+| selfhosted | `android-app/local.properties`: `sudomnia.updateHost=<your-hostname>` (see below) |
 
-Der Upload-Schlüssel gehört **nicht** ins Repository. Ihn zu verlieren kostet nicht
-die App (Play App Signing hält den eigentlichen Signaturschlüssel), aber Google
-muss den Upload-Schlüssel dann vor dem nächsten Release zurücksetzen.
+The upload key does **not** belong in the repository. Losing it doesn't cost the app
+itself (Play App Signing holds the actual signing key), but Google then has to reset
+the upload key before the next release.
 
 ---
 
 ## 1. Version
 
-`version.properties` im Wurzelverzeichnis ist die einzige Quelle. Beide Zahlen
-wandern gemeinsam:
+`version.properties` in the root directory is the single source. Both numbers move
+together:
 
 ```properties
 VERSION_CODE=10
 VERSION_NAME=0.5.0
 ```
 
-`VERSION_CODE` muss **echt größer** sein als alles, was Play je gesehen hat.
-Lücken sind egal, Rückwärtsgehen nicht, und es lässt sich nicht rückgängig machen
-— Play merkt sich einen Versionscode auch für ein verworfenes Release.
+`VERSION_CODE` must be **strictly greater** than anything Play has ever seen. Gaps
+don't matter, going backwards does, and it can't be undone — Play remembers a
+version code even for a discarded release.
 
-Jeder Build, der diese Maschine verlässt, bekommt eine eigene Version, auch
-Testbauten. Zwei Artefakte mit derselben Version sind der Weg, einen Fehler zu
-suchen, der nie installiert war.
+Every build that leaves this machine gets its own version, including test builds.
+Two artifacts with the same version are the way to go chasing a bug that was never
+installed.
 
-## 2. Erzeugtes neu erzeugen
+## 2. Regenerating generated files
 
-Nur wenn die Quelle sich geändert hat:
+Only when the source has changed:
 
 ```bash
-python3 tools/generate_app_icon.py       # App-Icon
-python3 tools/render_store_assets.py     # Play-Icon 512 und Feature-Grafiken
+python3 tools/generate_app_icon.py       # app icon
+python3 tools/render_store_assets.py     # Play icon 512 and feature graphics
 ```
 
-## 3. Prüfen und bauen
+## 3. Check and build
 
 ```bash
 cd android-app
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
-./gradlew test                  # die ganze Testsuite, beide Varianten
-./gradlew test -DsudokuDeep=1   # ~2.500 Rätsel, jedes erzeugt und benotet
+./gradlew test                  # the full test suite, both flavours
+./gradlew test -DsudokuDeep=1   # ~2,500 puzzles, each generated and graded
 ./gradlew lintPlayRelease
 ./gradlew bundlePlayRelease
 ```
 
-Das Artefakt ist `app/build/outputs/bundle/playRelease/app-play-release.aab`.
+The artifact is `app/build/outputs/bundle/playRelease/app-play-release.aab`.
 
-⚠️ Play will das **Bundle**, nicht ein APK. `assemblePlayRelease` erzeugt ein APK
-zum Sideloaden auf ein Testgerät; hochgeladen wird das nicht.
+⚠️ Play wants the **bundle**, not an APK. `assemblePlayRelease` produces an APK for
+sideloading onto a test device; that's not what gets uploaded.
 
-## 4. Das Artefakt prüfen
+## 4. Verify the artifact
 
-Geprüft wird, was hochgeht — nicht, was übersetzt wurde. „BUILD SUCCESSFUL" ist
-kein Beweis.
+What's checked is what ships — not what compiled. "BUILD SUCCESSFUL" is not proof.
 
 ```bash
 AAB=app/build/outputs/bundle/playRelease/app-play-release.aab
 
-# Mit dem Upload-Schluessel signiert, nicht mit einem Debug-Schluessel
+# Signed with the upload key, not a debug key
 jarsigner -verify -verbose:summary -certs "$AAB" | grep "Signed by"
 
-# Alle drei Sprachen wirklich drin (je ein String, der nur dort vorkommt)
+# All three languages are really in there (one string each that only occurs there)
 unzip -p "$AAB" base/resources.pb | grep -ac "Verstecktes Single"   # de
 unzip -p "$AAB" base/resources.pb | grep -ac "Hidden single"        # en
 unzip -p "$AAB" base/resources.pb | grep -ac "Único oculto"         # es
 
-# Die Selbst-Aktualisierung ist NICHT drin
-unzip -p "$AAB" base/dex/classes.dex | grep -ac "sudomnia/update/UpdateClient"   # muss 0 sein
+# The self-update is NOT in there
+unzip -p "$AAB" base/dex/classes.dex | grep -ac "sudomnia/update/UpdateClient"   # must be 0
 ```
 
-Und im gemergten Manifest, wo eine Abhängigkeit still eine Berechtigung
-zurückbringen kann:
+And in the merged manifest, where a dependency can quietly bring back a permission:
 
 ```bash
 grep -oE '<uses-permission[^>]*>' \
   app/build/intermediates/merged_manifest/playRelease/*/AndroidManifest.xml
 ```
 
-Die einzige Zeile darf `…DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` sein, die
-AndroidX über die App selbst deklariert. Insbesondere kein `INTERNET`. Genau das
-prüft auch der CI-Workflow bei jedem Push.
+The only line allowed is `…DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, which AndroidX
+declares about the app itself. In particular, no `INTERNET`. This is exactly what
+the CI workflow also checks on every push.
 
-## 5. Committen und taggen
+## 5. Commit and tag
 
 ```bash
 git commit -am "Version 0.5.0 (10)"
@@ -116,103 +113,100 @@ git tag -a v0.5.0 -m "Version 0.5.0"
 git push && git push --tags
 ```
 
-## 6. Hochladen
+## 6. Upload
 
-### Automatisiert
+### Automated
 
-Sobald `android-app/play-service-account.json` existiert:
+Once `android-app/play-service-account.json` exists:
 
 ```bash
 cd android-app
 ./gradlew publishPlayBundle                     # internal track
-./gradlew publishPlayBundle --track production  # ausdruecklich; nie als Vorgabe
+./gradlew publishPlayBundle --track production  # explicit; never the default
 ```
 
-Die Vorgaben sind absichtlich harmlos: ein blankes `publishPlayBundle` geht in den
-**internen** Kanal — eine benannte Liste von höchstens 100 Testern, nicht der
-Store. Ohne die Schlüsseldatei laufen alle übrigen Tasks weiter, und nur die
-`publish*`-Tasks scheitern, mit einer Meldung, die das auch sagt.
+The defaults are deliberately harmless: a bare `publishPlayBundle` goes to the
+**internal** channel — a named list of at most 100 testers, not the store. Without
+the key file, all other tasks keep working, and only the `publish*` tasks fail,
+with a message that says so.
 
-⚠️ Die Developer-API **kann das erste Release einer App nicht anlegen.** Google
-verlangt, dass für diesen Paketnamen einmal von Hand ein Bundle über die Console
-hochgeladen wurde. Bis dahin gilt der manuelle Weg.
+⚠️ The Developer API **cannot create the first release of an app.** Google requires
+that a bundle be uploaded once by hand through the Console for this package name.
+Until then, the manual path applies.
 
-### Von Hand
+### By hand
 
-Play Console: **Test and release → Production** (oder ein Testkanal) → *Create new
-release* → das `.aab` hochladen → Release-Notes → ausrollen.
+Play Console: **Test and release → Production** (or a test channel) → *Create new
+release* → upload the `.aab` → release notes → roll out.
 
-Release-Notes kommen aus `CHANGELOG.md`, gekürzt. Play erlaubt 500 Zeichen je
-Sprache, und `en-US`, `de-DE` und `es-ES` brauchen jeweils einen eigenen Text.
+Release notes come from `CHANGELOG.md`, shortened. Play allows 500 characters per
+language, and `en-US`, `de-DE` and `es-ES` each need their own text.
 
-Der Store-Eintrag selbst steht in `store/listing-en.md`, `store/listing-de.md`
-und `store/listing-es.md` — einschließlich der Data-Safety-Antworten und der
-Einordnung (die nur einmal gilt, nicht je Sprache). Diese Dateien mit dem
-gleichziehen, was in der Console wirklich eingetragen ist, sonst wird das
-nächste Release aus einer veralteten Quelle bearbeitet.
-
----
-
-## Nur beim ersten Release
-
-Passiert einmal und gehört nicht zum Alltag:
-
-1. **Identitätsprüfung** des Entwicklerkontos.
-2. **App in der Console anlegen**: Name, Standardsprache, „App" vs. „Spiel", gratis.
-3. **Geschlossener Test mit 12 Testern über 14 zusammenhängende Tage** — für neue
-   private Entwicklerkonten Voraussetzung, bevor die Produktion freigeschaltet
-   wird. Das ist mit Abstand der langsamste Schritt und hängt an Menschen, nicht
-   an Code. Früh anfangen.
-4. **Play App Signing**: beim ersten Upload annehmen. Für Sudomnia soll dabei der
-   **vorhandene Schlüssel hochgeladen** werden (Play Console → App-Integrität →
-   „Schlüssel aus Java-Keystore exportieren und hochladen"). Grund: Die Geräte im
-   Haus haben die `selfhosted`-Fassung mit derselben `applicationId` und diesem
-   Schlüssel installiert. Nur wenn Play mit demselben Schlüssel signiert, kann die
-   Store-Fassung sie aktualisieren, statt eine Neuinstallation mit verlorener
-   Statistik und verlorenem Spielstand zu erzwingen.
-5. **Screenshots**: Handy, 7"- und 10"-Tablet. Sie müssen die echte App zeigen,
-   müssen also auf einem Gerät aufgenommen werden — siehe
-   `store/screenshots/README.md`.
+The store listing itself lives in `store/listing-en.md`, `store/listing-de.md` and
+`store/listing-es.md` — including the data-safety answers and the categorisation
+(which applies once, not per language). Keep these files in sync with what's
+actually entered in the Console, or the next release gets edited from a stale
+source.
 
 ---
 
-## Der zweite Weg: die Geräte im Haus
+## First release only
+
+Happens once and isn't part of the routine:
+
+1. **Identity verification** of the developer account.
+2. **Create the app in the Console**: name, default language, "app" vs. "game", free.
+3. **Closed testing with 12 testers over 14 consecutive days** — a requirement for
+   new personal developer accounts before production is unlocked. By far the
+   slowest step, and it depends on people, not code. Start early.
+4. **Play App Signing**: accept on the first upload. For Sudomnia, this should
+   upload the **existing key** (Play Console → App integrity → "Export and upload a
+   key from a Java keystore"). Reason: the devices at home have the `selfhosted`
+   flavour installed with the same `applicationId` and this key. Only if Play signs
+   with the same key can the store version update them, instead of forcing a
+   reinstall with lost statistics and lost save state.
+5. **Screenshots**: phone, 7" and 10" tablet. They must show the real app, so they
+   have to be taken on a device — see `store/screenshots/README.md`.
+
+---
+
+## The second path: the devices at home
 
 ```bash
-./deploy.sh --notes "Was neu ist"     # Version +1, Release-Build, ab auf den Server
-./deploy.sh --no-bump                 # wenn die Version schon von Hand erhoeht wurde
+./deploy.sh --notes "What's new"      # version +1, release build, ship to the server
+./deploy.sh --no-bump                 # if the version was already bumped by hand
 ```
 
-Baut `assembleSelfhostedRelease`, legt die APK unter `/var/lib/sudomnia/apk/` ab
-und schreibt `latest.json`, das die installierten Apps abfragen. Ein Neustart des
-EnergyControl-Servers ist dafür nicht nötig; die Apps sehen die neue Version
-innerhalb von 15 Minuten.
+Builds `assembleSelfhostedRelease`, drops the APK under `/var/lib/sudomnia/apk/` and
+writes `latest.json`, which the installed apps poll. No restart of the
+EnergyControl server is needed for this; the apps see the new version within 15
+minutes.
 
-### Der Hostname
+### The hostname
 
-`UpdateClient.BASE_URL` nennt keinen Hostnamen im Quellcode mehr. Er kommt über
-`BuildConfig.UPDATE_HOST` aus der untracked `android-app/local.properties`:
+`UpdateClient.BASE_URL` no longer names a hostname in the source code. It comes via
+`BuildConfig.UPDATE_HOST` from the untracked `android-app/local.properties`:
 
 ```properties
-sudomnia.updateHost=<dein-hostname>
+sudomnia.updateHost=<your-hostname>
 ```
 
-Fehlt der Eintrag, fällt der Build auf `sudomnia.invalid` zurück (RFC 2606, löst
-absichtlich nirgendwo auf) — die `selfhosted`-Variante übersetzt also auch ohne diese
-Zeile, kann dann aber keinen Server erreichen. Ein frischer Clone verrät so nicht,
-welcher Host dahintersteckt.
+If the entry is missing, the build falls back to `sudomnia.invalid` (RFC 2606,
+deliberately resolves nowhere) — so the `selfhosted` flavour still compiles without
+this line, but then can't reach a server. A fresh clone therefore never reveals
+which host is behind it.
 
-### Das Client-Zertifikat und das gepinnte Serverzertifikat
+### The client certificate and the pinned server certificate
 
-`android-app/app/src/selfhosted/res/raw/sudomnia_client.p12` **und**
-`.../server_cert.pem` sind git-ignoriert. **Ohne sie übersetzt die
-selfhosted-Variante nicht** — `UpdateClient` referenziert `R.raw.sudomnia_client` und
-`R.raw.server_cert` ganz normal. Das ist Absicht: ein fehlender Schlüssel soll beim
-Bauen auffallen und nicht erst auf dem Gerät. Die `play`-Variante braucht keins von
-beidem, ein frischer Clone übersetzt die also ohne jedes Geheimnis.
+`android-app/app/src/selfhosted/res/raw/sudomnia_client.p12` **and**
+`.../server_cert.pem` are git-ignored. **Without them, the selfhosted flavour
+won't compile** — `UpdateClient` references `R.raw.sudomnia_client` and
+`R.raw.server_cert` normally. That's intentional: a missing key should show up
+while building, not only on the device. The `play` flavour needs neither, so a
+fresh clone compiles it without any secret.
 
-Neu ausstellen (auf dem Server-Host; schreibt zugleich die Seriennummer in die
-Allow-List des Servers und das gepinnte Serverzertifikat in `res/raw/`):
+Re-issuing them (on the server host; this also writes the serial number to the
+server's allow-list and the pinned server certificate to `res/raw/`):
 
 ```bash
 cd /home/pi/projects/EnergyControl
@@ -221,21 +215,19 @@ java -cp "target/classes:$(cat /tmp/ec-cp.txt)" \
      name.lechners.energycontrol.tools.SudomniaClientCertTool
 ```
 
-Danach den EnergyControl-Server neu starten — die Allow-List wird beim Start
-gelesen. Alte Seriennummern in `/var/lib/sudomnia/allowed-serials.txt` von Hand
-entfernen.
+Then restart the EnergyControl server — the allow-list is read on startup. Remove
+old serial numbers from `/var/lib/sudomnia/allowed-serials.txt` by hand.
 
-Nicht `mvn exec:java` benutzen: in der `pom.xml` steht `Daemon` fest als
-`mainClass`, `-Dexec.mainClass` wird davon überstimmt und es startet ein zweiter
-Server-Prozess.
+Don't use `mvn exec:java`: `pom.xml` hardcodes `Daemon` as `mainClass`,
+`-Dexec.mainClass` gets overridden by that, and a second server process starts.
 
-### Fallstricke
+### Pitfalls
 
-- **PKCS12-Passwort nie leer.** Androids BouncyCastle lehnt in PBKDF2 ein Passwort
-  der Länge 0 mit `IllegalArgumentException: password empty` ab. Der Wert steht in
-  `UpdateClient.P12_PASSWORD` und muss zu `SudomniaClientCertTool` passen.
-- **Version nur in `version.properties` ändern.** `build.gradle.kts` liest sie von
-  dort; ein zweiter Ort wäre sofort widersprüchlich.
-- **Der Schlüssel ist derselbe wie für Play.** Beide Wege signieren mit
-  `keystore.properties` — genau deshalb können die Tablets zwischen den Fassungen
-  wechseln (siehe Punkt 4 oben).
+- **Never an empty PKCS12 password.** Android's BouncyCastle rejects a zero-length
+  password in PBKDF2 with `IllegalArgumentException: password empty`. The value
+  lives in `UpdateClient.P12_PASSWORD` and must match `SudomniaClientCertTool`.
+- **Change the version only in `version.properties`.** `build.gradle.kts` reads it
+  from there; a second place would be immediately inconsistent.
+- **The key is the same as for Play.** Both paths sign with `keystore.properties`
+  — that's exactly why the tablets can switch between the flavours (see point 4
+  above).

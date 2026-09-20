@@ -1,139 +1,135 @@
 # Changelog
 
-Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
-Versionierung nach [SemVer](https://semver.org/lang/de/).
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+versioning based on [SemVer](https://semver.org/).
 
 ## [1.0.0] – 2026-09-18
 
-Erste Veroeffentlichung.
+First release.
 
-### Neu
-- **Spanisch** als dritte Sprache, neben Englisch (Standard) und Deutsch --
-  App, Store-Eintrag und Feature-Grafik.
+### Added
+- **Spanish** as a third language, alongside English (default) and German --
+  app, store listing and feature graphic.
 
-### Geaendert
-- Kontaktadresse `sudomnia@lechners.name` ergaenzt (Impressum, Datenschutz,
-  Vorschlag im Fehlerbericht).
-- Der Hostname des Update-Servers steht nicht mehr im Repo; `BASE_URL` kommt
-  jetzt aus der untracked `local.properties`.
+### Changed
+- Added contact address `sudomnia@lechners.name` (imprint, privacy, suggestion
+  in the error report).
+- The update server's hostname is no longer in the repo; `BASE_URL` now comes
+  from the untracked `local.properties`.
 
 ## [0.6.0] – 2026-09-14
 
-### Neu
-- **Warnung vor falschen Eingaben** -- die fuenfte Hilfe, und die einzige, die
-  standardmaessig **aus** ist. Eingeschaltet vergleicht sie jede gesetzte Ziffer mit der
-  Loesung und sagt sofort Bescheid. Die vier anderen Hilfen reden ueber die *Regeln*,
-  diese liest die *Antwort* -- deshalb kostet sie etwas: **drei falsche Eingaben beenden
-  die Partie.** Die Warnung zaehlt die verbleibenden Versuche laut mit, damit die dritte
-  keine Ueberraschung ist, und der Hinweis im Einstellungsdialog nennt den Preis, bevor
-  man den Schalter umlegt.
-- Im **Zweig** wird nicht geprueft: dort *soll* eine Annahme falsch sein duerfen.
-  Rueckgaengig gibt einen verbrauchten Versuch nicht zurueck -- sonst waere der Preis
-  keiner --, und der Zaehler steht im Spielstand, also bringt auch ein Neustart der App
-  keine frischen Versuche.
+### Added
+- **Warning for wrong entries** -- the fifth aid, and the only one **off** by
+  default. When enabled, it compares every entered digit against the solution and
+  reports immediately. The other four aids talk about the *rules*, this one reads
+  the *answer* -- which is why it costs something: **three wrong entries end the
+  game.** The warning counts down the remaining attempts out loud, so the third one
+  is never a surprise, and the hint in the settings dialog states the cost before
+  the switch is flipped.
+- No check happens inside a **branch**: an assumption there is *allowed* to be
+  wrong. Undo does not refund a used attempt -- otherwise the cost wouldn't be one
+  -- and the counter lives in the save state, so restarting the app doesn't give
+  fresh attempts either.
 
 ## [0.5.1] – 2026-09-10
 
-### Behoben
-- **Die Konfliktanzeige uebersah Notizen.** Sie markierte nur gesetzte Ziffern; ein
-  Bleistift-Kandidat, dessen Ziffer in der Zeile, der Spalte oder dem Block schon
-  steht, blieb unauffaellig. Jetzt wird er rot -- dieselbe Aussage ueber dieselbe
-  Regel. Zwei *Notizen* derselben Ziffer in einer Einheit bleiben zulaessig, dafuer
-  sind Notizen da.
+### Fixed
+- **Conflict marking overlooked notes.** It only marked entered digits; a pencil
+  candidate whose digit was already set in the row, column or box went unnoticed.
+  Now it turns red -- the same statement about the same rule. Two *notes* of the
+  same digit in one unit remain allowed, that's what notes are for.
 
 ## [0.5.0] – 2026-09-09
 
-### Neu
-- **Die Technikleiter ist da.** `HumanSolver` loest ein Raetsel so, wie ein Mensch es
-  taete: Hidden/Naked Single, Locked Candidates, Naked/Hidden Pair und Triple, X-Wing,
-  Swordfish, Simple Colouring, XY-Wing -- und **nie durch Raten**. Die hoechste dabei
-  noetige Technik ist die Stufe (`Grader`), gemessen statt geschaetzt.
-- **Der Tipp begruendet jetzt jeden Schritt.** Er nimmt den naechsten Schritt der
-  Leiter vom Brett, wie es dasteht, nennt die Technik und den Grund und fuehrt noetigen-
-  falls durch eine Kette von Schritten bis zu der Ziffer, die man eintragen kann.
-  Gestrichene Kandidaten stehen durchgestrichen im Gitter. Die blanke Aufdeckung ohne
-  Begruendung ist damit fuer Raetsel aus diesem Generator verschwunden.
-- **Vier Stufen** statt drei: Leicht, Mittel, Schwer, Experte. "vorlaeufig" ist aus der
-  Kopfzeile verschwunden, dafuer steht dort jetzt die Zahl der Vorgaben.
+### Added
+- **The technique ladder is here.** `HumanSolver` solves a puzzle the way a person
+  would: hidden/naked single, locked candidates, naked/hidden pair and triple,
+  X-Wing, Swordfish, simple colouring, XY-Wing -- and **never by guessing**. The
+  highest technique needed is the level (`Grader`), measured instead of guessed.
+- **The hint now justifies every step.** It takes the next step of the ladder from
+  the board as it stands, names the technique and the reason, and where needed
+  walks through a chain of steps up to the digit that can be entered. Struck
+  candidates are shown crossed out in the grid. Blank reveals without justification
+  are thereby gone for puzzles from this generator.
+- **Four levels** instead of three: Easy, Medium, Hard, Expert. "Provisional" has
+  disappeared from the header, replaced by the clue count.
 
-### Behoben
-- **Raetsel, die Raten verlangten.** Die alte Stufe "Schwer" hiess nur "Singles
-  genuegen nicht" und nahm sonst alles, was eindeutig war -- gemessen an 150 solchen
-  Raetseln waren **53 % mit keiner menschlichen Technik loesbar**. Der Digger nimmt
-  eine Entfernung jetzt zurueck, sobald die Leiter das Raetsel nicht mehr zu Ende
-  bringt.
+### Fixed
+- **Puzzles that required guessing.** The old "Hard" level just meant "singles
+  don't suffice" and otherwise took anything that was unique -- measured across
+  150 such puzzles, **53% could not be solved by any human technique**. The digger
+  now undoes a removal as soon as the ladder can no longer finish the puzzle.
 
-### Vorbereitung auf die Veröffentlichung
-- **Englisch als Standardsprache**, Deutsch als Uebersetzung (`values-de`). Die App
-  war bis hier nur deutsch.
-- **Zwei Varianten** (`play`, `selfhosted`). Die Play-Fassung enthaelt die
-  Selbst-Aktualisierung nicht -- Google verbietet Apps aus dem Store, sich auf einem
-  anderen Weg selbst zu aktualisieren -- und haelt damit **keine einzige
-  Berechtigung**. Die selfhosted-Fassung bleibt wie bisher; `deploy.sh` baut sie.
-- **Ein frischer Clone uebersetzt jetzt** (`assemblePlayDebug`). Bisher scheiterte er
-  am fehlenden Client-Zertifikat, das absichtlich nicht im Repo liegt.
-- **Store-Material und Projektseite**: `store/` mit den Eintragstexten in beiden
-  Sprachen, Data-Safety-Antworten, Icon 512 und Feature-Grafiken; `docs/` als
-  Projektseite samt der Datenschutzerklaerung, auf die der Play-Eintrag zeigt;
-  `RELEASING.md` fuer beide Auslieferungswege; CI-Workflow, der die Berechtigungen
-  der Play-Variante prueft.
-- **AAB statt APK fuer Play** ueber das Play-Publisher-Plugin. Die Play-Tasks der
-  selfhosted-Variante sind abgeschaltet.
+### Release preparation
+- **English as the default language**, German as a translation (`values-de`). Up
+  to this point the app was German-only.
+- **Two flavours** (`play`, `selfhosted`). The Play build does not contain the
+  self-update -- Google forbids apps from the store updating themselves any other
+  way -- and therefore holds **not a single permission**. The selfhosted flavour
+  stays as before; `deploy.sh` builds it.
+- **A fresh clone now compiles** (`assemblePlayDebug`). Previously it failed on
+  the missing client certificate, which deliberately isn't in the repo.
+- **Store material and project page**: `store/` with the listing texts in both
+  languages, data-safety answers, 512 icon and feature graphics; `docs/` as the
+  project page including the privacy policy the Play listing points to;
+  `RELEASING.md` for both distribution paths; a CI workflow that checks the
+  permissions of the Play flavour.
+- **AAB instead of APK for Play** via the Play Publisher plugin. The Play tasks
+  of the selfhosted flavour are disabled.
 
 ## [0.4.5] – 2026-09-08
 
-### Neu
-- **Pause** in der Kopfzeile: haelt die Uhr an und blendet das Brett aus (es wird
-  nicht gezeichnet, kein durchscheinender Schleier). Weiter geht es mit einem Tipp
-  irgendwohin.
+### Added
+- **Pause** in the header: stops the clock and hides the board (it isn't drawn,
+  no translucent veil). Resumes with a tap anywhere.
 
-### Behoben
-- **Die Uhr lief weiter, wenn die App nicht sichtbar war** -- Bildschirm aus,
-  App-Umschalter, Home-Taste. Angehalten wurde sie bisher nur bei "neues Spiel" und
-  "geloest"; Lebenszyklus-Ereignisse kannte das ViewModel gar nicht, und die
-  verstrichene Zeit kommt aus `elapsedRealtime()`, die auch im Tiefschlaf laeuft.
-  Jetzt entscheidet eine Stelle, ob die Uhr laufen darf. `onStop` speichert
-  zusaetzlich den Spielstand -- im Hintergrund kann der Prozess sterben, und bisher
-  ueberlebte nur die Zeit bis zur letzten Brettaenderung.
+### Fixed
+- **The clock kept running when the app wasn't visible** -- screen off, app
+  switcher, home button. It used to be stopped only on "new game" and "solved";
+  the ViewModel didn't know about lifecycle events at all, and the elapsed time
+  comes from `elapsedRealtime()`, which keeps running even in deep sleep. Now one
+  place decides whether the clock may run. `onStop` also saves the game state --
+  the process can die in the background, and previously only the time up to the
+  last board change survived.
 
 ## [0.4.4] – 2026-09-08
 
-### Neu
-- **Zweig** – ein Versuch auf Probe fuer den Punkt, an dem kein Feld mehr erzwungen
-  ist. "Zweig beginnen" setzt eine Marke, alles danach Eingetragene ist vorlaeufig
-  und steht **gelb** im Gitter (Zelle und Ziffer). "Verwerfen" nimmt den ganzen
-  Versuch in einem Schritt zurueck, "Uebernehmen" macht ihn endgueltig. Rueckgaengig
-  haelt an der Marke an, solange der Zweig offen ist; der Zweig ueberlebt das
-  Beenden der App und wird beim Loesen automatisch uebernommen.
+### Added
+- **Branch** -- a trial attempt for the point where no cell is forced anymore.
+  "Start branch" sets a marker, everything entered afterwards is provisional and
+  shown **yellow** in the grid (cell and digit). "Discard" undoes the whole
+  attempt in one step, "Commit" makes it permanent. Undo stops at the marker
+  while the branch is open; the branch survives closing the app and is committed
+  automatically on solving.
 
 ## [0.4.3] – 2026-09-07
 
-### Behoben
-- Der Aktualisieren-Knopf scheiterte mit `IllegalArgumentException: password empty`.
-  Das JDK schreibt PKCS12 seit 8u301 mit PBES2/PBKDF2, und Androids BouncyCastle
-  lehnt dort ein Passwort der Laenge 0 ab. Das Client-Zertifikat hat jetzt ein
-  Passwort und wird im alten PKCS12-Format geschrieben.
+### Fixed
+- The update button failed with `IllegalArgumentException: password empty`. Since
+  8u301, the JDK writes PKCS12 with PBES2/PBKDF2, and Android's BouncyCastle
+  rejects a zero-length password there. The client certificate now has a password
+  and is written in the old PKCS12 format.
 
-### Neu
-- **Fehlerbericht teilen** (Hilfen-Dialog): Protokoll, Abstuerze und Stacktraces
-  gehen ueber die normale Teilen-Auswahl raus. Kein Upload-Weg in der App.
+### Added
+- **Share error report** (aids dialog): log, crashes and stack traces go out
+  through the normal share sheet. No upload path in the app.
 
 ## [0.4.2] – 2026-09-07
 
-### Geaendert
-- **Die Eingabe hat keinen Modus mehr.** Statt Schalter "Notizen" stehen zwei
-  Reihen unter dem Brett: oben die Ziffern, darunter die Notiz-Tasten. Erst das
-  Feld waehlen, dann entscheiden -- drei Kandidaten sind drei Taps. Die
-  Notiz-Tasten zeigen den Kandidatenstand des gewaehlten Feldes an; ohne
-  bearbeitbares Feld sind beide Reihen sichtbar tot.
+### Changed
+- **Input no longer has a mode.** Instead of a "notes" toggle, two rows sit under
+  the board: digits on top, note buttons below. Select the cell first, then
+  decide -- three candidates are three taps. The note buttons show the candidate
+  state of the selected cell; with no editable cell, both rows are visibly dead.
 
-### Neu
-- **Auto-Update** ueber den mTLS-Port des Haus-Servers, funktioniert damit auch
-  ohne VPN. Banner ueber dem Brett, Versionszeile im Hilfen-Dialog,
-  SHA-256-Pruefung des Downloads.
+### Added
+- **Auto-update** over the house server's mTLS port, so it works without a VPN
+  too. Banner above the board, version line in the aids dialog, SHA-256 check of
+  the download.
 
 ## [0.4.0] – 2026-09-03
 
-Erster spielbarer Stand: Generator mit garantiert eindeutiger Loesung, drei
-Stufen, Notizen, Undo/Redo, Timer, Tipp-Funktion, Statistik, gespeicherter
-Spielstand, abschaltbare Hilfen, App-Icon, signierter Release-Build.
+First playable state: generator with guaranteed unique solution, three levels,
+notes, undo/redo, timer, hint function, statistics, saved game state, aids that
+can be switched off, app icon, signed release build.

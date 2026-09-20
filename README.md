@@ -1,210 +1,209 @@
 # Sudomnia
 
-Ein Sudoku für Android-Tablets. Prototyp (0.4.3).
+A Sudoku for Android tablets. Prototype (0.4.3).
 
-Erzeugt seine Rätsel selbst — jedes hat **garantiert genau eine Lösung**, weil es aus
-einem fertigen Gitter herausgegraben und nach jedem entfernten Feld auf Eindeutigkeit
-geprüft wird. Keine Puzzle-Datenbank. Das Spiel selbst ist offline; das Netz wird
-ausschließlich für die Update-Prüfung benutzt (siehe „Updates").
+Generates its own puzzles — each one is **guaranteed to have exactly one solution**,
+because it is dug out of a finished grid and checked for uniqueness after every removed
+cell. No puzzle database. The game itself is offline; the network is used exclusively
+for the update check (see "Updates").
 
-## Stand
+## Status
 
-Spielbar: Gitter, Ziffernpad, Notizen (Bleistift-Kandidaten), Undo/Redo, Zweige
-(Versuch auf Probe), Timer mit Pause, Gelöst-Erkennung, vier gemessene
-Schwierigkeitsstufen, App-Icon, signierter Release-Build, Auto-Update.
+Playable: grid, digit pad, notes (pencil candidates), undo/redo, branches (trial
+attempts), timer with pause, solved detection, four measured difficulty levels, app
+icon, signed release build, auto-update.
 
-**Eingabe: erst das Feld, dann die Entscheidung.** Unter dem Brett stehen zwei Reihen —
-oben die großen Ziffern (eintragen, nochmal tippen löscht wieder), darunter die kleinen
-Notiz-Tasten (an/aus). Einen Modus gibt es nicht: drei Kandidaten notieren sind drei
-Taps. Eine gefüllte kleine Taste heißt „diese Notiz steht im gewählten Feld", die Reihe
-ist also zugleich die Anzeige. Ohne gewähltes Feld sind beide Reihen grau.
+**Input: the cell first, then the decision.** Below the board are two rows — the large
+digits on top (tap to enter, tap again to clear), the small note buttons below (on/off).
+There is no mode: noting three candidates is three taps. A filled small button means
+"this note is set in the selected cell", so the row doubles as the readout. With no cell
+selected, both rows are grey.
 
-Ein Feld antippen hebt alle Felder mit derselben Ziffer hervor — gesetzte **und**
-notierte. Funktioniert auch auf den vorgegebenen Zahlen.
+Tapping a cell highlights every cell with the same digit — entered **and** noted. Works
+on the given clues too.
 
-**Zweig**, wenn kein Feld mehr eindeutig ist: „Zweig beginnen" setzt eine Marke, ab da
-ist jede eingetragene Ziffer nur ein Versuch und steht **gelb** im Gitter. Geht der
-Versuch auf, macht „Übernehmen" ihn endgültig; geht er nicht auf, räumt „Verwerfen"
-alles davon in einem Schritt weg — auch die Notizen, die dabei bei den Nachbarn
-verschwunden sind. Solange der Zweig offen ist, hält „Rückgängig" an seinem Anfang an,
-damit man nicht versehentlich darunter rutscht. Ob der Versuch schon gescheitert ist,
-sagt übrigens der Tipp: er meldet dann, dass das Rätsel nicht mehr aufgeht.
+**Branch**, for when no cell is unique anymore: "Start branch" sets a marker; from then
+on every digit entered is only a trial and shown in **yellow** on the grid. If the
+attempt works out, "Commit" makes it permanent; if it doesn't, "Discard" clears all of
+it in one step — including the notes that vanished from neighbouring cells along the
+way. While the branch is open, "Undo" stops at its start, so you don't slip past it by
+accident. Whether the attempt has already failed is something the hint will tell you
+too: it reports that the puzzle no longer works out.
 
-**Tipp**, wenn es klemmt — und er sagt immer *warum*. Der erste Druck hebt hervor,
-worum es geht, der zweite nennt die Technik und den Grund („Eingesperrte Kandidaten:
-in Block 5 passt die 7 nur in Felder der Spalte 3 — im Rest der Spalte fällt sie weg"),
-der dritte trägt die Ziffer ein. Braucht es mehrere Schritte bis dahin, führt der Tipp
-durch die Kette. Gestrichene Kandidaten werden im Gitter durchgestrichen gezeigt, auch
-wenn du sie nie notiert hattest. Hat man sich schon verrannt, sagt die App, *dass* das
-Rätsel nicht mehr aufgeht, aber nicht wo.
+**Hint**, for when you're stuck — and it always says *why*. The first press highlights
+what's involved, the second names the technique and the reason ("Locked candidates: in
+box 5 the 7 fits only in cells of column 3 — so it can go from the rest of the column"),
+the third enters the digit. Where several steps are needed to get there, the hint walks
+you through the chain. Candidates it strikes out are shown crossed out in the grid, even
+if you never noted them. If you've already gone wrong, the app tells you *that* the
+puzzle no longer works out, but not where.
 
-**Pause** in der Kopfzeile: die Uhr steht, das Brett wird ausgeblendet (kein Schleier,
-es wird nicht gezeichnet), ein Tipp irgendwohin macht weiter. Die Uhr hält außerdem
-von selbst an, sobald die App nicht mehr sichtbar ist — Bildschirm aus, App-Umschalter,
-Home-Taste —, und läuft beim Zurückkommen weiter.
+**Pause** in the header: the clock stops, the board is hidden (not veiled — it simply
+isn't drawn), and a tap anywhere resumes. The clock also stops on its own as soon as the
+app is no longer visible — screen off, app switcher, home button — and resumes when you
+come back.
 
-**Statistik** pro Stufe: gelöst, begonnen, Bestzeit, dazu die Abzeichen „ohne Hilfen" und
-„ohne Tipp".
+**Statistics** per level: solved, started, best time, plus the "no aids" and "no hint"
+badges.
 
-Das **laufende Spiel wird gespeichert** — Ziffern, Notizen, Undo-Stack, ein offener
-Zweig und die Spielzeit überleben das Beenden der App.
+The **running game is saved** — digits, notes, undo stack, an open branch and the
+elapsed time all survive closing the app.
 
-**Alle Hilfen sind abschaltbar** (Kopfzeile → „Hilfen"): Konfliktanzeige, Hervorhebung
-gleicher Ziffern, Hervorhebung von Zeile/Spalte/Block, Ausgrauen fertiger Ziffern.
-Die wichtigste ist die Konfliktanzeige — sie sagt dir sofort, ob eine Ziffer im Feld
-überhaupt möglich ist, und nimmt dir damit die halbe Denkarbeit ab. Sie gilt auch für
-**Notizen**: ein Kandidat, dessen Ziffer in Zeile, Spalte oder Block schon steht, wird
-rot. Aus heißt: die App
-schweigt, und du merkst es erst, wenn das Gitter nicht aufgeht. Die Einstellungen
-überleben den App-Neustart.
+**Every aid can be switched off** (header → "Aids"): conflict marking, highlighting the
+same digit, highlighting row/column/box, dimming finished digits. The most important is
+conflict marking — it tells you instantly whether a digit is even possible in a cell,
+taking half the thinking off your hands. It also applies to **notes**: a candidate whose
+digit already appears in the row, column or box turns red. Off means the app stays
+quiet, and you only notice when the grid doesn't work out. The settings survive an app
+restart.
 
-**Vier Stufen, und sie sind gemessen.** Die App löst jedes Rätsel vor der Ausgabe so,
-wie ein Mensch es täte — nur mit Techniken, die sich in einem Satz erklären lassen —
-und die höchste dabei nötige Technik ist die Stufe:
+**Four levels, and they are measured.** Before it hands a puzzle over, the app solves it
+the way a person would — using only techniques that can be explained in one sentence —
+and the hardest technique needed is the level:
 
-| Stufe | Was sie verlangt |
+| Level | What it requires |
 |---|---|
-| **Leicht** | nur Singles, und mindestens 36 Vorgaben bleiben stehen |
-| **Mittel** | nur Singles, aber so tief ausgegraben, wie es geht |
-| **Schwer** | Locked Candidates oder ein Paar/Tripel |
-| **Experte** | X-Wing, Simple Colouring oder XY-Wing |
+| **Easy** | singles only, and at least 36 clues stay on the board |
+| **Medium** | singles only, but dug as deep as it goes |
+| **Hard** | locked candidates or a pair/triple |
+| **Expert** | X-Wing, simple colouring or XY-Wing |
 
-**Kein Rätsel verlangt Raten.** Das ist neu und war vorher nicht so: gemessen an 150
-Rätseln der alten „Schwer"-Stufe waren **53 % mit keiner menschlichen Technik lösbar**.
-Wer dort feststeckte, konnte nicht wissen, ob er etwas übersieht oder ob es nichts zu
-sehen gibt. Der Generator gräbt jetzt nur so tief, wie die Technikleiter noch mitkommt.
+**No puzzle requires guessing.** That's new, and it wasn't always true: measured across
+150 puzzles from the old "Hard" level, **53% could not be solved by any human
+technique**. If you got stuck in one, there was no way to tell whether you were missing
+something or whether there was nothing to see. The generator now only digs as deep as
+the technique ladder can still follow.
 
-Die **Oberfläche gibt es auf Englisch und Deutsch**; Englisch ist der Standard, Deutsch
-kommt automatisch auf einem deutschsprachigen Gerät.
+The **interface is available in English and German**; English is the default, German
+comes automatically on a German-language device.
 
-Noch nicht da: Begründungen jenseits von Singles — dafür bräuchte es die Technikleiter.
+Not there yet: explanations beyond singles — that would need the technique ladder.
 
-## Bauen
+## Building
 
-Java 17 ist Pflicht — neuere JDKs bringen den Kotlin-Compiler zum Absturz.
+Java 17 is mandatory — newer JDKs crash the Kotlin compiler.
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
 export ANDROID_HOME=$HOME/android-sdk
 cd android-app
-./gradlew test                     # Solver, Generator, Spiellogik
-./gradlew test -DsudokuDeep=1      # dieselben Tests mit 10x so vielen Rätseln
+./gradlew test                     # solver, generator, game logic
+./gradlew test -DsudokuDeep=1      # the same tests with 10x as many puzzles
 ./gradlew assemblePlayDebug        # app/build/outputs/apk/play/debug/…
-./gradlew lintPlayRelease          # NewApi & Co. -- laeuft bewusst nicht im Release-Pfad
-./gradlew bundlePlayRelease        # das AAB für Google Play
-./gradlew assembleSelfhostedRelease # die APK für den Haus-Server
+./gradlew lintPlayRelease          # NewApi & co. -- deliberately not run in the release path
+./gradlew bundlePlayRelease        # the AAB for Google Play
+./gradlew assembleSelfhostedRelease # the APK for the house server
 ```
 
-**Zwei Varianten.** `play` ist die Fassung für den Store: ohne Selbst-Aktualisierung
-und **ohne eine einzige Berechtigung** — Google verbietet Apps aus dem Store, sich auf
-einem anderen Weg selbst zu aktualisieren. `selfhosted` ist die Fassung für die
-Geräte im Haus, die ihre Updates vom EnergyControl-Server holt; nur sie braucht das
-Client-Zertifikat und ist ohne dieses nicht baubar. Ein frischer Clone übersetzt
-`play` ohne jedes Geheimnis.
+**Two flavours.** `play` is the store build: no self-update and **not a single
+permission** — Google forbids apps from the store updating themselves any other way.
+`selfhosted` is the build for the devices at home, which fetch their updates from the
+EnergyControl server; only this one needs the client certificate, and it won't build
+without it. A fresh clone compiles `play` without any secret.
 
-Der Release-Build wird über eine **nicht eingecheckte** `android-app/keystore.properties`
-signiert (Vorlage: `keystore.properties.example`). Fehlt die Datei, entsteht ein
-unsigniertes APK — genau das, was ein Fork oder ein CI-Lauf will.
+The release build is signed via a **not-checked-in** `android-app/keystore.properties`
+(template: `keystore.properties.example`). If the file is missing, an unsigned APK
+results — exactly what a fork or a CI run wants.
 
-Die Version steht an genau einer Stelle: `version.properties`.
+The version lives in exactly one place: `version.properties`.
 
-## Veröffentlichen
+## Releasing
 
-Zwei Wege, und sie sind nicht dasselbe:
+Two paths, and they are not the same:
 
 ```bash
-cd android-app && ./gradlew bundlePlayRelease   # das AAB für Google Play
-./deploy.sh --notes "Was neu ist"               # die APK für die Geräte im Haus
+cd android-app && ./gradlew bundlePlayRelease   # the AAB for Google Play
+./deploy.sh --notes "What's new"                # the APK for the devices at home
 ```
 
-Die Play-Fassung enthält die Selbst-Aktualisierung nicht und hält **keine einzige
-Berechtigung**; die selfhosted-Fassung holt sich ihre Updates vom EnergyControl-Server
-im Haus. Der ganze Ablauf samt Prüfung des hochgeladenen Bundles steht in
-`RELEASING.md`, die Store-Texte in `store/`.
+The Play build contains no self-update and holds **not a single permission**; the
+selfhosted build fetches its updates from the EnergyControl server at home. The full
+process, including verification of the uploaded bundle, is in `RELEASING.md`; the store
+texts are in `store/`.
 
 ## Updates
 
-**Aus dem Play Store** kommen sie wie bei jeder anderen App. Die Play-Fassung hat
-keinen eigenen Update-Weg und darf auch keinen haben.
+**From the Play Store**, updates arrive like for any other app. The Play build has no
+update path of its own, and must not have one.
 
-**Die Fassung für die Geräte im Haus** (`selfhosted`) fragt beim Start und danach alle
-15 Minuten `https://<konfigurierter Host>:8443/api/v1/sudomnia/app/latest.json` ab. Ist
-dort ein höherer `version_code` hinterlegt, erscheint über dem Brett ein Streifen
-„Version x.y.z ist da"; ein Tipp darauf lädt die APK, prüft ihre SHA-256 und übergibt
-sie dem Paketinstaller. Dieselbe Funktion steckt unten im Hilfen-Dialog, dort auch als
-„jetzt nachsehen". Der Hostname selbst steht nicht im Repo, sondern in der jeweils
-eigenen, nicht committeten `local.properties` (`sudomnia.updateHost`, siehe
+**The build for the devices at home** (`selfhosted`) polls
+`https://<configured host>:8443/api/v1/sudomnia/app/latest.json` on startup and every 15
+minutes after that. If a higher `version_code` is listed there, a banner "Version x.y.z
+is available" appears above the board; tapping it downloads the APK, checks its SHA-256
+and hands it to the package installer. The same function sits at the bottom of the aids
+dialog, there as "check now". The hostname itself is not in the repo but in each
+machine's own, not-committed `local.properties` (`sudomnia.updateHost`, see
 RELEASING.md).
 
-Der Weg läuft über den mTLS-Port des Servers — **das Update funktioniert deshalb auch
-von unterwegs, ohne VPN.** Das dafür nötige Client-Zertifikat liegt fest in der App
-(`app/src/selfhosted/res/raw/sudomnia_client.p12`, nicht im Repo); es ist serverseitig
-auf genau diesen einen Download beschränkt und öffnet sonst nichts. Wenn es klemmt, gibt
-es im Heimnetz den Notweg über den plain-HTTP-Port desselben Hosts im Browser.
+This path goes over the server's mTLS port — **so the update works from outside the
+house too, without a VPN.** The client certificate this needs is baked into the app
+(`app/src/selfhosted/res/raw/sudomnia_client.p12`, not in the repo); server-side, it is
+restricted to exactly this one download and opens nothing else. If it gets stuck,
+there's a fallback on the home network via the same host's plain-HTTP port in a browser.
 
-Nur diese Fassung hat deshalb zwei Berechtigungen: `INTERNET` und
-`REQUEST_INSTALL_PACKAGES`. Beide werden ausschließlich hierfür verwendet — das Spiel
-selbst kennt keinen Server, sammelt nichts und sendet nichts.
+Only this build therefore has two permissions: `INTERNET` and
+`REQUEST_INSTALL_PACKAGES`. Both are used exclusively for this — the game itself knows
+no server, collects nothing and sends nothing.
 
-## Wenn etwas klemmt
+## When something goes wrong
 
-Hilfen-Dialog → **Fehlerbericht → Teilen**. Das öffnet die normale Teilen-Auswahl mit
-einem Textbericht: Gerät, Android-Version, App-Version und das Protokoll der letzten
-Fehler samt Stacktrace. Abstürze landen automatisch darin.
+Aids dialog → **Error report → Share**. This opens the normal share sheet with a text
+report: device, Android version, app version, and the log of recent errors with stack
+traces. Crashes land in it automatically.
 
-Verschickt wird nichts von selbst — die App hat keinen Upload-Weg. Wohin der Bericht
-geht, entscheidet jedes Mal der Teilen-Dialog.
+Nothing is sent on its own — the app has no upload path. Where the report goes is
+decided every time by the share dialog.
 
-## Struktur
+## Structure
 
-| Verzeichnis | Inhalt |
+| Directory | Contents |
 |---|---|
-| `android-app/app/src/main/java/…/rules/` | Solver, Generator, Digger — reines Kotlin, ohne Android-Importe, vollständig auf der JVM testbar |
-| `…/game/` | Laufende Partie: Eingaben, Notizen, Undo-Historie |
-| `…/data/` | Einstellungen, SharedPreferences mit Migrationskette |
-| `…/ui/` | Compose-Oberfläche, ein Screen |
-| `…/update/` | Update-Prüfung: Manifest, mTLS-Client, eigenes ViewModel |
-| `tools/` | `generate_app_icon.py` — erzeugt die drei Icon-Ebenen aus einer Quelle |
+| `android-app/app/src/main/java/…/rules/` | Solver, generator, digger — pure Kotlin, no Android imports, fully testable on the JVM |
+| `…/game/` | Running game: inputs, notes, undo history |
+| `…/data/` | Settings, SharedPreferences with a migration chain |
+| `…/ui/` | Compose UI, one screen |
+| `…/update/` | Update check: manifest, mTLS client, its own ViewModel |
+| `tools/` | `generate_app_icon.py` — generates the three icon layers from one source |
 
-Details und die Begründungen hinter den Entwurfsentscheidungen: **ARCHITECTURE.md**.
+Details and the reasoning behind the design decisions: **ARCHITECTURE.md**.
 
-## Lizenz
+## License
 
-Apache-2.0 — siehe [LICENSE](LICENSE) und [NOTICE](NOTICE).
+Apache-2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
-| Was | Herkunft | Lizenz |
+| What | Origin | License |
 |---|---|---|
-| Rätsel | Keine fremden. Der Generator erzeugt jedes selbst | — |
-| App-Icon | Eigene Arbeit, erzeugt von `tools/generate_app_icon.py` | Apache-2.0 |
-| Referenzrätsel im Test | Project Euler 96 Nr. 1, ein 17-Vorgaben-Rätsel, „AI Escargot" | Faktenlage¹ |
-| Bibliotheken | AndroidX (Core, Activity, Lifecycle), Jetpack Compose | Apache-2.0 |
+| Puzzles | None from outside. The generator creates every one itself | — |
+| App icon | Own work, generated by `tools/generate_app_icon.py` | Apache-2.0 |
+| Reference puzzles in tests | Project Euler 96 no. 1, a 17-clue puzzle, "AI Escargot" | Facts¹ |
+| Libraries | AndroidX (Core, Activity, Lifecycle), Jetpack Compose | Apache-2.0 |
 
-¹ Einzelne Sudoku-Gitter sind keine schutzfähigen Werke. Sie liegen ohnehin nur im
-Testpfad und werden nicht mit der App ausgeliefert.
+¹ Individual Sudoku grids are not copyrightable works. They live only in the test path
+anyway and are not shipped with the app.
 
-## Drei Dateien fehlen im Repo
+## Three files are missing from the repo
 
-Alle drei absichtlich (siehe [RELEASING.md](RELEASING.md)). **Der `play`-Build braucht
-keine davon** — ein frischer Clone übersetzt ihn ohne jedes Geheimnis:
+All three deliberately (see [RELEASING.md](RELEASING.md)). **The `play` build needs
+none of them** — a fresh clone compiles it without any secret:
 
-- `android-app/app/src/selfhosted/res/raw/sudomnia_client.p12` — das Client-Zertifikat
-  für die Update-Prüfung gegen meinen Heimserver. Ein privater Schlüssel gehört nicht
-  auf GitHub. **Ohne diese Datei übersetzt die `selfhosted`-Variante nicht**
-  (`R.raw.sudomnia_client` existiert dann nicht). Das ist so gewollt: ein fehlender
-  Schlüssel soll beim Bauen auffallen, an einer offensichtlichen Stelle, statt auf
-  irgendeinem Tablet. Wer forkt, braucht diese Variante ohnehin nicht — der Server
-  dahinter steht nur bei mir.
-- `android-app/keystore.properties` — ohne sie entsteht ein **unsigniertes** Release.
-- `android-app/play-service-account.json` — nur für den automatisierten Play-Upload.
-  Ohne sie laufen alle übrigen Tasks; nur `publish*` scheitert, mit klarer Meldung.
+- `android-app/app/src/selfhosted/res/raw/sudomnia_client.p12` — the client certificate
+  for the update check against my home server. A private key doesn't belong on GitHub.
+  **Without this file, the `selfhosted` flavour won't compile**
+  (`R.raw.sudomnia_client` doesn't exist then). That's intentional: a missing key should
+  show up while building, in an obvious place, rather than on some tablet. Anyone
+  forking doesn't need this flavour anyway — the server behind it only exists at my
+  house.
+- `android-app/keystore.properties` — without it, an **unsigned** release results.
+- `android-app/play-service-account.json` — only for automated Play upload. Without it,
+  all other tasks run fine; only `publish*` fails, with a clear message.
 
-## Mitarbeit
+## Contributing
 
-Siehe [CONTRIBUTING.md](CONTRIBUTING.md). Datenschutz: [PRIVACY.md](PRIVACY.md).
-Änderungen: [CHANGELOG.md](CHANGELOG.md). Projektseite:
+See [CONTRIBUTING.md](CONTRIBUTING.md). Privacy: [PRIVACY.md](PRIVACY.md).
+Changes: [CHANGELOG.md](CHANGELOG.md). Project page:
 [alramlechner.github.io/Sudomnia](https://alramlechner.github.io/Sudomnia/).
 
-## Impressum
+## Imprint
 
-`sudomnia@lechners.name` — die Adresse, die der Fehlerbericht in der App als
-Empfänger vorschlägt, und an die alles andere zu diesem Projekt geht.
+`sudomnia@lechners.name` — the address the in-app error report suggests as the
+recipient, and where everything else about this project goes.

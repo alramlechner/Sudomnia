@@ -19,15 +19,15 @@ play-service-account.json
 *.iml
 .DS_Store
 
-# Client-Zertifikat und gepinntes Serverzertifikat fuer den Update-Endpunkt: beide
-# bleiben lokal. Das Client-Zertifikat ist ein privater Schluessel, das Serverzertifikat
-# verraet sonst den Hostnamen des Servers -- keins von beidem gehoert auf GitHub. Die App
-# sucht die Dateien zur Laufzeit und laeuft ohne sie (nur die Update-Pruefung meldet dann
-# "nicht eingerichtet") -- siehe RELEASING.md. Beide werden von SudomniaClientCertTool
-# gemeinsam neu ausgestellt.
+# Client certificate and pinned server certificate for the update endpoint: both
+# stay local. The client certificate is a private key, the server certificate would
+# otherwise reveal the server's hostname -- neither belongs on GitHub. The app looks
+# for these files at runtime and runs without them (only the update check then reports
+# "not configured") -- see RELEASING.md. Both are re-issued together by
+# SudomniaClientCertTool.
 android-app/app/src/selfhosted/res/raw/*.p12
 android-app/app/src/selfhosted/res/raw/server_cert.pem
 
-# Erzeugte Raetsel-Pakete: reine Ausgabe des Generators, jederzeit neu erzeugbar.
+# Generated puzzle packages: pure generator output, can be regenerated at any time.
 generator-cli/generated-puzzles/
 generator-cli/run/*.log

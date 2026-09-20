@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Keine einzige Berechtigung. Das Spiel sammelt nichts, sendet nichts und kennt
-         keinen Server; es kann technisch gar nichts irgendwohin schicken.
+    <!-- Not a single permission. The game collects nothing, sends nothing and knows
+         no server; it technically cannot send anything anywhere.
 
-         INTERNET und REQUEST_INSTALL_PACKAGES stehen ausschliesslich im Manifest der
-         selfhosted-Variante (src/selfhosted/AndroidManifest.xml), die sich selbst vom
-         Haus-Server aktualisiert. Der Play-Build enthaelt den Code dazu gar nicht —
-         Google verbietet Selbst-Updates ausserhalb des Stores. -->
+         INTERNET and REQUEST_INSTALL_PACKAGES exist exclusively in the manifest of
+         the selfhosted flavour (src/selfhosted/AndroidManifest.xml), which updates
+         itself from the house server. The Play build doesn't contain that code at
+         all — Google forbids self-updates outside the store. -->
 
     <uses-feature android:name="android.hardware.touchscreen" android:required="true" />
 
