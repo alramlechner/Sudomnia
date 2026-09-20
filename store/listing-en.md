@@ -121,7 +121,7 @@ https://alramlechner.github.io/Sudomnia/privacy.html
 |---|---|---|
 | App icon, 512×512 PNG | `store/play-icon-512.png` | ready |
 | Feature graphic, 1024×500 PNG | `store/play-feature-1024x500-en.png` | ready |
-| Phone screenshots (2–8, min 320px) | — | **must be taken on a device** |
+| Phone screenshots (2–8, min 320px) | `store/screenshots/phone/*.png` | ready — notes/conflicts, a hint with its reasoning, the aids dialog and statistics, in en/de/es |
 | 7" tablet screenshots (up to 8) | — | **must be taken on a device** |
 | 10" tablet screenshots (up to 8) | `store/screenshots/tablet/*.png` | ready — notes/conflicts, a hint with its reasoning, an open branch and the aids dialog in en/de/es, statistics |
 

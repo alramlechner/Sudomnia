@@ -1,53 +1,70 @@
 # Screenshots
 
-Aufgenommen auf einem 10"-Tablet (1840 × 2944, ~340 dpi, Lenovo TB370FU) mit
-`adb exec-out screencap`. Nichts hier ist aus den Vektorquellen gerendert:
-Google verlangt Screenshots der echten App, und ein Modell würde sie falsch
-darstellen.
+Taken on a 10" tablet (1840 × 2944, ~340 dpi, Lenovo TB370FU) with
+`adb exec-out screencap`. Nothing here is rendered from the vector sources:
+Google requires screenshots of the real app, and a mockup would misrepresent it.
 
 ## Tablet (`tablet/`)
 
-Sprachwechsel nur der App, nicht des Geräts, über
+Language switch for the app only, not the device, via
 `cmd locale set-app-locales name.lechners.sudomnia --user 0 --locales <de|en|es>`
-(Android 13+, kein Reboot, kein Geräte-Sprachwechsel nötig).
+(Android 13+, no reboot, no device language switch needed).
 
-| Datei | Zeigt |
+| File | Shows |
 |---|---|
-| `01-notes-conflict-de.png` | Notizen in einer Zelle, eine davon rot markiert — Konflikt mit einer bereits gesetzten Ziffer in Zeile/Spalte/Block |
-| `02-hint-reasoning-de.png` | Ein Tipp mit ausgeschriebener Begründung ("Verstecktes Single — in Zeile 7 ist nur hier noch Platz für die 2") — **das Bild, das diese App von anderen unterscheidet** |
-| `03-branch-en.png` / `-de.png` / `-es.png` | Ein offener Zweig: die provisorische Ziffer (gelb/gold), die Leiste mit Verwerfen/Übernehmen — in allen drei Sprachen |
-| `04-aids-en.png` / `-de.png` / `-es.png` | Der Hilfen-Dialog, jeder Schalter einzeln abschaltbar — in allen drei Sprachen |
-| `05-stats-es.png` | Die Statistik mit den vier Stufen, echte Werte aus vorherigen Partien |
+| `01-notes-conflict-de.png` | Notes in a cell, one marked red — a conflict with a digit already set in the row/column/box |
+| `02-hint-reasoning-de.png` | A hint with the reasoning spelled out ("Verstecktes Single — in Zeile 7 ist nur hier noch Platz für die 2") — **the one image that sets this app apart from others** |
+| `03-branch-en.png` / `-de.png` / `-es.png` | An open branch: the provisional digit (yellow/gold), the bar with discard/commit — in all three languages |
+| `04-aids-en.png` / `-de.png` / `-es.png` | The aids dialog, each switch individually toggleable — in all three languages |
+| `05-stats-es.png` | The statistics with the four levels, real values from previous games |
 
-**Seitenverhältnis:** alle Aufnahmen sind 1840 × 2944 (Verhältnis 1,6:1),
-damit unter Plays Grenze von 2:1 — kein Zuschnitt nötig.
+**Aspect ratio:** all captures are 1840 × 2944 (ratio 1.6:1), which stays under
+Play's 2:1 limit — no cropping needed.
 
-## Was noch fehlt
+## Phone (`phone/`)
 
-- **Handy-Screenshots.** Play verlangt 2–8 Stück, mind. 320 px kurze Kante;
-  keiner der Tablet-Screenshots erfüllt das. Auf einem Handy-Gerät nachholen.
-- **7"-Tablet-Satz.** Play unterscheidet 7" von 10"; alles oben ist 10"-Klasse.
+Taken on a Pixel 9 Pro (960 × 2142 at the WM-reported size, ~360 dpi) over wireless
+ADB, in all three languages via the same `cmd locale set-app-locales` switch as the
+tablet set. The raw capture is 2.23:1 and fails Play's 2:1 limit, so the status bar
+and the gesture-nav strip are cropped off (they're OS chrome, not app content
+anyway): 960 × 1890, ratio 1.97:1.
 
-## Was Play verlangt
+| File | Shows |
+|---|---|
+| `01-notes-conflict-en.png` / `-de.png` / `-es.png` | Same situation as the tablet set: notes in a cell, one in red for a conflict with the row/column/box — in all three languages |
+| `02-hint-reasoning-en.png` / `-de.png` / `-es.png` | A hint with the reasoning spelled out (a hidden single this time) — in all three languages |
+| `03-aids-en.png` / `-de.png` / `-es.png` | The aids dialog, also showing the app version in the same shot — in all three languages |
+| `04-stats-en.png` / `-de.png` / `-es.png` | The statistics screen with real values from previous games — in all three languages |
 
-| Formfaktor | Anzahl | Größe |
+Capturing the Spanish set is what found the TopBar overflow bug fixed in
+`ui/game/TopBar.kt` (a plain `Row` let "Nueva partida" run off the right edge on
+phone width instead of wrapping) — these screenshots are from the build that
+already has the fix, not the one that shipped the bug.
+
+## What's still missing
+
+- **7" tablet set.** Play distinguishes 7" from 10"; everything above is 10"-class.
+
+## What Play requires
+
+| Form factor | Count | Size |
 |---|---|---|
-| Handy | 2–8 | mind. 320 px kurze Kante |
-| Tablet 7" | bis 8 | mind. 1080 px lange Kante |
-| Tablet 10" | bis 8 | mind. 1080 px lange Kante |
+| Phone | 2–8 | min. 320 px short edge |
+| 7" tablet | up to 8 | min. 1080 px long edge |
+| 10" tablet | up to 8 | min. 1080 px long edge |
 
-**Seitenverhältnis:** die lange Kante darf höchstens doppelt so lang sein wie die
-kurze. Ein Rohbild moderner Handys liegt oft bei 2,23:1 und fällt damit durch —
-dann zuschneiden.
+**Aspect ratio:** the long edge may be at most twice as long as the short edge. A
+raw image from a modern phone is often around 2.23:1 and fails this — crop it in
+that case.
 
-## Aufnehmen
+## Capturing
 
-Auf einem Gerät mit ADB:
+On a device with ADB:
 
 ```bash
 adb exec-out screencap -p > store/screenshots/phone-1-grid.png
 ```
 
-Der Kopfbereich zeigt die Stufe, die Zahl der Vorgaben und die Uhr — vor der
-Aufnahme lohnt ein Blick darauf, ob dort etwas steht, das man nicht
-veröffentlichen will (eine Uhr bei 4:13:24 erzählt eine eigene Geschichte).
+The header area shows the level, the clue count and the clock — before capturing
+it's worth checking whether it shows something you don't want to publish (a clock
+reading 4:13:24 tells its own story).
