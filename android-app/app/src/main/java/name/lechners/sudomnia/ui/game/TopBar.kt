@@ -2,6 +2,7 @@ package name.lechners.sudomnia.ui.game
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -44,12 +45,15 @@ fun TopBar(
     onStats: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    // FlowRow, not Row: long translations (Spanish especially) don't fit on one line at
+    // phone width. A plain Row would let the last child run off the edge instead of
+    // wrapping -- this happened for real with "Nueva partida" before this was a FlowRow.
+    FlowRow(
         modifier = modifier.fillMaxWidth().padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Column {
+        Column(modifier = Modifier.align(Alignment.CenterVertically)) {
             Text(
                 text = levelLabel(level),
                 color = TextPrimary,
@@ -74,13 +78,19 @@ fun TopBar(
             )
         }
         // The pause button sits on the clock, because that is what it acts on.
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.align(Alignment.CenterVertically),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(text = elapsed, color = TextPrimary, fontSize = 20.sp)
             TextButton(onClick = onPause, enabled = canPause) {
                 Text(stringResource(R.string.paused_pause))
             }
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.align(Alignment.CenterVertically),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             TextButton(onClick = onStats) { Text(stringResource(R.string.stats)) }
             TextButton(onClick = onSettings) { Text(stringResource(R.string.settings)) }
             TextButton(onClick = onNewGame) { Text(stringResource(R.string.new_game)) }
