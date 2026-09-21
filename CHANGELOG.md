@@ -3,6 +3,17 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning based on [SemVer](https://semver.org/).
 
+## [1.0.1] – 2026-09-21
+
+### Fixed
+- **Board could render invisible.** Its size was the vertical space left over
+  after the fixed rows around it, inside a column that could not scroll -- if
+  those rows claimed more height than usual (larger system-bar insets, a
+  longer translation), the leftover shrank to zero and the 9x9 grid vanished
+  while every other row kept rendering normally. The board's side is now
+  derived from the available width instead, and the screen scrolls as a
+  fallback if content still doesn't fit vertically.
+
 ## [1.0.0] – 2026-09-18
 
 First release.

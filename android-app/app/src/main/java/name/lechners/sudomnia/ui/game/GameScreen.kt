@@ -3,14 +3,16 @@ package name.lechners.sudomnia.ui.game
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -25,7 +27,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import name.lechners.sudomnia.R
 import name.lechners.sudomnia.data.Settings
@@ -68,7 +69,10 @@ fun GameScreen(
 
     Box(modifier = modifier.fillMaxSize().background(AppBackground)) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(12.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -116,40 +120,45 @@ fun GameScreen(
                 )
             }
 
-            // The board side is written out as min(width, height) instead of
-            // fillMaxHeight().aspectRatio(1f). That modifier chain derives the width
-            // from the *height* constraint and happily returns a board wider than the
-            // screen -- the exact bug Chessomnia hit and documented.
-            BoxWithConstraints(
-                modifier = Modifier.fillMaxWidth().weight(1f),
+            // The board side used to be min(width, height) inside a
+            // weight(1f) box: whatever vertical space the fixed rows around it left
+            // over. On a column that isn't allowed to scroll, "leftover" can be zero
+            // -- taller system-bar insets or a longer translation in one of the fixed
+            // rows is enough to starve the board down to nothing while everything
+            // else keeps rendering fine. Deriving the side from width instead avoids
+            // that: width doesn't depend on how much the rows above and below claim.
+            // (It must not derive from height via fillMaxHeight().aspectRatio(1f)
+            // either -- that's the reverse bug, an overly-wide board, and the exact
+            // one Chessomnia hit.) The surrounding verticalScroll is the safety net
+            // for the case where width-sized content still doesn't fit vertically.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 560.dp)
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(6.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                val side = min(maxWidth, maxHeight)
-                Box(
-                    modifier = Modifier.size(side).clip(RoundedCornerShape(6.dp)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    val board = state.board
-                    if (state.paused) {
-                        // Nothing is drawn while paused -- the overlay below is opaque,
-                        // but not drawing the grid at all is the honest version of
-                        // "the board is hidden".
-                        Box(modifier = Modifier.fillMaxSize().background(AppSurface))
-                    } else if (board == null || state.generating) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator()
-                            Text(
-                                text = stringResource(R.string.generating),
-                                modifier = Modifier.padding(top = 12.dp),
-                            )
-                        }
-                    } else {
-                        SudokuBoard(
-                            state = board,
-                            onCellTap = onCellTap,
-                            modifier = Modifier.fillMaxSize(),
+                val board = state.board
+                if (state.paused) {
+                    // Nothing is drawn while paused -- the overlay below is opaque,
+                    // but not drawing the grid at all is the honest version of
+                    // "the board is hidden".
+                    Box(modifier = Modifier.fillMaxSize().background(AppSurface))
+                } else if (board == null || state.generating) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Text(
+                            text = stringResource(R.string.generating),
+                            modifier = Modifier.padding(top = 12.dp),
                         )
                     }
+                } else {
+                    SudokuBoard(
+                        state = board,
+                        onCellTap = onCellTap,
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 }
             }
 
