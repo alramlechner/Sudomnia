@@ -3,6 +3,16 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning based on [SemVer](https://semver.org/).
 
+## [1.0.2] – 2026-09-21
+
+### Changed
+- **The board uses the full screen width past the "Larger" accessibility text
+  size** (system font scale >= 1.3), dropping its side padding and its tablet
+  width cap. `fontScale` only scales text (sp), never the screen's actual
+  width (dp) -- so someone who deliberately turned the system font up gets a
+  genuinely bigger 9x9 grid and bigger digits, not just a grid that survives
+  the setting.
+
 ## [1.0.1] – 2026-09-21
 
 ### Fixed

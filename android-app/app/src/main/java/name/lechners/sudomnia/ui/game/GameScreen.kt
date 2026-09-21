@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -67,12 +68,19 @@ fun GameScreen(
     var showSettings by remember { mutableStateOf(false) }
     var showStats by remember { mutableStateOf(false) }
 
+    // fontScale only scales sp, never the dp width a reader's screen actually has --
+    // so someone who turned the system font up past the "Larger" step gets the
+    // benefit of that choice only if the layout also gives up its side padding and
+    // its tablet width cap on the board. Below that step, phones keep the margin.
+    val fontScale = LocalDensity.current.fontScale
+    val fullWidthBoard = fontScale >= 1.3f
+
     Box(modifier = modifier.fillMaxSize().background(AppBackground)) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(12.dp),
+                .padding(horizontal = if (fullWidthBoard) 0.dp else 12.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -134,7 +142,7 @@ fun GameScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .widthIn(max = 560.dp)
+                    .then(if (fullWidthBoard) Modifier else Modifier.widthIn(max = 560.dp))
                     .aspectRatio(1f)
                     .clip(RoundedCornerShape(6.dp)),
                 contentAlignment = Alignment.Center,
