@@ -31,5 +31,18 @@
             </intent-filter>
         </activity>
 
+        <!-- Shares a cache file via a content:// URI (required since Android 7). Used by
+             the "Fehler melden" diagnostics report (both flavours) and, in the selfhosted
+             flavour only, to hand the downloaded update APK to the package installer. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
     </application>
 </manifest>

@@ -3,6 +3,14 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning based on [SemVer](https://semver.org/).
 
+## [1.0.3] – 2026-09-22
+
+### Fixed
+- **"Fehler melden" crashed the app on the Play build.** The FileProvider it
+  needs to share the diagnostics report was declared only in the selfhosted
+  flavour's manifest; the Play flavour had no provider at all, so tapping the
+  button threw immediately. Now declared once for both flavours.
+
 ## [1.0.2] – 2026-09-21
 
 ### Changed

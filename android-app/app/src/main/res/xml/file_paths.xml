@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only the cache: that's where sudomnia-report.txt (diagnostics) and, in the
+     selfhosted flavour, sudomnia-update.apk land. Nothing else gets shared. -->
+<paths>
+    <cache-path name="apk_downloads" path="." />
+</paths>

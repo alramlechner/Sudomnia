@@ -2,30 +2,19 @@
 <!--
     Only the selfhosted flavour: the app fetches new versions itself from the
     EnergyControl server at home (see update/UpdateClient.kt). Both permissions
-    and the FileProvider belong exclusively to that.
+    belong exclusively to that.
 
-    In the Play build, this file doesn't exist and neither does the code — Google
-    forbids apps from the store updating themselves any other way, and a Sudoku
-    wouldn't get REQUEST_INSTALL_PACKAGES declared for it anyway.
+    The FileProvider itself is declared in src/main now — the diagnostics report
+    ("Fehler melden") shares a cache file the same way in both flavours and needs
+    it too, so it can't live only here.
+
+    In the Play build, this file doesn't exist and neither does the update code —
+    Google forbids apps from the store updating themselves any other way, and a
+    Sudoku wouldn't get REQUEST_INSTALL_PACKAGES declared for it anyway.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
-    <application>
-
-        <!-- Hands the downloaded APK from the cache to the package installer.
-             Without FileProvider this would be a file:// URI, which has been forbidden since Android 7. -->
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
-        </provider>
-
-    </application>
 </manifest>
