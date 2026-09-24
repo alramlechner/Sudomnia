@@ -10,7 +10,7 @@ This page is in English; the English version on file with Google Play is at
 
 ## What stays on the device
 
-Settings, statistics and the running save state live in the app's private
+Settings, statistics, the history of finished games and the running save state live in the app's private
 SharedPreferences. They never leave the device and disappear on uninstall.
 
 ## Network

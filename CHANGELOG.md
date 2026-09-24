@@ -3,6 +3,24 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning based on [SemVer](https://semver.org/).
 
+## [1.1.0] – 2026-09-24
+
+### Added
+- **A proper statistics screen** instead of a text dialog: a rating with a title
+  (Beginner … Grandmaster) and its trend, win rate, streak, best time, a rating
+  curve, solve times with a running median per difficulty, a 12-week play
+  calendar, and a filter per difficulty. The rating can be shared as text.
+- **Every finished game is now remembered** (won, lost by three mistakes, or
+  abandoned) with its time, mistakes, hints and the puzzle's graded difficulty.
+  Stored on the device only, capped at 2,000 games. History starts with this
+  update; the old counters are kept as they were.
+- **The rating** is reasoning per minute, measured with the same grader that
+  labels the difficulty, so an easy and an expert game are comparable without
+  per-level fudge factors. Hints, mistakes and aids cost points, a lost game is
+  worth little, abandoning a game after two minutes counts too. Provisional
+  ("?") until ten games.
+- The win screen shows the rating change and "faster than N % of your games".
+
 ## [1.0.3] – 2026-09-22
 
 ### Fixed

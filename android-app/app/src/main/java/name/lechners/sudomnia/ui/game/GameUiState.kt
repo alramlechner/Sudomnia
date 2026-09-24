@@ -1,5 +1,6 @@
 package name.lechners.sudomnia.ui.game
 
+import name.lechners.sudomnia.data.History
 import name.lechners.sudomnia.data.Settings
 import name.lechners.sudomnia.data.Stats
 import name.lechners.sudomnia.rules.Hint
@@ -54,6 +55,8 @@ data class GameUiState(
     val wrongCell: Int = -1,
     val settings: Settings = Settings(),
     val stats: Stats = Stats.EMPTY,
+    val history: History = History(),
+    val lastSolve: SolveSummary? = null,
     val hint: HintState? = null,
     /** Asked for a hint, but the entries so far can no longer lead to a solution. */
     val hintDeadEnd: Boolean = false,
@@ -79,6 +82,9 @@ data class GameUiState(
      */
     val finished: Boolean get() = solved || lost
 }
+
+/** What the win just achieved, shown on the overlay. Null fields: nothing to compare yet. */
+data class SolveSummary(val ratingDelta: Int?, val fasterThanPercent: Int?)
 
 /** How much of the current step has been revealed: where it is, then why. */
 enum class HintStage { LOCATE, REVEAL }

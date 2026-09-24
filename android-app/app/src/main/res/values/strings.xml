@@ -145,4 +145,30 @@
     <string name="diag_hint">Pass on the log and crash reports when something is stuck</string>
     <string name="diag_share">Share</string>
 
+
+    <string name="stats_all">All</string>
+    <string name="stats_rating">Rating</string>
+    <string name="stats_quote">Win rate</string>
+    <string name="stats_streak">Streak</string>
+    <string name="stats_streak_best">Longest streak</string>
+    <string name="stats_median">Median time</string>
+    <string name="stats_clean">Solved cleanly</string>
+    <string name="stats_lost">Lost</string>
+    <string name="stats_abandoned">Abandoned</string>
+    <string name="stats_playtime">Time played</string>
+    <string name="stats_rating_curve">Rating over your games</string>
+    <string name="stats_time_curve">Solve times (line: median of the last 10)</string>
+    <string name="stats_calendar">Last 12 weeks · %1$d days in a row</string>
+    <string name="stats_no_data">Play a few more games to see this.</string>
+    <string name="stats_range">%1$d – %2$d</string>
+    <string name="stats_time_range">fastest %1$s · slowest %2$s</string>
+    <string name="stats_share">Share rating</string>
+    <string name="stats_share_text">My Sudomnia rating: %1$d (%2$s) · %3$d solved in a row</string>
+    <string name="title_beginner">Beginner</string>
+    <string name="title_advanced">Advanced</string>
+    <string name="title_skilled">Skilled</string>
+    <string name="title_master">Master</string>
+    <string name="title_grandmaster">Grandmaster</string>
+    <string name="solved_rating">Rating %1$s</string>
+    <string name="solved_faster">faster than %1$d %% of your games</string>
 </resources>

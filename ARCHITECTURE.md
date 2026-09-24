@@ -322,6 +322,26 @@ during an update would lose it over a field that didn't exist back then.
 not be scattered: the hint expires (one computed against an older board isn't just stale,
 it can be wrong), the win is counted, the game is saved.
 
+### Play history and the rating (1.1.0)
+
+The counters cannot answer "am I getting better", so each finished game is also one
+`GameRecord` line in `History` (`data/History.kt`, pure functions, `HistoryTest`). The
+game's *score* is the `Grader` sum of technique costs -- the amount of reasoning in the
+puzzle -- computed once at the end on a background dispatcher (`recordEnd`), so nothing
+extra is stored with the running game. `recordedEnd` guards it like `countedSolved`
+guards the win; on restore it is derived from the snapshot (`counted` or lost).
+
+Per-game rating = `1000 + 400 * log2(score/minute / 8)`: doubling the pace is always
++400, and ~8 points/minute is a comfortable pace at *every* level, which is why no
+per-level factor is needed. Discarded alternative: fixed reference times per level --
+simpler, but hand-picked constants that would have to be re-tuned with every change to
+the digger. Hints x0.8 each, mistakes x0.9 each, aids x0.9; lost = 200; abandoned = 400,
+but only after two minutes, or abandoning a bad start would be free. The overall rating
+is an exponential moving average (alpha 0.15), provisional below ten games.
+
+Not done: a shared daily puzzle for comparing with others (needs a seedable generator),
+and a global leaderboard -- the Play build has no INTERNET permission by promise.
+
 ---
 
 ## 7. Aids that can be switched off

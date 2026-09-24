@@ -247,6 +247,7 @@ fun GameScreen(
                 elapsed = timer.format(),
                 hintsUsed = state.hintsUsed,
                 noAids = state.aidsCleanRun,
+                summary = state.lastSolve,
                 onNewGame = { showLevelPicker = true },
             )
         }
@@ -272,6 +273,7 @@ fun GameScreen(
         if (showStats) {
             StatsDialog(
                 stats = state.stats,
+                history = state.history,
                 onReset = onResetStats,
                 onDismiss = { showStats = false },
             )

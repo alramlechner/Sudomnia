@@ -1,0 +1,1 @@
+New statistics screen: rating with title and trend, charts of your rating and solve times, a play calendar, streaks and a filter per difficulty. The win screen shows your rating change. History starts with this update; everything stays on your device.

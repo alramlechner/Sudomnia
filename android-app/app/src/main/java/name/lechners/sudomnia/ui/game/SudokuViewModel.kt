@@ -12,12 +12,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import name.lechners.sudomnia.data.GameRecord
 import name.lechners.sudomnia.data.GameSnapshot
+import name.lechners.sudomnia.data.History
+import name.lechners.sudomnia.data.Outcome
 import name.lechners.sudomnia.data.Settings
 import name.lechners.sudomnia.data.Stats
 import name.lechners.sudomnia.data.SudomniaPrefs
 import name.lechners.sudomnia.game.MistakeTally
 import name.lechners.sudomnia.game.SudokuGame
+import name.lechners.sudomnia.rules.Grader
 import name.lechners.sudomnia.rules.Hint
 import name.lechners.sudomnia.rules.HintFinder
 import name.lechners.sudomnia.rules.Level
@@ -34,8 +38,11 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
     // Read synchronously, before the first frame -- see SudomniaPrefs.
     private var settings: Settings = prefs.load()
     private var stats: Stats = prefs.loadStats()
+    private var history: History = prefs.loadHistory()
+    /** What the game just won was worth, for the win overlay. Cleared with the next game. */
+    private var lastSolve: SolveSummary? = null
 
-    private val _ui = MutableStateFlow(GameUiState(settings = settings, stats = stats))
+    private val _ui = MutableStateFlow(GameUiState(settings = settings, stats = stats, history = history))
     val ui: StateFlow<GameUiState> = _ui.asStateFlow()
 
     private val _timer = MutableStateFlow(TimerState())
@@ -58,6 +65,8 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
     private var countedSolved = false
     /** Per game: has the first move been counted as "started"? */
     private var countedStart = false
+    /** Per game: has its end (win, loss or abandonment) gone into the history? */
+    private var recordedEnd = false
     private var hintsUsed = 0
     /** Cleared for good the moment any aid is on -- switching them off at the end earns nothing. */
     private var aidsCleanRun = true
@@ -96,6 +105,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         selected = -1
         countedSolved = saved.counted
         countedStart = true
+        recordedEnd = saved.counted || MistakeTally(saved.mistakes).lost
         hintsUsed = saved.hintsUsed
         aidsCleanRun = !saved.aidsUsed
         mistakes = MistakeTally(saved.mistakes)
@@ -114,12 +124,19 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
 
     fun resetStats() {
         stats = Stats.EMPTY
+        history = History()
+        lastSolve = null
         prefs.saveStats(stats)
+        prefs.saveHistory(history)
         publish()
     }
 
     fun newGame(level: Level) {
-        _ui.value = GameUiState(generating = true, level = level, settings = settings)
+        // A game that was begun and is neither won nor lost ends here, by the
+        // player's choice -- it goes into the history as such.
+        if (countedStart && !recordedEnd) recordEnd(Outcome.ABANDONED)
+        lastSolve = null
+        _ui.value = GameUiState(generating = true, level = level, settings = settings, stats = stats, history = history)
         stopTimer()
         manuallyPaused = false
         viewModelScope.launch {
@@ -131,6 +148,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             accumulatedMs = 0L
             countedSolved = false
             countedStart = false
+            recordedEnd = false
             hintsUsed = 0
             aidsCleanRun = true
             hintPending = false
@@ -359,7 +377,10 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
 
         publish()
         if (!wasSolved && _ui.value.solved) onSolved()
-        if (mistakes.lost) syncTimer()
+        if (mistakes.lost) {
+            syncTimer()
+            if (!recordedEnd) recordEnd(Outcome.LOST)
+        }
         saveGame()
     }
 
@@ -378,8 +399,42 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             noHints = hintsUsed == 0,
         )
         prefs.saveStats(stats)
+        recordEnd(Outcome.SOLVED)
         publish()
         saveGame()
+    }
+
+    /**
+     * Puts the game that just ended into the history, once. The puzzle's score comes
+     * from the Grader, which solves it like a person would -- cheap, but not a thing
+     * for the main thread, and not worth storing with the running game.
+     */
+    private fun recordEnd(outcome: Outcome) {
+        val g = game ?: return
+        if (recordedEnd) return
+        recordedEnd = true
+        val level = g.puzzle.level
+        val givens = g.puzzle.givens
+        val duration = if (_timer.value.running) elapsedNow() else accumulatedMs
+        val mistakesNow = mistakes.count
+        val hints = hintsUsed
+        val clean = aidsCleanRun
+        val at = System.currentTimeMillis()
+        viewModelScope.launch {
+            val score = withContext(Dispatchers.Default) { Grader().grade(givens).score }
+            val record = GameRecord(at, level, score, duration, mistakesNow, hints, clean, outcome)
+            val before = history.rating()
+            history = history.plus(record)
+            prefs.saveHistory(history)
+            if (outcome == Outcome.SOLVED && game === g) {
+                val after = history.rating()
+                lastSolve = SolveSummary(
+                    ratingDelta = if (before != null && after != null) after - before else null,
+                    fasterThanPercent = history.fasterThanShare(level, duration),
+                )
+            }
+            publish()
+        }
     }
 
     private fun saveGame() {
@@ -485,6 +540,8 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             lost = mistakes.lost,
             settings = settings,
             stats = stats,
+            history = history,
+            lastSolve = lastSolve,
             hintsUsed = hintsUsed,
             aidsCleanRun = aidsCleanRun,
             fullButWrong = full && !solved,

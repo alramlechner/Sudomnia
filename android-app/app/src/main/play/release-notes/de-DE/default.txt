@@ -1,0 +1,1 @@
+Neuer Statistik-Bildschirm: Wertung mit Titel und Trend, Diagramme zu Wertung und Lösezeiten, Spielkalender, Serien und Filter je Schwierigkeit. Der Gewinn-Bildschirm zeigt die Wertungsänderung. Der Verlauf beginnt mit diesem Update; alles bleibt auf deinem Gerät.

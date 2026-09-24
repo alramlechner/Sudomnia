@@ -148,4 +148,30 @@
     <string name="diag_hint">Comparte el registro y los informes de fallos cuando algo se atasque</string>
     <string name="diag_share">Compartir</string>
 
+
+    <string name="stats_all">Todos</string>
+    <string name="stats_rating">Puntuación</string>
+    <string name="stats_quote">Tasa de éxito</string>
+    <string name="stats_streak">Racha</string>
+    <string name="stats_streak_best">Racha más larga</string>
+    <string name="stats_median">Tiempo mediano</string>
+    <string name="stats_clean">Resueltos limpios</string>
+    <string name="stats_lost">Perdidos</string>
+    <string name="stats_abandoned">Abandonados</string>
+    <string name="stats_playtime">Tiempo jugado</string>
+    <string name="stats_rating_curve">Puntuación a lo largo de tus partidas</string>
+    <string name="stats_time_curve">Tiempos (línea: mediana de las últimas 10)</string>
+    <string name="stats_calendar">Últimas 12 semanas · %1$d días seguidos</string>
+    <string name="stats_no_data">Juega unas partidas más para verlo.</string>
+    <string name="stats_range">%1$d – %2$d</string>
+    <string name="stats_time_range">más rápida %1$s · más lenta %2$s</string>
+    <string name="stats_share">Compartir puntuación</string>
+    <string name="stats_share_text">Mi puntuación en Sudomnia: %1$d (%2$s) · %3$d resueltos seguidos</string>
+    <string name="title_beginner">Principiante</string>
+    <string name="title_advanced">Avanzado</string>
+    <string name="title_skilled">Hábil</string>
+    <string name="title_master">Maestro</string>
+    <string name="title_grandmaster">Gran maestro</string>
+    <string name="solved_rating">Puntuación %1$s</string>
+    <string name="solved_faster">más rápido que el %1$d %% de tus partidas</string>
 </resources>

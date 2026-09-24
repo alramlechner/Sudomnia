@@ -144,4 +144,30 @@
     <string name="diag_hint">Protokoll und Absturzberichte weitergeben, wenn etwas klemmt</string>
     <string name="diag_share">Teilen</string>
 
+
+    <string name="stats_all">Alle</string>
+    <string name="stats_rating">Wertung</string>
+    <string name="stats_quote">Erfolgsquote</string>
+    <string name="stats_streak">Serie</string>
+    <string name="stats_streak_best">Längste Serie</string>
+    <string name="stats_median">Mediane Zeit</string>
+    <string name="stats_clean">Sauber gelöst</string>
+    <string name="stats_lost">Verloren</string>
+    <string name="stats_abandoned">Abgebrochen</string>
+    <string name="stats_playtime">Spielzeit</string>
+    <string name="stats_rating_curve">Wertung über deine Partien</string>
+    <string name="stats_time_curve">Lösezeiten (Linie: Median der letzten 10)</string>
+    <string name="stats_calendar">Letzte 12 Wochen · %1$d Tage in Folge</string>
+    <string name="stats_no_data">Spiele noch ein paar Partien, dann erscheint das hier.</string>
+    <string name="stats_range">%1$d – %2$d</string>
+    <string name="stats_time_range">schnellste %1$s · langsamste %2$s</string>
+    <string name="stats_share">Wertung teilen</string>
+    <string name="stats_share_text">Meine Sudomnia-Wertung: %1$d (%2$s) · %3$d in Folge gelöst</string>
+    <string name="title_beginner">Anfänger</string>
+    <string name="title_advanced">Fortgeschritten</string>
+    <string name="title_skilled">Könner</string>
+    <string name="title_master">Meister</string>
+    <string name="title_grandmaster">Großmeister</string>
+    <string name="solved_rating">Wertung %1$s</string>
+    <string name="solved_faster">schneller als %1$d %% deiner Partien</string>
 </resources>

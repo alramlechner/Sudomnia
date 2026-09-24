@@ -33,6 +33,7 @@ fun SolvedOverlay(
     elapsed: String,
     hintsUsed: Int,
     noAids: Boolean,
+    summary: SolveSummary?,
     onNewGame: () -> Unit,
 ) {
     Box(
@@ -67,8 +68,25 @@ fun SolvedOverlay(
                 ).joinToString(" · "),
                 color = TextSecondary,
                 fontSize = 13.sp,
-                modifier = Modifier.padding(top = 2.dp, bottom = 18.dp),
+                modifier = Modifier.padding(top = 2.dp),
             )
+            // What the win was worth against the player's own history -- the moment
+            // after solving is when a number like this is read.
+            val extras = listOfNotNull(
+                summary?.ratingDelta?.let { stringResource(R.string.solved_rating, if (it >= 0) "+$it" else "$it") },
+                summary?.fasterThanPercent?.takeIf { it > 0 }
+                    ?.let { stringResource(R.string.solved_faster, it) },
+            )
+            if (extras.isNotEmpty()) {
+                Text(
+                    text = extras.joinToString(" · "),
+                    color = TextPrimary,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+            }
+            Box(modifier = Modifier.padding(bottom = 18.dp))
             Button(onClick = onNewGame) { Text(stringResource(R.string.solved_new_game)) }
         }
     }

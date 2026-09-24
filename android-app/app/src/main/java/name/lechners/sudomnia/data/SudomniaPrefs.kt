@@ -79,6 +79,14 @@ class SudomniaPrefs(context: Context) {
 
     private fun statKey(level: Level, field: String) = "stat_${level.name}_$field"
 
+    // --- History ------------------------------------------------------------
+
+    fun loadHistory(): History = History.decode(prefs.getString(KEY_HISTORY, null))
+
+    fun saveHistory(history: History) {
+        prefs.edit { putString(KEY_HISTORY, History.encode(history)) }
+    }
+
     // --- Running game ---------------------------------------------------
 
     fun loadGame(): GameSnapshot? = GameSnapshot.decode(prefs.getString(KEY_GAME, null))
@@ -115,5 +123,6 @@ class SudomniaPrefs(context: Context) {
         const val KEY_DIM_DIGITS = "dim_completed_digits"
         const val KEY_WARN_WRONG = "warn_on_wrong"
         const val KEY_GAME = "current_game"
+        const val KEY_HISTORY = "game_history"
     }
 }
