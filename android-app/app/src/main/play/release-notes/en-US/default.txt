@@ -1,1 +1,1 @@
-New statistics screen: rating with title and trend, charts of your rating and solve times, a play calendar, streaks and a filter per difficulty. The win screen shows your rating change. History starts with this update; everything stays on your device.
+New light theme that follows your system setting, and one consistent look for the grid. Pencil marks are faster: with no cell selected, pick a digit on the notes row, then tap cells on the board to note it in each. Tap the digit again to stop.

@@ -3,6 +3,19 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning based on [SemVer](https://semver.org/).
 
+## [1.2.0] – 2026-10-11
+
+### Added
+- **A light theme.** The app now follows the system's light/dark setting.
+- **Pencil a digit across the board.** With no cell selected, a key on the notes
+  row arms that digit; tapping cells on the board then toggles it as a note
+  instead of selecting the cell. A blue frame around the board and a line above
+  the row show the mode; tapping the armed digit again ends it.
+
+### Changed
+- The grid no longer is a light sheet on a dark app: it shares the colour family
+  of the surrounding screen in both themes.
+
 ## [1.1.0] – 2026-09-24
 
 ### Added

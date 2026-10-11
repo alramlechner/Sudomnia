@@ -1,1 +1,1 @@
-Nueva pantalla de estadísticas: puntuación con título y tendencia, gráficos de puntuación y tiempos, calendario de juego, rachas y filtro por dificultad. La pantalla de victoria muestra el cambio de puntuación. El historial empieza con esta actualización; todo queda en tu dispositivo.
+Nuevo tema claro que sigue el ajuste del sistema y un aspecto más uniforme del tablero. Anotar es más rápido: sin casilla seleccionada, elige un dígito en la fila de notas y toca casillas del tablero para anotarlo. Vuelve a tocar el dígito para terminar.

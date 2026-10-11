@@ -1,1 +1,1 @@
-Neuer Statistik-Bildschirm: Wertung mit Titel und Trend, Diagramme zu Wertung und Lösezeiten, Spielkalender, Serien und Filter je Schwierigkeit. Der Gewinn-Bildschirm zeigt die Wertungsänderung. Der Verlauf beginnt mit diesem Update; alles bleibt auf deinem Gerät.
+Neues helles Design, das der Systemeinstellung folgt, und ein einheitlicheres Raster. Notizen gehen schneller: Ist kein Feld ausgewählt, wähle eine Zahl in der Notizzeile und tippe dann Felder im Raster an, um sie dort zu notieren. Zahl erneut tippen zum Beenden.
