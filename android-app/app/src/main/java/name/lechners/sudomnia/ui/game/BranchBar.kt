@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import name.lechners.sudomnia.R
-import name.lechners.sudomnia.ui.theme.PaperTrial
+import name.lechners.sudomnia.ui.theme.InkTrial
 import name.lechners.sudomnia.ui.theme.TextSecondary
 
 /**
@@ -60,15 +60,15 @@ fun BranchBar(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(PaperTrial.copy(alpha = 0.14f))
-            .border(1.dp, PaperTrial.copy(alpha = 0.55f), RoundedCornerShape(8.dp))
+            .background(InkTrial.copy(alpha = 0.14f))
+            .border(1.dp, InkTrial.copy(alpha = 0.55f), RoundedCornerShape(8.dp))
             .padding(start = 10.dp, end = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = if (cells == 0) stringResource(R.string.branch_empty)
             else pluralStringResource(R.plurals.branch_cells, cells, cells),
-            color = if (cells == 0) TextSecondary else PaperTrial,
+            color = if (cells == 0) TextSecondary else InkTrial,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.weight(1f).padding(vertical = 4.dp),

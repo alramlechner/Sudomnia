@@ -49,6 +49,7 @@ import name.lechners.sudomnia.data.Outcome
 import name.lechners.sudomnia.data.Stats
 import name.lechners.sudomnia.data.Title
 import name.lechners.sudomnia.rules.Level
+import name.lechners.sudomnia.ui.theme.LocalPalette
 import name.lechners.sudomnia.ui.theme.AppBackground
 import name.lechners.sudomnia.ui.theme.AppOutline
 import name.lechners.sudomnia.ui.theme.AppSurface
@@ -56,8 +57,6 @@ import name.lechners.sudomnia.ui.theme.LogoBlue
 import name.lechners.sudomnia.ui.theme.TextPrimary
 import name.lechners.sudomnia.ui.theme.TextSecondary
 
-private val Good = Color(0xFF6BC46D)
-private val Bad = Color(0xFFE07A70)
 
 /** The statistics as a full screen: rating, trend, charts, then the plain counters. */
 @Composable
@@ -157,7 +156,7 @@ private fun Overview(stats: Stats, history: History, filter: Level?) {
                     ?: stringResource(R.string.stats_none),
                 sub = rating?.let { titleLabel(History.titleOf(it)) },
                 extra = trend?.let { (if (it >= 0) "▲ +" else "▼ ") + it },
-                extraColor = if ((trend ?: 0) >= 0) Good else Bad,
+                extraColor = if ((trend ?: 0) >= 0) LocalPalette.current.good else LocalPalette.current.bad,
             )
             Tile(Modifier.weight(1f), stringResource(R.string.stats_solved), solved.toString())
         }
@@ -246,6 +245,7 @@ private fun TimeChart(history: History, level: Level) {
             val w = times.subList(maxOf(0, i - 9), i + 1).sorted()
             if (w.size % 2 == 1) w[w.size / 2] else (w[w.size / 2 - 1] + w[w.size / 2]) / 2
         }
+        val dotColor = TextSecondary
         Canvas(modifier = Modifier.fillMaxWidth().height(110.dp)) {
             val hi = times.max()
             val lo = times.min()
@@ -255,7 +255,7 @@ private fun TimeChart(history: History, level: Level) {
                 // Faster (smaller) is higher: up means better, as on the rating chart.
                 y = (size.height * (0.05 + 0.9 * (v - lo) / span)).toFloat(),
             )
-            times.forEachIndexed { i, v -> drawCircle(TextSecondary, 3.dp.toPx(), pt(i, v)) }
+            times.forEachIndexed { i, v -> drawCircle(dotColor, 3.dp.toPx(), pt(i, v)) }
             val path = Path()
             medians.forEachIndexed { i, v -> pt(i, v).let { if (i == 0) path.moveTo(it.x, it.y) else path.lineTo(it.x, it.y) } }
             drawPath(path, LogoBlue, style = Stroke(width = 3.dp.toPx()))
@@ -276,6 +276,7 @@ private fun Calendar(history: History) {
     val perDay = remember(history) { history.perDay() }
     val today = remember { LocalDate.now() }
     ChartCard(stringResource(R.string.stats_calendar, history.dayStreak(today))) {
+        val emptyDay = AppOutline.copy(alpha = 0.5f)
         Canvas(modifier = Modifier.fillMaxWidth().height(96.dp)) {
             val weeks = 12
             val gap = 3.dp.toPx()
@@ -286,7 +287,7 @@ private fun Calendar(history: History) {
                 val date = monday.minusWeeks((weeks - 1 - w).toLong()).plusDays(d.toLong())
                 if (date.isAfter(today)) continue
                 val n = perDay[date] ?: 0
-                val color = if (n == 0) AppOutline.copy(alpha = 0.5f)
+                val color = if (n == 0) emptyDay
                 else LogoBlue.copy(alpha = (0.35f + 0.2f * n).coerceAtMost(1f))
                 drawRect(color, Offset(w * (cell + gap), d * (cell + gap)), Size(cell, cell))
             }

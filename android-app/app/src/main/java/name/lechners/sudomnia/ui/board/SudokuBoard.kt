@@ -6,6 +6,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import name.lechners.sudomnia.ui.theme.LocalPalette
+import name.lechners.sudomnia.ui.theme.Palette
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -15,23 +17,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import name.lechners.sudomnia.rules.Bits
 import name.lechners.sudomnia.rules.Units
-import name.lechners.sudomnia.ui.theme.GridLine
-import name.lechners.sudomnia.ui.theme.GridLineStrong
-import name.lechners.sudomnia.ui.theme.InkConflict
-import name.lechners.sudomnia.ui.theme.InkEntry
-import name.lechners.sudomnia.ui.theme.InkGiven
-import name.lechners.sudomnia.ui.theme.InkNote
-import name.lechners.sudomnia.ui.theme.InkNoteHighlight
-import name.lechners.sudomnia.ui.theme.InkTrial
-import name.lechners.sudomnia.ui.theme.PaperBase
-import name.lechners.sudomnia.ui.theme.PaperConflict
-import name.lechners.sudomnia.ui.theme.PaperGivenCell
-import name.lechners.sudomnia.ui.theme.PaperHint
-import name.lechners.sudomnia.ui.theme.PaperHintUnit
-import name.lechners.sudomnia.ui.theme.PaperPeer
-import name.lechners.sudomnia.ui.theme.PaperSameDigit
-import name.lechners.sudomnia.ui.theme.PaperSelected
-import name.lechners.sudomnia.ui.theme.PaperTrial
 
 /**
  * The whole grid in one [Canvas], not 81 composables.
@@ -52,6 +37,7 @@ fun SudokuBoard(
     modifier: Modifier = Modifier,
 ) {
     val paints = remember { BoardPaints() }
+    val pal = LocalPalette.current
 
     Canvas(
         modifier = modifier.pointerInput(Unit) {
@@ -63,9 +49,9 @@ fun SudokuBoard(
         },
     ) {
         val geo = BoardGeometry(size.minDimension)
-        drawCellBackgrounds(geo, state)
-        drawGlyphs(geo, state, paints)
-        drawGridLines(geo)
+        drawCellBackgrounds(geo, state, pal)
+        drawGlyphs(geo, state, paints, pal)
+        drawGridLines(geo, pal)
     }
 }
 
@@ -87,8 +73,8 @@ private class BoardPaints {
     }
 }
 
-private fun DrawScope.drawCellBackgrounds(geo: BoardGeometry, state: BoardState) {
-    drawRect(PaperBase, size = Size(geo.sizePx, geo.sizePx))
+private fun DrawScope.drawCellBackgrounds(geo: BoardGeometry, state: BoardState, pal: Palette) {
+    drawRect(pal.paperBase, size = Size(geo.sizePx, geo.sizePx))
 
     val peersLit = state.highlightPeers && state.selected >= 0
     val selRow = if (peersLit) Units.rowOf[state.selected] else -1
@@ -106,14 +92,14 @@ private fun DrawScope.drawCellBackgrounds(geo: BoardGeometry, state: BoardState)
         // A trial cell ranks above the same-digit highlight by the same rule: an
         // attempt is a handful of cells, the highlight up to nine.
         val color = when {
-            state.conflicts[cell] -> PaperConflict
-            state.hintCells[cell] -> PaperHint
-            cell == state.selected -> PaperSelected
-            state.trial[cell] -> PaperTrial
-            state.highlightDigit != 0 && state.values[cell] == state.highlightDigit -> PaperSameDigit
-            Units.unitsOfCell[cell].any { state.hintUnits and (1 shl it) != 0 } -> PaperHintUnit
-            row == selRow || col == selCol || Units.boxOf[cell] == selBox -> PaperPeer
-            state.givens[cell] -> PaperGivenCell
+            state.conflicts[cell] -> pal.paperConflict
+            state.hintCells[cell] -> pal.paperHint
+            cell == state.selected -> pal.paperSelected
+            state.trial[cell] -> pal.paperTrial
+            state.highlightDigit != 0 && state.values[cell] == state.highlightDigit -> pal.paperSameDigit
+            Units.unitsOfCell[cell].any { state.hintUnits and (1 shl it) != 0 } -> pal.paperHintUnit
+            row == selRow || col == selCol || Units.boxOf[cell] == selBox -> pal.paperPeer
+            state.givens[cell] -> pal.paperGivenCell
             else -> null
         }
         if (color != null) {
@@ -126,21 +112,21 @@ private fun DrawScope.drawCellBackgrounds(geo: BoardGeometry, state: BoardState)
     }
 }
 
-private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: BoardPaints) {
+private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: BoardPaints, pal: Palette) {
     val canvas = drawContext.canvas.nativeCanvas
     paints.digit.textSize = geo.cellSize * 0.62f
     paints.given.textSize = geo.cellSize * 0.62f
     paints.note.textSize = geo.cellSize * 0.24f
-    paints.note.color = InkNote.toArgb()
+    paints.note.color = pal.inkNote.toArgb()
     paints.noteHighlight.textSize = geo.cellSize * 0.26f
-    paints.noteHighlight.color = InkNoteHighlight.toArgb()
+    paints.noteHighlight.color = pal.inkNoteHighlight.toArgb()
     paints.noteConflict.textSize = geo.cellSize * 0.26f
-    paints.noteConflict.color = InkConflict.toArgb()
+    paints.noteConflict.color = pal.inkConflict.toArgb()
 
     // The candidates a hint strikes out, drawn in the note grid whether or not the
     // player pencilled them in.
     paints.noteStruck.textSize = geo.cellSize * 0.26f
-    paints.noteStruck.color = InkConflict.toArgb()
+    paints.noteStruck.color = pal.inkConflict.toArgb()
     for (packed in state.hintStrikes) {
         val cell = packed / 16
         val d = packed % 16
@@ -164,12 +150,12 @@ private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: 
         if (value != 0) {
             val paint = if (state.givens[cell]) paints.given else paints.digit
             paint.color = when {
-                state.conflicts[cell] -> InkConflict.toArgb()
-                state.givens[cell] -> InkGiven.toArgb()
+                state.conflicts[cell] -> pal.inkConflict.toArgb()
+                state.givens[cell] -> pal.inkGiven.toArgb()
                 // Provisional, so not the settled blue of a kept entry -- and unlike
                 // the cell tint this survives being selected or highlighted.
-                state.trial[cell] -> InkTrial.toArgb()
-                else -> InkEntry.toArgb()
+                state.trial[cell] -> pal.inkTrial.toArgb()
+                else -> pal.inkEntry.toArgb()
             }
             // Centre on the glyph body, not on the baseline.
             val baseline = geo.centerY(row) - (paint.descent() + paint.ascent()) / 2f
@@ -202,14 +188,14 @@ private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: 
     }
 }
 
-private fun DrawScope.drawGridLines(geo: BoardGeometry) {
+private fun DrawScope.drawGridLines(geo: BoardGeometry, pal: Palette) {
     val thin = geo.sizePx * 0.0022f
     val thick = geo.sizePx * 0.0075f
 
     for (i in 0..9) {
         val strong = i % 3 == 0
         val w = if (strong) thick else thin
-        val color = if (strong) GridLineStrong else GridLine
+        val color = if (strong) pal.gridLineStrong else pal.gridLine
         val p = i * geo.cellSize
         // Nudge the outer lines inwards so they are not half-clipped by the edge.
         val v = p.coerceIn(w / 2f, geo.sizePx - w / 2f)
