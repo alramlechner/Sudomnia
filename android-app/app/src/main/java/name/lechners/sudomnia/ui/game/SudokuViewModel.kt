@@ -49,6 +49,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
     val timer: StateFlow<TimerState> = _timer.asStateFlow()
 
     private var selected = -1
+    private var armedNote = 0
     private var accumulatedMs = 0L
     private var startedAt = 0L
 
@@ -103,6 +104,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         }
         game = g
         selected = -1
+        armedNote = 0
         countedSolved = saved.counted
         countedStart = true
         recordedEnd = saved.counted || MistakeTally(saved.mistakes).lost
@@ -145,6 +147,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             val puzzle = withContext(Dispatchers.Default) { factory.generate(level) }
             game = SudokuGame(puzzle)
             selected = -1
+            armedNote = 0
             accumulatedMs = 0L
             countedSolved = false
             countedStart = false
@@ -160,7 +163,14 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
     }
 
     fun onCellTap(cell: Int) {
-        game ?: return
+        val g = game ?: return
+        if (armedNote != 0) {
+            if (!mistakes.lost && !g.isGiven(cell) && g.valueAt(cell) == 0) {
+                g.toggleNote(cell, armedNote)
+                onBoardChanged()
+            }
+            return
+        }
         selected = if (selected == cell) -1 else cell
         publish()
     }
@@ -200,7 +210,13 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
     fun onNote(digit: Int) {
         val g = game ?: return
         val cell = selected
-        if (cell < 0 || g.isGiven(cell)) return
+        if (cell < 0) {
+            // Nothing selected: the key arms (or disarms) a digit for the board taps.
+            armedNote = if (armedNote == digit) 0 else digit
+            publish()
+            return
+        }
+        if (g.isGiven(cell)) return
         g.toggleNote(cell, digit)
         onBoardChanged()
     }
@@ -530,6 +546,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             selectionEditable = editable,
             selectedDigit = if (editable) values[selected] else 0,
             selectedNotes = if (editable) g.notes[selected] else 0,
+            armedNote = if (selected < 0) armedNote else 0,
             canUndo = g.canUndo,
             canRedo = g.canRedo,
             paused = manuallyPaused,

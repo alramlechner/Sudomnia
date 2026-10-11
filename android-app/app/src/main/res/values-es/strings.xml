@@ -24,6 +24,7 @@
 
     <string name="generating">Generando sudoku…</string>
     <string name="pad_notes">Notas</string>
+    <string name="pad_notes_armed">Anotando %1$d: toca casillas del tablero. Toca %1$d de nuevo para terminar.</string>
     <string name="erase">Borrar</string>
     <string name="undo">Deshacer</string>
     <string name="redo">Rehacer</string>

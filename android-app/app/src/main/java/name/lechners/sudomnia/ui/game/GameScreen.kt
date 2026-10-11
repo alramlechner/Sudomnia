@@ -1,6 +1,8 @@
 package name.lechners.sudomnia.ui.game
 
 import androidx.compose.foundation.background
+import name.lechners.sudomnia.ui.theme.LogoBlue
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -144,7 +146,12 @@ fun GameScreen(
                     .fillMaxWidth()
                     .then(if (fullWidthBoard) Modifier else Modifier.widthIn(max = 560.dp))
                     .aspectRatio(1f)
-                    .clip(RoundedCornerShape(6.dp)),
+                    .clip(RoundedCornerShape(6.dp))
+                    .then(
+                        if (state.armedNote != 0) {
+                            Modifier.border(3.dp, LogoBlue, RoundedCornerShape(6.dp))
+                        } else Modifier,
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 val board = state.board
@@ -195,9 +202,12 @@ fun GameScreen(
 
             NotePad(
                 notes = state.selectedNotes,
+                armed = state.armedNote,
                 // A filled cell cannot hold pencil marks; SudokuGame.toggleNote
-                // ignores it, so the row says so instead of swallowing taps.
-                enabled = canEdit && state.selectedDigit == 0,
+                // ignores it, so the row says so instead of swallowing taps. With
+                // nothing selected the row arms a digit for the board instead.
+                enabled = if (state.selectionEditable) canEdit && state.selectedDigit == 0
+                else !state.generating && !state.finished && !state.paused,
                 onNote = onNote,
             )
 

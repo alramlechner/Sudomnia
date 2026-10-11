@@ -100,20 +100,24 @@ fun DigitPad(
 fun NotePad(
     /** The selected cell's pencil marks as a 9-bit mask. */
     notes: Int,
+    /** The digit armed for board taps (no cell selected), 0 if none. */
+    armed: Int,
     enabled: Boolean,
     onNote: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(R.string.pad_notes),
-            color = TextSecondary,
-            fontSize = 11.sp,
+            text = if (armed != 0) stringResource(R.string.pad_notes_armed, armed)
+            else stringResource(R.string.pad_notes),
+            color = if (armed != 0) LogoBlue else TextSecondary,
+            fontSize = if (armed != 0) 12.sp else 11.sp,
+            fontWeight = if (armed != 0) FontWeight.SemiBold else FontWeight.Normal,
             modifier = Modifier.padding(start = 2.dp, bottom = 3.dp),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             for (d in 1..9) {
-                val on = enabled && Bits.contains(notes, d)
+                val on = enabled && (d == armed || Bits.contains(notes, d))
                 Box(
                     modifier = Modifier
                         .weight(1f)

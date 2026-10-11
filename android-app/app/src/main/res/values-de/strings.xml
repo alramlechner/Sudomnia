@@ -23,6 +23,7 @@
 
     <string name="generating">Rätsel wird erzeugt…</string>
     <string name="pad_notes">Notizen</string>
+    <string name="pad_notes_armed">Notiere %1$d: Felder im Raster antippen. %1$d erneut tippen zum Beenden.</string>
     <string name="erase">Löschen</string>
     <string name="undo">Rückgängig</string>
     <string name="redo">Wiederholen</string>

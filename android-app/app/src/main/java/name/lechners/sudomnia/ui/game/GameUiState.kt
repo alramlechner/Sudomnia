@@ -27,6 +27,11 @@ data class GameUiState(
     val selectedDigit: Int = 0,
     /** The selected cell's pencil marks as a 9-bit mask. */
     val selectedNotes: Int = 0,
+    /**
+     * The digit armed on the note row while no cell is selected, 0 if none. Board taps
+     * then pencil it into the tapped cell instead of selecting it.
+     */
+    val armedNote: Int = 0,
     val remaining: List<Int> = List(10) { 0 },
     val canUndo: Boolean = false,
     val canRedo: Boolean = false,
