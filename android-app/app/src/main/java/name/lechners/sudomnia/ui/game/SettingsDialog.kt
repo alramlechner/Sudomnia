@@ -10,6 +10,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.size
+import android.content.Intent
+import android.net.Uri
+import name.lechners.sudomnia.ui.theme.GithubIcon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -29,6 +38,8 @@ import androidx.compose.ui.platform.LocalContext
 import name.lechners.sudomnia.diag.DiagnosticsLog
 import name.lechners.sudomnia.update.UpdateState
 
+private const val REPO_URL = "https://github.com/alramlechner/Sudomnia"
+
 @Composable
 fun SettingsDialog(
     settings: Settings,
@@ -39,6 +50,27 @@ fun SettingsDialog(
     onCheckUpdate: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    var showLicenses by remember { mutableStateOf(false) }
+    if (showLicenses) {
+        AlertDialog(
+            onDismissRequest = { showLicenses = false },
+            title = { Text(stringResource(R.string.settings_licenses)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(
+                        text = stringResource(R.string.licenses_body),
+                        color = TextPrimary,
+                        fontSize = 14.sp,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showLicenses = false }) {
+                    Text(stringResource(R.string.settings_done))
+                }
+            },
+        )
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.settings)) },
@@ -94,6 +126,25 @@ fun SettingsDialog(
                     onCheck = onCheckUpdate,
                 )
                 DiagnosticsRow()
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                val context = LocalContext.current
+                TextButton(onClick = {
+                    runCatching {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, Uri.parse(REPO_URL))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    }
+                }) {
+                    Icon(GithubIcon, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Text(
+                        stringResource(R.string.settings_github),
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+                TextButton(onClick = { showLicenses = true }) {
+                    Text(stringResource(R.string.settings_licenses))
+                }
             }
         },
         confirmButton = {

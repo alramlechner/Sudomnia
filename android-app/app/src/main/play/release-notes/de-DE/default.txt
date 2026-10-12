@@ -1,1 +1,1 @@
-Neues helles Design, das der Systemeinstellung folgt, und ein einheitlicheres Raster. Notizen gehen schneller: Ist kein Feld ausgewählt, wähle eine Zahl in der Notizzeile und tippe dann Felder im Raster an, um sie dort zu notieren. Zahl erneut tippen zum Beenden.
+Design-Schalter (hell/dunkel/automatisch), Querformat-Layout mit bildhohem Spielfeld und eine aufgeräumte Symbolleiste: Löschen, Tipp, Rückgängig und Wiederholen sind nach oben gewandert. Links zum Quellcode und zu den Open-Source-Lizenzen im Hilfen-Dialog.

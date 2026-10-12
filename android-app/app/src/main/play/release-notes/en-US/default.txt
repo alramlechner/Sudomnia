@@ -1,1 +1,1 @@
-New light theme that follows your system setting, and one consistent look for the grid. Pencil marks are faster: with no cell selected, pick a digit on the notes row, then tap cells on the board to note it in each. Tap the digit again to stop.
+Theme button (light/dark/automatic), landscape layout with the board filling the height, and a cleaner icon-based top bar: erase, hint, undo and redo moved up. Links to the source code and open-source licences in the aids dialog.

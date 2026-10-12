@@ -35,6 +35,9 @@ class SudomniaPrefs(context: Context) {
             highlightPeers = prefs.getBoolean(KEY_PEERS, d.highlightPeers),
             dimCompletedDigits = prefs.getBoolean(KEY_DIM_DIGITS, d.dimCompletedDigits),
             warnOnWrong = prefs.getBoolean(KEY_WARN_WRONG, d.warnOnWrong),
+            themeMode = prefs.getString(KEY_THEME, null)
+                ?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } }
+                ?: d.themeMode,
         )
     }
 
@@ -45,6 +48,7 @@ class SudomniaPrefs(context: Context) {
             putBoolean(KEY_PEERS, settings.highlightPeers)
             putBoolean(KEY_DIM_DIGITS, settings.dimCompletedDigits)
             putBoolean(KEY_WARN_WRONG, settings.warnOnWrong)
+            putString(KEY_THEME, settings.themeMode.name)
             putInt(KEY_VERSION, CURRENT_VERSION)
         }
     }
@@ -114,7 +118,9 @@ class SudomniaPrefs(context: Context) {
         // defaulting to "off" -- the missing key returns exactly that default, so
         // again nothing to migrate. The number just records that this version knows
         // about the toggle.
-        const val CURRENT_VERSION = 3
+        // 4: themeMode, a new choice defaulting to "follow the system" -- a missing
+        // key returns exactly that, so nothing to migrate.
+        const val CURRENT_VERSION = 4
 
         const val KEY_VERSION = "settings_version"
         const val KEY_CONFLICTS = "show_conflicts"
@@ -122,6 +128,7 @@ class SudomniaPrefs(context: Context) {
         const val KEY_PEERS = "highlight_peers"
         const val KEY_DIM_DIGITS = "dim_completed_digits"
         const val KEY_WARN_WRONG = "warn_on_wrong"
+        const val KEY_THEME = "theme_mode"
         const val KEY_GAME = "current_game"
         const val KEY_HISTORY = "game_history"
     }

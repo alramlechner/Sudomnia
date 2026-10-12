@@ -171,4 +171,11 @@
     <string name="title_grandmaster">Großmeister</string>
     <string name="solved_rating">Wertung %1$s</string>
     <string name="solved_faster">schneller als %1$d %% deiner Partien</string>
+    <string name="theme_auto">Design: automatisch</string>
+    <string name="theme_light">Design: hell</string>
+    <string name="theme_dark">Design: dunkel</string>
+    <string name="theme_auto_hint">Automatisch: folgt den Systemeinstellungen</string>
+    <string name="settings_github">Quellcode auf GitHub</string>
+    <string name="settings_licenses">Open-Source-Lizenzen</string>
+    <string name="licenses_body">Diese App verwendet die folgenden Open-Source-Bibliotheken, alle unter der Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0):\n\n• Kotlin und Kotlin-Standardbibliothek (JetBrains)\n• AndroidX Core KTX\n• AndroidX Activity Compose\n• AndroidX Lifecycle ViewModel Compose\n• Jetpack Compose (UI, Graphics, Material3)\n\nCopyright The Android Open Source Project und JetBrains s.r.o. Bereitgestellt \"wie besehen\", ohne jegliche Gewährleistung.</string>
 </resources>

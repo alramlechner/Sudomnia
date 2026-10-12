@@ -1,1 +1,1 @@
-Nuevo tema claro que sigue el ajuste del sistema y un aspecto más uniforme del tablero. Anotar es más rápido: sin casilla seleccionada, elige un dígito en la fila de notas y toca casillas del tablero para anotarlo. Vuelve a tocar el dígito para terminar.
+Botón de tema (claro/oscuro/automático), diseño horizontal con el tablero a toda la altura y una barra superior con iconos: borrar, pista, deshacer y rehacer suben a ella. Enlaces al código fuente y a las licencias de código abierto en el diálogo de ayudas.

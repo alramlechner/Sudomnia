@@ -3,6 +3,19 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning based on [SemVer](https://semver.org/).
 
+## [1.3.0] – 2026-10-12
+
+### Added
+- **A theme button** (light / dark / automatic) in the top bar, with a hint
+  bubble when automatic is chosen.
+- **Landscape layout**: the board fills the height, the controls sit beside it.
+- Links to the source code on GitHub and to the open-source licences in the
+  aids dialog.
+
+### Changed
+- The top bar uses icons throughout; erase, hint, undo and redo moved up from
+  the bottom rows.
+
 ## [1.2.0] – 2026-10-11
 
 ### Added

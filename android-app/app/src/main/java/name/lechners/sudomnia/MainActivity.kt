@@ -48,8 +48,8 @@ class MainActivity : ComponentActivity() {
         ]
 
         setContent {
-            SudomniaTheme {
-                val state by vm.ui.collectAsState()
+            val state by vm.ui.collectAsState()
+            SudomniaTheme(mode = state.settings.themeMode) {
                 val timer by vm.timer.collectAsState()
 
                 // The self-update only exists in the selfhosted flavour; in the Play

@@ -27,9 +27,17 @@ data class Settings(
     val highlightPeers: Boolean = true,
     val dimCompletedDigits: Boolean = true,
     val warnOnWrong: Boolean = false,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
 ) {
     /** True if nothing is being given away -- drives the "no aids" marker in the UI. */
     val allAidsOff: Boolean
         get() = !showConflicts && !highlightSameDigit && !highlightPeers &&
             !dimCompletedDigits && !warnOnWrong
+}
+
+/** Which colour scheme the app wears. Cycled by the icon in the top bar. */
+enum class ThemeMode {
+    SYSTEM, LIGHT, DARK;
+
+    fun next(): ThemeMode = entries[(ordinal + 1) % entries.size]
 }
