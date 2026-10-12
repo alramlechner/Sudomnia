@@ -12,11 +12,15 @@ Language switch for the app only, not the device, via
 
 | File | Shows |
 |---|---|
-| `01-notes-conflict-de.png` | Notes in a cell, one marked red — a conflict with a digit already set in the row/column/box |
-| `02-hint-reasoning-de.png` | A hint with the reasoning spelled out ("Verstecktes Single — in Zeile 7 ist nur hier noch Platz für die 2") — **the one image that sets this app apart from others** |
-| `03-branch-en.png` / `-de.png` / `-es.png` | An open branch: the provisional digit (yellow/gold), the bar with discard/commit — in all three languages |
-| `04-aids-en.png` / `-de.png` / `-es.png` | The aids dialog, each switch individually toggleable — in all three languages |
-| `05-stats-es.png` | The statistics with the four levels, real values from previous games |
+| `01-notes-conflict-<lang>.png` | Notes in a cell, one marked red — a conflict with a digit already set in the row/column/box |
+| `02-hint-reasoning-<lang>.png` | A hint with the reasoning spelled out (a hidden single) — **the one image that sets this app apart from others** |
+| `03-branch-<lang>.png` | An open branch: the provisional digit (yellow/gold), the bar with discard/commit |
+| `04-aids-<lang>.png` | The aids dialog, with the GitHub and licence links and the app version |
+| `05-stats-<lang>.png` | The statistics screen with real values from previous games |
+| `06-dark-de.png` | The dark theme |
+| `07-landscape-de.png` | Landscape: board at full height, controls beside it (2944 × 1840) |
+
+`<lang>` is `de`, `en` or `es`. Version 1.3.0 (21); the top bar uses icons.
 
 **Aspect ratio:** all captures are 1840 × 2944 (ratio 1.6:1), which stays under
 Play's 2:1 limit — no cropping needed.
