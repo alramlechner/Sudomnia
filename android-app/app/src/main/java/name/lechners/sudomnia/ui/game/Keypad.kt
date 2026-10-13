@@ -2,7 +2,8 @@ package name.lechners.sudomnia.ui.game
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,25 +45,39 @@ import name.lechners.sudomnia.ui.theme.TextSecondary
  * Both rows are visibly disabled until an editable cell is selected. That is what
  * teaches the new order; previously a tap into the void simply did nothing.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DigitPad(
     remaining: List<Int>,
     /** The digit in the selected cell, 0 if empty -- its key reads as pressed. */
     selectedDigit: Int,
+    /** The digit armed for board taps (no cell selected), 0 if none. */
+    armed: Int,
     enabled: Boolean,
     dimCompleted: Boolean,
     onDigit: (Int) -> Unit,
+    onLongPress: (Int) -> Unit,
+    modeEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    Column(modifier = modifier.fillMaxWidth()) {
+    Text(
+        text = if (armed != 0) stringResource(R.string.pad_digits_armed, armed)
+        else stringResource(R.string.pad_digits),
+        color = if (armed != 0) LogoBlue else TextSecondary,
+        fontSize = if (armed != 0) 12.sp else 11.sp,
+        fontWeight = if (armed != 0) FontWeight.SemiBold else FontWeight.Normal,
+        modifier = Modifier.padding(start = 2.dp, bottom = 3.dp),
+    )
     Row(
-        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         for (d in 1..9) {
             // With the aid off the key stays fully lit and usable: counting the
             // nines is then the player's job, and a ninth 5 must still be typeable.
             val done = dimCompleted && remaining.getOrElse(d) { 0 } <= 0
-            val active = enabled && !done
+            val isArmed = d == armed
+            val active = enabled && (!done || isArmed)
             val set = enabled && d == selectedDigit
             Box(
                 modifier = Modifier
@@ -74,7 +90,12 @@ fun DigitPad(
                         color = if (set) LogoBlue else AppOutline,
                         shape = RoundedCornerShape(10.dp),
                     )
-                    .clickable(enabled = active) { onDigit(d) },
+                    .dashedFrame(isArmed, 10.dp)
+                    .combinedClickable(
+                        enabled = modeEnabled && !done || active,
+                        onLongClick = { onLongPress(d) },
+                        onClick = { if (active) onDigit(d) },
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -87,6 +108,7 @@ fun DigitPad(
             }
         }
     }
+    }
 }
 
 /**
@@ -96,6 +118,7 @@ fun DigitPad(
  * the row doubles as a readout of what has been noted there. Tapping toggles, which
  * is why several marks in a row cost one tap each and taking one back costs one more.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NotePad(
     /** The selected cell's pencil marks as a 9-bit mask. */
@@ -104,6 +127,8 @@ fun NotePad(
     armed: Int,
     enabled: Boolean,
     onNote: (Int) -> Unit,
+    onLongPress: (Int) -> Unit,
+    modeEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -117,7 +142,7 @@ fun NotePad(
         )
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             for (d in 1..9) {
-                val on = enabled && (d == armed || Bits.contains(notes, d))
+                val on = enabled && Bits.contains(notes, d)
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -129,7 +154,12 @@ fun NotePad(
                             color = if (on) LogoBlue else AppOutline,
                             shape = RoundedCornerShape(8.dp),
                         )
-                        .clickable(enabled = enabled) { onNote(d) },
+                        .dashedFrame(d == armed, 8.dp)
+                        .combinedClickable(
+                            enabled = modeEnabled,
+                            onLongClick = { onLongPress(d) },
+                            onClick = { if (enabled) onNote(d) },
+                        ),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -147,3 +177,22 @@ fun NotePad(
         }
     }
 }
+
+/** The "armed" marker: a dashed blue frame inside the key, independent of its fill. */
+private fun Modifier.dashedFrame(show: Boolean, radius: androidx.compose.ui.unit.Dp): Modifier =
+    if (!show) this else this.drawWithContent {
+        drawContent()
+        val w = 2.5.dp.toPx()
+        drawRoundRect(
+            color = LogoBlue,
+            topLeft = androidx.compose.ui.geometry.Offset(w * 1.5f, w * 1.5f),
+            size = androidx.compose.ui.geometry.Size(size.width - w * 3f, size.height - w * 3f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius.toPx()),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = w,
+                pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
+                    floatArrayOf(w * 2.2f, w * 1.6f)
+                ),
+            ),
+        )
+    }

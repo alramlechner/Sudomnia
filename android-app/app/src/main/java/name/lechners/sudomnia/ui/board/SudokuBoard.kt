@@ -4,7 +4,17 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.Color
+import name.lechners.sudomnia.ui.theme.LogoBlue
 import androidx.compose.runtime.remember
 import name.lechners.sudomnia.ui.theme.LocalPalette
 import name.lechners.sudomnia.ui.theme.Palette
@@ -34,24 +44,101 @@ import name.lechners.sudomnia.rules.Units
 fun SudokuBoard(
     state: BoardState,
     onCellTap: (Int) -> Unit,
+    onCellLongPress: (Int) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val paints = remember { BoardPaints() }
     val pal = LocalPalette.current
 
+    // 0 -> 1 over the life of the effect; one run per write, replayed by flashId.
+    val flash = remember { Animatable(1f) }
+    LaunchedEffect(state.flashId) {
+        if (state.flashCell >= 0) {
+            flash.snapTo(0f)
+            flash.animateTo(1f, tween(FLASH_MS, easing = LinearEasing))
+        }
+    }
+
     Canvas(
         modifier = modifier.pointerInput(Unit) {
-            detectTapGestures { offset ->
-                val geo = BoardGeometry(size.width.toFloat())
-                val cell = geo.cellAt(offset.x, offset.y)
-                if (cell >= 0) onCellTap(cell)
-            }
+            detectTapGestures(
+                onLongPress = { offset ->
+                    val cell = BoardGeometry(size.width.toFloat()).cellAt(offset.x, offset.y)
+                    if (cell >= 0) onCellLongPress(cell)
+                },
+                onTap = { offset ->
+                    val cell = BoardGeometry(size.width.toFloat()).cellAt(offset.x, offset.y)
+                    if (cell >= 0) onCellTap(cell)
+                },
+            )
         },
     ) {
         val geo = BoardGeometry(size.minDimension)
         drawCellBackgrounds(geo, state, pal)
         drawGlyphs(geo, state, paints, pal)
         drawGridLines(geo, pal)
+        drawSelectionFrame(geo, state)
+        if (state.flashCell >= 0) drawFlash(geo, state, pal, flash.value)
+    }
+}
+
+private const val FLASH_MS = 2500
+
+/** Dashed frame on the selected cell: says "this one" without touching the fill. */
+private fun DrawScope.drawSelectionFrame(geo: BoardGeometry, state: BoardState) {
+    val c = state.selected
+    if (c < 0) return
+    val w = geo.cellSize * 0.055f
+    val inset = w * 1.2f
+    drawRoundRect(
+        color = LogoBlue,
+        topLeft = Offset(geo.left(Units.colOf[c]) + inset, geo.top(Units.rowOf[c]) + inset),
+        size = Size(geo.cellSize - 2 * inset, geo.cellSize - 2 * inset),
+        cornerRadius = CornerRadius(geo.cellSize * 0.1f),
+        style = Stroke(
+            width = w,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(w * 2.6f, w * 1.8f)),
+        ),
+    )
+}
+
+/**
+ * What was just written: a ring that settles in from slightly outside (the "pop"),
+ * then holds and fades. For a pencil mark the ring and a glow sit on that one slot,
+ * big enough to be seen around a fingertip.
+ */
+private fun DrawScope.drawFlash(geo: BoardGeometry, state: BoardState, pal: Palette, t: Float) {
+    if (t >= 1f) return
+    val c = state.flashCell
+    val fade = if (t < 0.6f) 1f else (1f - t) / 0.4f
+    val pop = (1f - (t / 0.12f).coerceAtMost(1f))
+    val amber = pal.inkTrial.copy(alpha = 1f)
+    val col = Units.colOf[c]
+    val row = Units.rowOf[c]
+    val note = state.flashNote
+    if (note == 0) {
+        val grow = geo.cellSize * 0.12f * pop
+        drawRoundRect(
+            color = amber.copy(alpha = 0.28f * fade),
+            topLeft = Offset(geo.left(col) - grow, geo.top(row) - grow),
+            size = Size(geo.cellSize + 2 * grow, geo.cellSize + 2 * grow),
+            cornerRadius = CornerRadius(geo.cellSize * 0.12f),
+        )
+        drawRoundRect(
+            color = amber.copy(alpha = fade),
+            topLeft = Offset(geo.left(col) - grow, geo.top(row) - grow),
+            size = Size(geo.cellSize + 2 * grow, geo.cellSize + 2 * grow),
+            cornerRadius = CornerRadius(geo.cellSize * 0.12f),
+            style = Stroke(width = geo.cellSize * 0.07f),
+        )
+    } else {
+        val step = geo.cellSize / 3f
+        val cx = geo.left(col) + ((note - 1) % 3 + 0.5f) * step
+        val cy = geo.top(row) + ((note - 1) / 3 + 0.5f) * step
+        val r = step * (0.52f + 0.35f * pop)
+        drawCircle(amber.copy(alpha = 0.35f * fade), radius = r, center = Offset(cx, cy))
+        drawCircle(amber.copy(alpha = fade), radius = r, center = Offset(cx, cy),
+            style = Stroke(width = step * 0.14f))
     }
 }
 

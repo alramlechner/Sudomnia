@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,7 @@ import name.lechners.sudomnia.data.Stats
 import name.lechners.sudomnia.data.SudomniaPrefs
 import name.lechners.sudomnia.game.MistakeTally
 import name.lechners.sudomnia.game.SudokuGame
+import name.lechners.sudomnia.rules.Bits
 import name.lechners.sudomnia.rules.Grader
 import name.lechners.sudomnia.rules.Hint
 import name.lechners.sudomnia.rules.HintFinder
@@ -50,6 +52,12 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
 
     private var selected = -1
     private var armedNote = 0
+    /** Digit armed for placing on board taps ("Zahl setzen"); exclusive with [armedNote]. */
+    private var armedDigit = 0
+    private var flashCell = -1
+    private var flashNote = 0
+    private var flashId = 0
+    private var flashJob: Job? = null
     private var accumulatedMs = 0L
     private var startedAt = 0L
 
@@ -105,6 +113,8 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         game = g
         selected = -1
         armedNote = 0
+        armedDigit = 0
+        clearFlash()
         countedSolved = saved.counted
         countedStart = true
         recordedEnd = saved.counted || MistakeTally(saved.mistakes).lost
@@ -148,6 +158,8 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             game = SudokuGame(puzzle)
             selected = -1
             armedNote = 0
+            armedDigit = 0
+            clearFlash()
             accumulatedMs = 0L
             countedSolved = false
             countedStart = false
@@ -167,12 +179,62 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         if (armedNote != 0) {
             if (!mistakes.lost && !g.isGiven(cell) && g.valueAt(cell) == 0) {
                 g.toggleNote(cell, armedNote)
+                flash(cell, armedNote)
                 onBoardChanged()
             }
             return
         }
+        if (armedDigit != 0) {
+            placeDigit(cell, armedDigit)
+            return
+        }
         selected = if (selected == cell) -1 else cell
         publish()
+    }
+
+    /** A long press always selects that cell, leaving any armed placing mode. */
+    fun onCellLongPress(cell: Int) {
+        if (game == null) return
+        armedNote = 0
+        armedDigit = 0
+        selected = cell
+        publish()
+    }
+
+    /** A long press on a key never writes: it switches to that digit's placing mode. */
+    fun onDigitLongPress(digit: Int) {
+        if (game == null || mistakes.lost) return
+        selected = -1
+        armedDigit = digit
+        armedNote = 0
+        publish()
+    }
+
+    fun onNoteLongPress(digit: Int) {
+        if (game == null || mistakes.lost) return
+        selected = -1
+        armedNote = digit
+        armedDigit = 0
+        publish()
+    }
+
+    private fun flash(cell: Int, note: Int) {
+        flashCell = cell
+        flashNote = note
+        flashId++
+        flashJob?.cancel()
+        flashJob = viewModelScope.launch {
+            delay(FLASH_MS)
+            flashCell = -1
+            flashNote = 0
+            publish()
+        }
+    }
+
+    private fun clearFlash() {
+        flashJob?.cancel()
+        flashCell = -1
+        flashNote = 0
     }
 
     /**
@@ -192,8 +254,23 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         val g = game ?: return
         if (mistakes.lost) return
         val cell = selected
-        if (cell < 0 || g.isGiven(cell)) return
+        if (cell < 0) {
+            // Nothing selected: the key arms (or disarms) a digit for the board taps,
+            // and switches the pencil row off -- the two armed modes exclude each other.
+            armedDigit = if (armedDigit == digit) 0 else digit
+            armedNote = 0
+            publish()
+            return
+        }
+        if (g.isGiven(cell)) return
+        placeDigit(cell, digit)
+    }
+
+    private fun placeDigit(cell: Int, digit: Int) {
+        val g = game ?: return
+        if (mistakes.lost || g.isGiven(cell)) return
         g.setDigit(cell, digit)
+        flash(cell, 0)
 
         // Inside a trial branch nothing is checked. The branch exists precisely to
         // assume a digit and follow where it leads, so a wrong one there is the tool
@@ -213,18 +290,22 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         if (cell < 0) {
             // Nothing selected: the key arms (or disarms) a digit for the board taps.
             armedNote = if (armedNote == digit) 0 else digit
+            armedDigit = 0
             publish()
             return
         }
         if (g.isGiven(cell)) return
         g.toggleNote(cell, digit)
+        flash(cell, digit)
         onBoardChanged()
     }
 
     fun onErase() {
         val g = game ?: return
         if (selected < 0) return
+        val had = g.valueAt(selected) != 0 || g.notes[selected] != 0
         g.clearCell(selected)
+        if (had) flash(selected, 0)
         onBoardChanged()
     }
 
@@ -497,6 +578,12 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         val shownNoteConflicts =
             if (settings.showConflicts) g.noteConflicts() else IntArray(Units.CELLS)
 
+        // A digit whose nine are all placed goes dead on the keypad when the aid dims
+        // them -- a mode armed with it could no longer be switched off, so leave it.
+        if (armedDigit != 0 && settings.dimCompletedDigits &&
+            g.remaining().getOrElse(armedDigit) { 0 } <= 0
+        ) armedDigit = 0
+
         val full = g.isFull()
         val solved = g.isSolved()
         val trial = g.trialCells()
@@ -538,6 +625,9 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
                 hintCells = hintCells,
                 hintUnits = hintUnits,
                 hintStrikes = hintStrikes,
+                flashCell = flashCell,
+                flashNote = flashNote,
+                flashId = flashId,
             ),
             generating = false,
             level = g.puzzle.level,
@@ -547,6 +637,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             selectedDigit = if (editable) values[selected] else 0,
             selectedNotes = if (editable) g.notes[selected] else 0,
             armedNote = if (selected < 0) armedNote else 0,
+            armedDigit = if (selected < 0) armedDigit else 0,
             canUndo = g.canUndo,
             canRedo = g.canRedo,
             paused = manuallyPaused,
@@ -567,6 +658,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
 
     companion object {
         private const val TICK_MS = 500L
+        private const val FLASH_MS = 2500L
 
         fun factory(context: Context): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {

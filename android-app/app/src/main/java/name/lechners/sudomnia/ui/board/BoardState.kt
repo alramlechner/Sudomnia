@@ -41,6 +41,11 @@ class BoardState(
      * invisible if the display depends on whether they happened to note it.
      */
     val hintStrikes: IntArray,
+    /** The cell just written (-1: none) and, for a pencil mark, its digit (0 for an entry). */
+    val flashCell: Int = -1,
+    val flashNote: Int = 0,
+    /** Changes with every write, so the same cell written twice replays the effect. */
+    val flashId: Int = 0,
 ) {
     /**
      * `conflicts` is already all-false when the player has switched conflict
@@ -52,6 +57,9 @@ class BoardState(
         if (this === other) return true
         if (other !is BoardState) return false
         return selected == other.selected &&
+            flashCell == other.flashCell &&
+            flashNote == other.flashNote &&
+            flashId == other.flashId &&
             highlightDigit == other.highlightDigit &&
             highlightPeers == other.highlightPeers &&
             hintUnits == other.hintUnits &&
@@ -73,6 +81,8 @@ class BoardState(
         h = 31 * h + noteConflicts.contentHashCode()
         h = 31 * h + trial.contentHashCode()
         h = 31 * h + selected
+        h = 31 * h + flashId
+        h = 31 * h + flashCell
         h = 31 * h + highlightDigit
         h = 31 * h + if (highlightPeers) 1 else 0
         h = 31 * h + hintCells.contentHashCode()

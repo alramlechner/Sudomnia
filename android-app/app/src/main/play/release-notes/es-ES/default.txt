@@ -1,1 +1,1 @@
-Botón de tema (claro/oscuro/automático), diseño horizontal con el tablero a toda la altura y una barra superior con iconos: borrar, pista, deshacer y rehacer suben a ella. Enlaces al código fuente y a las licencias de código abierto en el diálogo de ayudas.
+Novedad: modo "colocar cifra" junto al de notas. Elige una cifra y toca las casillas. Una pulsación larga en una tecla cambia de modo; en una casilla, la selecciona. Casillas y teclas activas llevan un marco discontinuo, y lo que pones o quitas se ilumina un momento. Iconos más claros para nueva partida y tema automático.

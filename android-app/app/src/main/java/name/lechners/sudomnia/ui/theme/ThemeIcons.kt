@@ -34,10 +34,13 @@ private val Moon = icon("ThemeDark") {
     filled("M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.4 5.4 0 0 1-4.4 2.26 5.4 5.4 0 0 1-3.14-9.8C13.92 3.04 13.46 3 13 3z")
 }
 
-/** A ring around an "A": "whichever the device says". */
+/** A sun and a moon side by side: "whichever the device says". */
 private val Auto = icon("ThemeAuto") {
-    stroked("M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18z")
-    stroked("M8 16.5L12 7.5L16 16.5M9.6 13.5h4.8")
+    stroked("M8 5.4a2.6 2.6 0 1 0 0 5.2a2.6 2.6 0 0 0 0-5.2z")
+    stroked("M8 1.2v1.4M8 13.4v1.4M1.2 8h1.4M13.4 8h1.4M3.2 3.2l1 1M3.2 12.8l1-1M12.8 3.2l-1 1")
+    addGroup(scaleX = 0.55f, scaleY = 0.55f, translationX = 10.5f, translationY = 10.5f)
+    filled("M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.4 5.4 0 0 1-4.4 2.26 5.4 5.4 0 0 1-3.14-9.8C13.92 3.04 13.46 3 13 3z")
+    clearGroup()
 }
 
 /** Three sliders: the aids settings. */
@@ -68,8 +71,10 @@ val StatsIcon: ImageVector = icon("Stats") {
     stroked("M5 20V12M12 20V5M19 20V9")
 }
 
+/** A circular arrow: start over. */
 val NewGameIcon: ImageVector = icon("NewGame") {
-    stroked("M12 5v14M5 12h14")
+    stroked("M20 12a8 8 0 1 1-2.34-5.66")
+    stroked("M18.5 3v4.2h-4.2")
 }
 
 /** A backspace key. */

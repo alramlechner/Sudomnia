@@ -1,1 +1,1 @@
-Theme button (light/dark/automatic), landscape layout with the board filling the height, and a cleaner icon-based top bar: erase, hint, undo and redo moved up. Links to the source code and open-source licences in the aids dialog.
+New: a "place digit" mode next to the pencil mode. Pick a digit, then tap the cells. Long-press a key to switch mode, long-press a cell to select it. Selected cells and active keys get a dashed frame, and whatever you just set or removed lights up for a moment. Clearer icons for new game and the automatic theme.

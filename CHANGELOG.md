@@ -3,6 +3,22 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning based on [SemVer](https://semver.org/).
 
+## [1.4.0] – 2026-10-13
+
+### Added
+- **Place-digit mode.** With no cell selected, a key on the digit row arms that
+  digit; tapping cells on the board then places it. Arming it ends the pencil
+  mode and vice versa, and it ends by itself once all nine of the digit are set.
+- A long press on a key of either row switches to that mode without writing
+  anything; a long press on a board cell selects it and leaves the mode.
+- What was just set or removed (entry or pencil mark) lights up for 2.5 seconds.
+
+### Changed
+- The selected cell and the armed keys are marked with a dashed frame instead of
+  a fill, which the pencil row already used for "mark on this cell".
+- New icons for "new game" (circular arrow) and the automatic theme (sun and moon).
+- The new-game dialog has a title and says that a new puzzle is started.
+
 ## [1.3.0] – 2026-10-12
 
 ### Added

@@ -51,6 +51,9 @@ fun GameScreen(
     timer: TimerState,
     update: UpdateState?,
     onCellTap: (Int) -> Unit,
+    onCellLongPress: (Int) -> Unit,
+    onDigitLongPress: (Int) -> Unit,
+    onNoteLongPress: (Int) -> Unit,
     onDigit: (Int) -> Unit,
     onNote: (Int) -> Unit,
     onErase: () -> Unit,
@@ -159,9 +162,15 @@ fun GameScreen(
         DigitPad(
             remaining = state.remaining,
             selectedDigit = state.selectedDigit,
-            enabled = canEdit,
+            armed = state.armedDigit,
+            // With nothing selected the row arms a digit for the board taps.
+            enabled = if (state.selectionEditable) canEdit
+            else (state.board?.selected ?: -1) < 0 && !state.generating && !state.finished &&
+                !state.paused,
             dimCompleted = state.settings.dimCompletedDigits,
             onDigit = onDigit,
+            onLongPress = onDigitLongPress,
+            modeEnabled = !state.generating && !state.finished && !state.paused,
         )
 
         NotePad(
@@ -173,6 +182,8 @@ fun GameScreen(
             enabled = if (state.selectionEditable) canEdit && state.selectedDigit == 0
             else !state.generating && !state.finished && !state.paused,
             onNote = onNote,
+            onLongPress = onNoteLongPress,
+            modeEnabled = !state.generating && !state.finished && !state.paused,
         )
         }
 
@@ -192,7 +203,7 @@ fun GameScreen(
             modifier = sizing
                 .clip(RoundedCornerShape(6.dp))
                 .then(
-                    if (state.armedNote != 0) {
+                    if (state.armedNote != 0 || state.armedDigit != 0) {
                         Modifier.border(3.dp, LogoBlue, RoundedCornerShape(6.dp))
                     } else Modifier,
                 ),
@@ -216,6 +227,7 @@ fun GameScreen(
                 SudokuBoard(
                     state = board,
                     onCellTap = onCellTap,
+                    onCellLongPress = onCellLongPress,
                     modifier = Modifier.fillMaxSize(),
                 )
             }

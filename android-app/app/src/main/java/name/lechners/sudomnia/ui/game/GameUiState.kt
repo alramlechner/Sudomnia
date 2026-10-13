@@ -32,6 +32,8 @@ data class GameUiState(
      * then pencil it into the tapped cell instead of selecting it.
      */
     val armedNote: Int = 0,
+    /** Digit armed for placing on board taps while no cell is selected. */
+    val armedDigit: Int = 0,
     val remaining: List<Int> = List(10) { 0 },
     val canUndo: Boolean = false,
     val canRedo: Boolean = false,

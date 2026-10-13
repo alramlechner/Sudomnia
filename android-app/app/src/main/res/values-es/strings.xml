@@ -11,6 +11,8 @@
 
     <string name="new_game">Nueva partida</string>
     <string name="choose_level">Dificultad</string>
+    <string name="new_game_title">Iniciar una nueva partida</string>
+    <string name="new_game_hint">Se iniciará un sudoku nuevo. Elige la dificultad:</string>
     <string name="level_easy">Fácil</string>
     <string name="level_medium">Medio</string>
     <string name="level_hard">Difícil</string>
@@ -25,6 +27,8 @@
     <string name="generating">Generando sudoku…</string>
     <string name="pad_notes">Notas</string>
     <string name="pad_notes_armed">Anotando %1$d: toca casillas del tablero. Toca %1$d de nuevo para terminar.</string>
+    <string name="pad_digits">Cifras</string>
+    <string name="pad_digits_armed">Colocando %1$d: toca casillas del tablero. Toca %1$d de nuevo para terminar.</string>
     <string name="erase">Borrar</string>
     <string name="undo">Deshacer</string>
     <string name="redo">Rehacer</string>

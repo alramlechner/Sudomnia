@@ -21,9 +21,14 @@ fun NewGameDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.choose_level)) },
+        title = { Text(stringResource(R.string.new_game_title)) },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = stringResource(R.string.new_game_hint),
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
                 for (level in Level.entries) {
                     TextButton(
                         onClick = { onPick(level) },

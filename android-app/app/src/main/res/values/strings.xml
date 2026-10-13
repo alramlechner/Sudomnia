@@ -11,6 +11,8 @@
 
     <string name="new_game">New game</string>
     <string name="choose_level">Difficulty</string>
+    <string name="new_game_title">Start a new game</string>
+    <string name="new_game_hint">A new puzzle is started. Pick its difficulty:</string>
     <string name="level_easy">Easy</string>
     <string name="level_medium">Medium</string>
     <string name="level_hard">Hard</string>
@@ -24,6 +26,8 @@
     <string name="generating">Generating puzzle…</string>
     <string name="pad_notes">Notes</string>
     <string name="pad_notes_armed">Pencilling %1$d: tap cells on the board. Tap %1$d again to stop.</string>
+    <string name="pad_digits">Digits</string>
+    <string name="pad_digits_armed">Placing %1$d: tap cells on the board. Tap %1$d again to stop.</string>
     <string name="erase">Erase</string>
     <string name="undo">Undo</string>
     <string name="redo">Redo</string>
