@@ -1,1 +1,1 @@
-Novedad: modo "colocar cifra" junto al de notas. Elige una cifra y toca las casillas. Una pulsación larga en una tecla cambia de modo; en una casilla, la selecciona. Casillas y teclas activas llevan un marco discontinuo, y lo que pones o quitas se ilumina un momento. Iconos más claros para nueva partida y tema automático.
+Pequeña mejora: tras introducir un número en una casilla seleccionada, se quita la selección para que puedas pasar directamente a la siguiente.

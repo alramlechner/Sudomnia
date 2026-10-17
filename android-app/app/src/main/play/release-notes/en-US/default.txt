@@ -1,1 +1,1 @@
-New: a "place digit" mode next to the pencil mode. Pick a digit, then tap the cells. Long-press a key to switch mode, long-press a cell to select it. Selected cells and active keys get a dashed frame, and whatever you just set or removed lights up for a moment. Clearer icons for new game and the automatic theme.
+Small improvement: after you enter a digit into a selected cell, the cell is deselected so you can move straight on to the next one.

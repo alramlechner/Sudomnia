@@ -3,6 +3,12 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning based on [SemVer](https://semver.org/).
 
+## [1.4.1] – 2026-10-17
+
+### Changed
+- After a digit is entered into a cell that was selected first, the cell is
+  deselected, so the board is ready for the next cell.
+
 ## [1.4.0] – 2026-10-13
 
 ### Added

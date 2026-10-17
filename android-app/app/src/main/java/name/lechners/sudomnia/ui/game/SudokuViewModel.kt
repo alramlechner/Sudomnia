@@ -263,6 +263,8 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             return
         }
         if (g.isGiven(cell)) return
+        // Cell first, key second: the entry is done, so the focus moves off the cell.
+        selected = -1
         placeDigit(cell, digit)
     }
 
