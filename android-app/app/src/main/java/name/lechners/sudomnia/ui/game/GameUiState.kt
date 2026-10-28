@@ -79,6 +79,10 @@ data class GameUiState(
      * which is the line the setting is about.
      */
     val fullButWrong: Boolean = false,
+    /** The last ended game can be looked back at: it was played without the three strikes. */
+    val canAnalyze: Boolean = false,
+    /** A game with at least one move is under way and can be resumed from the start screen. */
+    val gameRunning: Boolean = false,
 ) {
     /**
      * The game is over, one way or the other.

@@ -31,6 +31,8 @@ data class GameSnapshot(
     val branchAt: Int = -1,
     /** Wrong entries made so far; three end the game. */
     val mistakes: Int = 0,
+    /** Struck-out notes from discarded branches, as `cell:mask` pairs joined by commas. */
+    val ruledOut: String = "",
 ) {
 
     fun encode(): String = listOf(
@@ -45,6 +47,7 @@ data class GameSnapshot(
         if (counted) "1" else "0",
         branchAt.toString(),
         mistakes.toString(),
+        ruledOut,
         edits.joinToString(EDIT_SEP),
     ).joinToString(FIELD_SEP)
 
@@ -64,11 +67,22 @@ data class GameSnapshot(
             }
         }
         if (branchAt > applied) return null
-        return SudokuGameRestore(Puzzle(g, s, level), rows, applied, branchAt)
+        val struck = IntArray(Units.CELLS)
+        if (ruledOut.isNotEmpty()) {
+            for (pair in ruledOut.split(CHANGE_SEP)) {
+                val kv = pair.split(":")
+                if (kv.size != 2) return null
+                val cell = kv[0].toIntOrNull() ?: return null
+                val mask = kv[1].toIntOrNull() ?: return null
+                if (cell !in 0 until Units.CELLS) return null
+                struck[cell] = mask and 0x1FF
+            }
+        }
+        return SudokuGameRestore(Puzzle(g, s, level), rows, applied, branchAt, struck)
     }
 
     companion object {
-        private const val VERSION = 3
+        private const val VERSION = 4
         private const val FIELD_SEP = "|"
         private const val EDIT_SEP = ";"
         private const val CHANGE_SEP = ","
@@ -83,10 +97,10 @@ data class GameSnapshot(
             val f = text.split(FIELD_SEP)
             val version = f[0].toIntOrNull() ?: return null
             // Version 1 knew no trial branch, version 2 no mistake count -- one field
-            // less each. Both are still read rather than dropped: whoever updates
+            // less each (version 3 lacks the struck-out notes). Both are still read rather than dropped: whoever updates
             // mid-puzzle keeps their game.
             if (version !in 1..VERSION) return null
-            if (f.size != when (version) { 1 -> 10; 2 -> 11; else -> 12 }) return null
+            if (f.size != when (version) { 1 -> 10; 2 -> 11; 3 -> 12; else -> 13 }) return null
             val level = Level.entries.firstOrNull { it.name == f[3] } ?: return null
             return GameSnapshot(
                 givens = f[1],
@@ -100,10 +114,18 @@ data class GameSnapshot(
                 counted = f[8] == "1",
                 branchAt = if (version == 1) -1 else f[9].toIntOrNull() ?: return null,
                 mistakes = if (version < 3) 0 else f[10].toIntOrNull() ?: return null,
+                ruledOut = if (version < 4) "" else f[11],
             )
         }
     }
 }
+
+/**
+ * The last game that ended, kept for the analysis. [lives] says whether the wrong-entry
+ * warning (the three strikes) was on at the end -- with it on the player was told about
+ * every mistake as it happened, so there is nothing left to look back for.
+ */
+class EndedGame(val snapshot: GameSnapshot, val outcome: Outcome, val lives: Boolean)
 
 /** What [GameSnapshot.toGame] hands back: enough to rebuild a `SudokuGame`. */
 class SudokuGameRestore(
@@ -111,4 +133,5 @@ class SudokuGameRestore(
     val history: List<List<IntArray>>,
     val applied: Int,
     val branchAt: Int,
+    val ruledOut: IntArray = IntArray(Units.CELLS),
 )

@@ -125,6 +125,36 @@ class SudokuGameTest {
     }
 
     @Test
+    fun theFirstDigitOfABranchIsItsRootAndSurvivesAsAStruckNoteWhenDiscarded() {
+        val game = newGame()
+        val empties = (0 until Units.CELLS).filter { !game.isGiven(it) }
+        val first = empties[0]
+        val second = empties[1]
+        assertEquals(-1, game.branchRoot())
+        game.toggleNote(first, 6)
+        game.beginBranch()
+        game.setDigit(first, 6)
+        game.setDigit(second, 3)
+        assertEquals(first, game.branchRoot())
+
+        game.discardBranch(deadEnd = true)
+        assertEquals(-1, game.branchRoot())
+        assertEquals("struck", Bits.of(6), game.ruledOut[first])
+        assertEquals("the note is gone", 0, game.notes[first] and Bits.of(6))
+        assertEquals(0, game.ruledOut[second])
+
+        // A plain discard decides nothing and leaves no strike.
+        game.beginBranch()
+        game.setDigit(second, 4)
+        game.discardBranch()
+        assertEquals(0, game.ruledOut[second])
+
+        // Tapping the struck mark takes the strike back.
+        game.toggleNote(first, 6)
+        assertEquals(0, game.ruledOut[first])
+    }
+
+    @Test
     fun committingABranchKeepsEverythingAndClearsTheMark() {
         val game = newGame()
         val cell = firstEmpty(game)

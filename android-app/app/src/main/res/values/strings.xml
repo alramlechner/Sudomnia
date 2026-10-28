@@ -58,6 +58,7 @@
         <item quantity="other">Branch · %1$d cells on trial</item>
     </plurals>
     <string name="branch_discard">Discard</string>
+    <string name="branch_dead_end">Dead end</string>
     <string name="branch_commit">Keep</string>
 
     <!-- Hint. One string per rung of the ladder: the hint explains the technique it
@@ -183,4 +184,24 @@
     <string name="settings_github">Source code on GitHub</string>
     <string name="settings_licenses">Open-source licences</string>
     <string name="licenses_body">This app is built with the following open-source libraries, all licensed under the Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0):\n\n• Kotlin and Kotlin standard library (JetBrains)\n• AndroidX Core KTX\n• AndroidX Activity Compose\n• AndroidX Lifecycle ViewModel Compose\n• Jetpack Compose (UI, Graphics, Material3)\n\nCopyright The Android Open Source Project and JetBrains s.r.o. Provided \"as is\", without warranties of any kind.</string>
+    <string name="home_tagline">Sudoku, thought through</string>
+    <string name="home_resume">Resume</string>
+    <string name="home_running">%1$s · %2$s</string>
+    <string name="home_analyze">Analyze last game</string>
+    <string name="home_give_up">Give up</string>
+    <string name="home_give_up_title">Give up this game?</string>
+    <string name="home_give_up_body">The game counts as abandoned.</string>
+    <string name="home_give_up_body_analyze">The game counts as abandoned. Afterwards you can look back at where a wrong digit went in.</string>
+    <string name="home_new_confirm_title">Start a new game?</string>
+    <string name="home_version">Version %1$s</string>
+    <string name="home_back">To start</string>
+    <string name="analysis_title">Game analysis</string>
+    <string name="analysis_no_error">No wrong digit was placed in this game.</string>
+    <string name="analysis_wrong_move">Move %1$d of %2$d: a %5$d went into row %3$d, column %4$d. The correct digit would have been %6$d.</string>
+    <string name="analysis_start">Starting grid</string>
+    <string name="analysis_move">Move %1$d of %2$d</string>
+    <string name="analysis_error_count">Wrong digits in this game: %1$d</string>
+    <string name="analysis_prev_error">◀ Mistake</string>
+    <string name="analysis_next_error">Mistake ▶</string>
+    <string name="analysis_legend">Green: correct digit · red: wrong digit</string>
 </resources>

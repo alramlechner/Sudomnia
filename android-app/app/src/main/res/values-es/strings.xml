@@ -61,6 +61,7 @@
         <item quantity="other">Rama · %1$d celdas de prueba</item>
     </plurals>
     <string name="branch_discard">Descartar</string>
+    <string name="branch_dead_end">Sin salida</string>
     <string name="branch_commit">Conservar</string>
 
     <!-- Pista. Una cadena por cada peldaño de la escalera: la pista explica la
@@ -186,4 +187,24 @@
     <string name="settings_github">Código fuente en GitHub</string>
     <string name="settings_licenses">Licencias de código abierto</string>
     <string name="licenses_body">Esta app usa las siguientes bibliotecas de código abierto, todas con licencia Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0):\n\n• Kotlin y la biblioteca estándar de Kotlin (JetBrains)\n• AndroidX Core KTX\n• AndroidX Activity Compose\n• AndroidX Lifecycle ViewModel Compose\n• Jetpack Compose (UI, Graphics, Material3)\n\nCopyright The Android Open Source Project y JetBrains s.r.o. Se ofrecen \"tal cual\", sin garantías de ningún tipo.</string>
+    <string name="home_tagline">Sudoku, bien pensado</string>
+    <string name="home_resume">Continuar</string>
+    <string name="home_running">%1$s · %2$s</string>
+    <string name="home_analyze">Analizar la última partida</string>
+    <string name="home_give_up">Rendirse</string>
+    <string name="home_give_up_title">¿Abandonar la partida?</string>
+    <string name="home_give_up_body">La partida cuenta como abandonada.</string>
+    <string name="home_give_up_body_analyze">La partida cuenta como abandonada. Después podrás ver dónde se puso un número equivocado.</string>
+    <string name="home_new_confirm_title">¿Empezar una partida nueva?</string>
+    <string name="home_version">Versión %1$s</string>
+    <string name="home_back">Al inicio</string>
+    <string name="analysis_title">Análisis de la partida</string>
+    <string name="analysis_no_error">En esta partida no se puso ningún número equivocado.</string>
+    <string name="analysis_wrong_move">Jugada %1$d de %2$d: en la fila %3$d, columna %4$d se puso un %5$d. Lo correcto era el %6$d.</string>
+    <string name="analysis_start">Posición inicial</string>
+    <string name="analysis_move">Jugada %1$d de %2$d</string>
+    <string name="analysis_error_count">Números equivocados en esta partida: %1$d</string>
+    <string name="analysis_prev_error">◀ Error</string>
+    <string name="analysis_next_error">Error ▶</string>
+    <string name="analysis_legend">Verde: número correcto · rojo: número equivocado</string>
 </resources>

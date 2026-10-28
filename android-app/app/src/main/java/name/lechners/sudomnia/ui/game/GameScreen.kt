@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,6 +44,7 @@ import name.lechners.sudomnia.ui.board.SudokuBoard
 import name.lechners.sudomnia.ui.theme.AppBackground
 import name.lechners.sudomnia.ui.theme.AppSurface
 import name.lechners.sudomnia.ui.theme.InkConflict
+import name.lechners.sudomnia.ui.theme.TextSecondary
 import name.lechners.sudomnia.update.UpdateState
 
 @Composable
@@ -64,7 +66,9 @@ fun GameScreen(
     onBeginBranch: () -> Unit,
     onCommitBranch: () -> Unit,
     onDiscardBranch: () -> Unit,
-    onNewGame: (Level) -> Unit,
+    onDeadEndBranch: () -> Unit,
+    onHome: () -> Unit,
+    onGiveUp: () -> Unit,
     onSettingsChange: (Settings) -> Unit,
     onHint: () -> Unit,
     onDismissHint: () -> Unit,
@@ -73,7 +77,7 @@ fun GameScreen(
     onCheckUpdate: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var showLevelPicker by remember { mutableStateOf(false) }
+    var confirmGiveUp by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
     var showStats by remember { mutableStateOf(false) }
 
@@ -94,7 +98,7 @@ fun GameScreen(
             settings = state.settings,
             canPause = !state.generating && !state.finished && !state.paused,
             onPause = onPause,
-            onNewGame = { showLevelPicker = true },
+            onHome = onHome,
             onSettings = { showSettings = true },
             onStats = { showStats = true },
             canUndo = state.canUndo && !state.lost,
@@ -152,6 +156,7 @@ fun GameScreen(
             onBegin = onBeginBranch,
             onCommit = onCommitBranch,
             onDiscard = onDiscardBranch,
+            onDeadEnd = onDeadEndBranch,
         )
 
         // Two permanent rows, no mode switch: pick a cell, then decide. The
@@ -185,6 +190,12 @@ fun GameScreen(
             onLongPress = onNoteLongPress,
             modeEnabled = !state.generating && !state.finished && !state.paused,
         )
+
+        if (state.gameRunning && !state.paused) {
+            TextButton(onClick = { confirmGiveUp = true }) {
+                Text(stringResource(R.string.home_give_up), color = TextSecondary)
+            }
+        }
         }
 
             // The board side used to be min(width, height) inside a
@@ -280,7 +291,7 @@ fun GameScreen(
             LostOverlay(
                 level = state.level,
                 elapsed = timer.format(),
-                onNewGame = { showLevelPicker = true },
+                onHome = onHome,
             )
         }
 
@@ -291,14 +302,30 @@ fun GameScreen(
                 hintsUsed = state.hintsUsed,
                 noAids = state.aidsCleanRun,
                 summary = state.lastSolve,
-                onNewGame = { showLevelPicker = true },
+                onHome = onHome,
             )
         }
 
-        if (showLevelPicker) {
-            NewGameDialog(
-                onPick = { showLevelPicker = false; onNewGame(it) },
-                onDismiss = { showLevelPicker = false },
+        if (confirmGiveUp) {
+            AlertDialog(
+                onDismissRequest = { confirmGiveUp = false },
+                title = { Text(stringResource(R.string.home_give_up_title)) },
+                text = {
+                    Text(
+                        stringResource(
+                            if (state.settings.warnOnWrong) R.string.home_give_up_body
+                            else R.string.home_give_up_body_analyze
+                        )
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = { confirmGiveUp = false; onGiveUp() }) {
+                        Text(stringResource(R.string.home_give_up))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { confirmGiveUp = false }) { Text(stringResource(R.string.cancel)) }
+                },
             )
         }
 

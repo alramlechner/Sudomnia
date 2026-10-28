@@ -26,7 +26,8 @@ import name.lechners.sudomnia.rules.Units
  * When no cell is forced any more, the way on is to assume a digit and follow the
  * consequences. [beginBranch] marks that point in the history; everything entered
  * afterwards is provisional and shown in its own colour, until [commitBranch] keeps
- * it or [discardBranch] takes the whole attempt back in one step.
+ * it or [discardBranch] takes the whole attempt back in one step. A discard that
+ * declares a dead end additionally strikes out the first digit tried.
  *
  * A branch is *just a marker in the edit list* -- no second board, no copied state.
  * Discarding is undo run down to the marker, which is why it restores pencil marks
@@ -41,6 +42,13 @@ class SudokuGame(val puzzle: Puzzle) {
 
     /** Pencil marks as 9-bit masks. */
     val notes = IntArray(Units.CELLS)
+
+    /**
+     * Per cell, the digits that an abandoned branch proved impossible there: the
+     * first digit of every discarded attempt. Shown as struck-out pencil marks.
+     * Not part of the edit history -- it is knowledge gained, not a move.
+     */
+    val ruledOut = IntArray(Units.CELLS)
 
     private val history = ArrayList<Edit>()
     private var applied = 0
@@ -82,6 +90,7 @@ class SudokuGame(val puzzle: Puzzle) {
         entries.fill(0)
         notes.fill(0)
         this.applied = 0
+        ruledOut.fill(0)
         this.branchAt = if (branchAt >= 0) branchAt else -1
         for (row in rows) {
             if (row.isEmpty()) return false
@@ -125,6 +134,11 @@ class SudokuGame(val puzzle: Puzzle) {
     fun toggleNote(cell: Int, digit: Int) {
         if (isGiven(cell) || entries[cell] != 0) return
         val bit = Bits.of(digit)
+        // Tapping a struck-out mark takes the strike back instead of writing the note.
+        if (ruledOut[cell] and bit != 0) {
+            ruledOut[cell] = ruledOut[cell] and bit.inv()
+            return
+        }
         val after = notes[cell] xor bit
         record(Edit(listOf(CellChange(cell, 0, 0, notes[cell], after))))
     }
@@ -132,6 +146,7 @@ class SudokuGame(val puzzle: Puzzle) {
     /** Empties a cell: digit and notes. */
     fun clearCell(cell: Int) {
         if (isGiven(cell)) return
+        ruledOut[cell] = 0
         if (entries[cell] == 0 && notes[cell] == 0) return
         record(Edit(listOf(CellChange(cell, entries[cell], 0, notes[cell], 0))))
     }
@@ -164,13 +179,39 @@ class SudokuGame(val puzzle: Puzzle) {
      * Takes the whole attempt back: undo down to the marker, then drop those edits
      * for good. Redo must not be able to walk back into an abandoned branch.
      */
-    fun discardBranch() {
+    fun discardBranch(deadEnd: Boolean = false) {
         if (branchAt < 0) return
         val start = branchAt
+        val first = firstRootChange()
+        val root = first?.cell ?: -1
+        val rootDigit = first?.digitAfter ?: 0
         branchAt = -1                       // so canUndo lets us step over the marker
         while (applied > start) undo()
         while (history.size > start) history.removeAt(history.size - 1)
+        // Only a dead end proves the first assumption wrong; a plain discard means the
+        // attempt decided nothing, so it leaves no trace.
+        if (deadEnd && root >= 0 && rootDigit != 0 && valueAt(root) == 0) {
+            val bit = Bits.of(rootDigit)
+            ruledOut[root] = ruledOut[root] or bit
+            notes[root] = notes[root] and bit.inv()
+        }
     }
+
+    private fun firstRootChange(): CellChange? {
+        if (branchAt < 0) return null
+        for (i in branchAt until applied) {
+            for (c in history[i].changes) {
+                if (c.digitAfter != 0 && c.digitAfter != c.digitBefore) return c
+            }
+        }
+        return null
+    }
+
+    /**
+     * The cell of the first digit entered in the open branch -- the assumption the
+     * whole attempt hangs on -- or -1. Marked on the board while the branch is open.
+     */
+    fun branchRoot(): Int = firstRootChange()?.cell ?: -1
 
     /**
      * Cells whose **digit** differs from what it was when the branch was opened.

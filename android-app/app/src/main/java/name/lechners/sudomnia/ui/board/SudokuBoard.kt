@@ -77,12 +77,37 @@ fun SudokuBoard(
         drawCellBackgrounds(geo, state, pal)
         drawGlyphs(geo, state, paints, pal)
         drawGridLines(geo, pal)
+        drawTrialRoot(geo, state, pal)
         drawSelectionFrame(geo, state)
         if (state.flashCell >= 0) drawFlash(geo, state, pal, flash.value)
     }
 }
 
 private const val FLASH_MS = 2500
+
+/** Marks the first digit of the open branch: a solid frame plus a corner flag. */
+private fun DrawScope.drawTrialRoot(geo: BoardGeometry, state: BoardState, pal: Palette) {
+    val c = state.trialRoot
+    if (c < 0) return
+    val x = geo.left(Units.colOf[c])
+    val y = geo.top(Units.rowOf[c])
+    val w = geo.cellSize * 0.06f
+    val ink = pal.inkTrial.copy(alpha = 1f)
+    drawRect(
+        color = ink,
+        topLeft = Offset(x + w / 2f, y + w / 2f),
+        size = Size(geo.cellSize - w, geo.cellSize - w),
+        style = Stroke(width = w),
+    )
+    val flag = geo.cellSize * 0.3f
+    val path = androidx.compose.ui.graphics.Path().apply {
+        moveTo(x, y)
+        lineTo(x + flag, y)
+        lineTo(x, y + flag)
+        close()
+    }
+    drawPath(path, ink)
+}
 
 /** Dashed frame on the selected cell: says "this one" without touching the fill. */
 private fun DrawScope.drawSelectionFrame(geo: BoardGeometry, state: BoardState) {
@@ -153,6 +178,9 @@ private class BoardPaints {
 
     /** Struck-out candidates from a hint -- drawn with a line through them. */
     val noteStruck = textPaint(Typeface.DEFAULT_BOLD).apply { strokeWidth = 2f }
+
+    /** Notes an abandoned branch ruled out -- muted, with a line through. */
+    val noteRuledOut = textPaint(Typeface.DEFAULT).apply { strokeWidth = 2f }
 
     private fun textPaint(face: Typeface) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
@@ -226,6 +254,22 @@ private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: 
         val half = paints.noteStruck.measureText(d.toString()) * 0.75f
         val mid = ny + (paints.noteStruck.descent() + paints.noteStruck.ascent()) / 2f
         canvas.drawLine(nx - half, mid, nx + half, mid, paints.noteStruck)
+    }
+
+    paints.noteRuledOut.textSize = geo.cellSize * 0.24f
+    paints.noteRuledOut.color = pal.inkNote.copy(alpha = 0.75f).toArgb()
+    for (cell in 0 until Units.CELLS) {
+        if (state.values[cell] != 0 || state.struck[cell] == 0) continue
+        val step = geo.cellSize / 3f
+        Bits.forEach(state.struck[cell]) { d ->
+            val nx = geo.left(Units.colOf[cell]) + ((d - 1) % 3 + 0.5f) * step
+            val ny = geo.top(Units.rowOf[cell]) + ((d - 1) / 3 + 0.5f) * step -
+                (paints.noteRuledOut.descent() + paints.noteRuledOut.ascent()) / 2f
+            canvas.drawText(d.toString(), nx, ny, paints.noteRuledOut)
+            val half = paints.noteRuledOut.measureText(d.toString()) * 0.75f
+            val mid = ny + (paints.noteRuledOut.descent() + paints.noteRuledOut.ascent()) / 2f
+            canvas.drawLine(nx - half, mid, nx + half, mid, paints.noteRuledOut)
+        }
     }
 
     for (cell in 0 until Units.CELLS) {

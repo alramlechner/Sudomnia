@@ -3,6 +3,40 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning based on [SemVer](https://semver.org/).
 
+## [1.4.6] – 2026-10-28
+
+### Added
+- Analysis timeline: every move is a tick above the slider -- green for a correct
+  digit, red for a wrong one, small grey for notes and erasing.
+
+## [1.4.5] – 2026-10-28
+
+### Changed
+- "Give up" moved from the start screen into the game screen (below the keypad).
+
+## [1.4.4] – 2026-10-28
+
+### Added
+- **Start screen** (like Chessomnia): resume, new game, give up, statistics,
+  settings. Finishing or leaving a game returns there.
+- **Game analysis.** After a game ended without the 3-lives rule, the start screen
+  offers to review it: step through the moves, jump between wrong digits, and see
+  the board as it stood when each one was placed (with the correct digit named).
+
+## [1.4.3] – 2026-10-26
+
+### Changed
+- A branch ends three ways: keep, discard, dead end (see below).
+
+## [1.4.2] – 2026-10-25
+
+### Added
+- A trial branch now marks the cell of its first digit (solid frame and corner flag).
+- A branch can end three ways: keep, discard, or **dead end**. Only a dead end turns
+  the first digit into a struck-out pencil mark in its cell; a plain discard (the
+  attempt decided nothing) leaves no trace. Tapping the struck mark removes the
+  strike. Saved games keep the struck marks.
+
 ## [1.4.1] – 2026-10-17
 
 ### Changed

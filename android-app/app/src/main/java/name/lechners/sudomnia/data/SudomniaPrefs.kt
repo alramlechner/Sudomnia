@@ -103,6 +103,23 @@ class SudomniaPrefs(context: Context) {
         prefs.edit { remove(KEY_GAME) }
     }
 
+    // --- Last ended game ----------------------------------------------------
+
+    fun loadEnded(): EndedGame? {
+        val snapshot = GameSnapshot.decode(prefs.getString(KEY_ENDED, null)) ?: return null
+        val outcome = prefs.getString(KEY_ENDED_OUTCOME, null)?.firstOrNull()?.let { Outcome.of(it) }
+            ?: return null
+        return EndedGame(snapshot, outcome, prefs.getBoolean(KEY_ENDED_LIVES, true))
+    }
+
+    fun saveEnded(ended: EndedGame) {
+        prefs.edit {
+            putString(KEY_ENDED, ended.snapshot.encode())
+            putString(KEY_ENDED_OUTCOME, ended.outcome.code.toString())
+            putBoolean(KEY_ENDED_LIVES, ended.lives)
+        }
+    }
+
     private fun migrate() {
         val from = prefs.getInt(KEY_VERSION, 0)
         if (from == CURRENT_VERSION) return
@@ -131,5 +148,8 @@ class SudomniaPrefs(context: Context) {
         const val KEY_THEME = "theme_mode"
         const val KEY_GAME = "current_game"
         const val KEY_HISTORY = "game_history"
+        const val KEY_ENDED = "ended_game"
+        const val KEY_ENDED_OUTCOME = "ended_outcome"
+        const val KEY_ENDED_LIVES = "ended_lives"
     }
 }

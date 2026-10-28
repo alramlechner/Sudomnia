@@ -34,7 +34,7 @@ fun SolvedOverlay(
     hintsUsed: Int,
     noAids: Boolean,
     summary: SolveSummary?,
-    onNewGame: () -> Unit,
+    onHome: () -> Unit,
 ) {
     Box(
         modifier = Modifier.fillMaxSize().background(AppSurfaceHigh.copy(alpha = 0.72f)),
@@ -87,7 +87,7 @@ fun SolvedOverlay(
                 )
             }
             Box(modifier = Modifier.padding(bottom = 18.dp))
-            Button(onClick = onNewGame) { Text(stringResource(R.string.solved_new_game)) }
+            Button(onClick = onHome) { Text(stringResource(R.string.home_back)) }
         }
     }
 }

@@ -32,7 +32,7 @@ import name.lechners.sudomnia.ui.theme.TextSecondary
 fun LostOverlay(
     level: Level,
     elapsed: String,
-    onNewGame: () -> Unit,
+    onHome: () -> Unit,
 ) {
     Box(
         modifier = Modifier.fillMaxSize().background(AppSurfaceHigh.copy(alpha = 0.72f)),
@@ -63,7 +63,7 @@ fun LostOverlay(
                 fontSize = 13.sp,
                 modifier = Modifier.padding(top = 2.dp, bottom = 18.dp),
             )
-            Button(onClick = onNewGame) { Text(stringResource(R.string.solved_new_game)) }
+            Button(onClick = onHome) { Text(stringResource(R.string.home_back)) }
         }
     }
 }

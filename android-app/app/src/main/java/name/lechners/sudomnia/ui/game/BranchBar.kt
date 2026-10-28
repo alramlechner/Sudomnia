@@ -42,6 +42,7 @@ fun BranchBar(
     onBegin: () -> Unit,
     onCommit: () -> Unit,
     onDiscard: () -> Unit,
+    onDeadEnd: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (!inBranch) {
@@ -73,6 +74,9 @@ fun BranchBar(
             fontWeight = FontWeight.Medium,
             modifier = Modifier.weight(1f).padding(vertical = 4.dp),
         )
+        TextButton(onClick = onDeadEnd) {
+            Text(stringResource(R.string.branch_dead_end))
+        }
         TextButton(onClick = onDiscard) {
             Text(stringResource(R.string.branch_discard))
         }

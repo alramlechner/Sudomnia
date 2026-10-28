@@ -21,6 +21,10 @@ class BoardState(
     val noteConflicts: IntArray,
     /** Cells written on trial in the open branch; all false when none is open. */
     val trial: BooleanArray,
+    /** The cell of the branch's first digit, marked while it is open; -1 when none. */
+    val trialRoot: Int,
+    /** Per cell, notes struck out because an abandoned branch started with that digit. */
+    val struck: IntArray,
     val selected: Int,
     /** 0 when same-digit highlighting is off or nothing is selected. */
     val highlightDigit: Int,
@@ -57,6 +61,8 @@ class BoardState(
         if (this === other) return true
         if (other !is BoardState) return false
         return selected == other.selected &&
+            trialRoot == other.trialRoot &&
+            struck.contentEquals(other.struck) &&
             flashCell == other.flashCell &&
             flashNote == other.flashNote &&
             flashId == other.flashId &&
@@ -81,6 +87,8 @@ class BoardState(
         h = 31 * h + noteConflicts.contentHashCode()
         h = 31 * h + trial.contentHashCode()
         h = 31 * h + selected
+        h = 31 * h + trialRoot
+        h = 31 * h + struck.contentHashCode()
         h = 31 * h + flashId
         h = 31 * h + flashCell
         h = 31 * h + highlightDigit

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import name.lechners.sudomnia.data.EndedGame
 import name.lechners.sudomnia.data.GameRecord
 import name.lechners.sudomnia.data.GameSnapshot
 import name.lechners.sudomnia.data.History
@@ -20,6 +21,7 @@ import name.lechners.sudomnia.data.Outcome
 import name.lechners.sudomnia.data.Settings
 import name.lechners.sudomnia.data.Stats
 import name.lechners.sudomnia.data.SudomniaPrefs
+import name.lechners.sudomnia.game.MistakeAnalysis
 import name.lechners.sudomnia.game.MistakeTally
 import name.lechners.sudomnia.game.SudokuGame
 import name.lechners.sudomnia.rules.Bits
@@ -29,6 +31,7 @@ import name.lechners.sudomnia.rules.HintFinder
 import name.lechners.sudomnia.rules.Level
 import name.lechners.sudomnia.rules.PuzzleFactory
 import name.lechners.sudomnia.rules.Units
+import name.lechners.sudomnia.ui.analysis.AnalysisUi
 import name.lechners.sudomnia.ui.board.BoardState
 
 class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
@@ -44,8 +47,17 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
     /** What the game just won was worth, for the win overlay. Cleared with the next game. */
     private var lastSolve: SolveSummary? = null
 
-    private val _ui = MutableStateFlow(GameUiState(settings = settings, stats = stats, history = history))
+    /** The last game that ended, for the analysis -- survives restarts. */
+    private var ended: EndedGame? = prefs.loadEnded()
+
+    private val _ui = MutableStateFlow(
+        GameUiState(settings = settings, stats = stats, history = history, canAnalyze = ended?.lives == false)
+    )
     val ui: StateFlow<GameUiState> = _ui.asStateFlow()
+
+    private val _analysis = MutableStateFlow<AnalysisUi?>(null)
+    val analysis: StateFlow<AnalysisUi?> = _analysis.asStateFlow()
+    private var analysisModel: MistakeAnalysis? = null
 
     private val _timer = MutableStateFlow(TimerState())
     val timer: StateFlow<TimerState> = _timer.asStateFlow()
@@ -93,7 +105,10 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
      * player answers would be a toll, not a feature.
      */
     private var manuallyPaused = false
-    private var visible = true
+    private var activityVisible = true
+    /** Only the game screen has a clock; the start screen and the analysis do not. */
+    private var boardShown = false
+    private val visible: Boolean get() = activityVisible && boardShown
 
     init {
         // Read synchronously so the very first frame already shows the game in
@@ -110,6 +125,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             prefs.clearGame()
             return false
         }
+        restore.ruledOut.copyInto(g.ruledOut)
         game = g
         selected = -1
         armedNote = 0
@@ -143,12 +159,100 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         publish()
     }
 
+    /**
+     * Gives up the running game: it goes into the history as abandoned and its moves are
+     * kept for the analysis. A fresh puzzle is generated behind it, so the start screen
+     * has no game to resume afterwards.
+     *
+     * @return whether the player can now look back at where a wrong digit went in
+     */
+    fun giveUp(): Boolean {
+        val g = game ?: return false
+        if (countedStart && !recordedEnd) recordEnd(Outcome.ABANDONED)
+        newGame(g.puzzle.level)
+        return ended?.lives == false
+    }
+
+    /** Opens the analysis of the last ended game, at its first wrong digit. */
+    fun openAnalysis(): Boolean {
+        val e = ended ?: return false
+        val restore = e.snapshot.toGame() ?: return false
+        val model = MistakeAnalysis(restore.puzzle, restore.history, restore.applied)
+        analysisModel = model
+        showAnalysisStep(e, model.wrongMoves.firstOrNull()?.step ?: model.total)
+        return _analysis.value != null
+    }
+
+    fun closeAnalysis() {
+        analysisModel = null
+        _analysis.value = null
+    }
+
+    fun analysisGoTo(step: Int) {
+        val e = ended ?: return
+        showAnalysisStep(e, step)
+    }
+
+    fun analysisStep(delta: Int) {
+        analysisGoTo((_analysis.value?.step ?: return) + delta)
+    }
+
+    fun analysisNextError() {
+        val model = analysisModel ?: return
+        model.nextWrongStep(_analysis.value?.step ?: return)?.let { analysisGoTo(it) }
+    }
+
+    fun analysisPreviousError() {
+        val model = analysisModel ?: return
+        model.previousWrongStep(_analysis.value?.step ?: return)?.let { analysisGoTo(it) }
+    }
+
+    private fun showAnalysisStep(e: EndedGame, wanted: Int) {
+        val model = analysisModel ?: return
+        val step = wanted.coerceIn(0, model.total)
+        val pos = model.positionAt(step) ?: run { _analysis.value = null; return }
+        val focus = model.wrongMoveAt(step)
+        val solution = model.puzzle.solution
+        val values = IntArray(Units.CELLS) { pos.valueAt(it) }
+        val wrongNow = BooleanArray(Units.CELLS) { values[it] != 0 && values[it] != solution[it] }
+        _analysis.value = AnalysisUi(
+            board = BoardState(
+                values = values,
+                givens = BooleanArray(Units.CELLS) { pos.isGiven(it) },
+                notes = pos.notes.copyOf(),
+                conflicts = wrongNow,
+                noteConflicts = IntArray(Units.CELLS),
+                trial = BooleanArray(Units.CELLS),
+                trialRoot = -1,
+                struck = IntArray(Units.CELLS),
+                selected = focus?.cell ?: -1,
+                highlightDigit = 0,
+                highlightPeers = false,
+                hintCells = BooleanArray(Units.CELLS),
+                hintUnits = 0,
+                hintStrikes = IntArray(0),
+            ),
+            level = model.puzzle.level,
+            outcome = e.outcome,
+            step = step,
+            total = model.total,
+            errorCount = model.wrongMoves.size,
+            marks = model.marks,
+            focus = focus,
+            hasPreviousError = model.previousWrongStep(step) != null,
+            hasNextError = model.nextWrongStep(step) != null,
+        )
+    }
+
     fun newGame(level: Level) {
         // A game that was begun and is neither won nor lost ends here, by the
         // player's choice -- it goes into the history as such.
         if (countedStart && !recordedEnd) recordEnd(Outcome.ABANDONED)
         lastSolve = null
-        _ui.value = GameUiState(generating = true, level = level, settings = settings, stats = stats, history = history)
+        _ui.value = GameUiState(
+            generating = true, level = level, settings = settings, stats = stats, history = history,
+            canAnalyze = ended?.lives == false,
+        )
         stopTimer()
         manuallyPaused = false
         viewModelScope.launch {
@@ -340,9 +444,9 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
     }
 
     /** Throws the attempt away; the board really moves, so the usual funnel applies. */
-    fun onDiscardBranch() {
+    fun onDiscardBranch(deadEnd: Boolean = false) {
         val g = game ?: return
-        g.discardBranch()
+        g.discardBranch(deadEnd)
         onBoardChanged()
     }
 
@@ -377,11 +481,20 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
      * up to the last board change would otherwise survive.
      */
     fun onVisibilityChanged(nowVisible: Boolean) {
-        if (visible == nowVisible) return
-        visible = nowVisible
+        if (activityVisible == nowVisible) return
+        activityVisible = nowVisible
         syncTimer()
         publish()
         if (!nowVisible) saveGame()
+    }
+
+    /** The game screen came up or went away; the clock only runs while it is shown. */
+    fun onBoardShown(shown: Boolean) {
+        if (boardShown == shown) return
+        boardShown = shown
+        syncTimer()
+        publish()
+        if (!shown) saveGame()
     }
 
     // --- Tipp ---------------------------------------------------------------
@@ -519,6 +632,9 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         val hints = hintsUsed
         val clean = aidsCleanRun
         val at = System.currentTimeMillis()
+        val keep = EndedGame(snapshotOf(g, duration), outcome, settings.warnOnWrong)
+        ended = keep
+        prefs.saveEnded(keep)
         viewModelScope.launch {
             val score = withContext(Dispatchers.Default) { Grader().grade(givens).score }
             val record = GameRecord(at, level, score, duration, mistakesNow, hints, clean, outcome)
@@ -538,22 +654,25 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
 
     private fun saveGame() {
         val g = game ?: return
-        prefs.saveGame(
-            GameSnapshot(
+        prefs.saveGame(snapshotOf(g, if (_timer.value.running) elapsedNow() else accumulatedMs))
+    }
+
+    private fun snapshotOf(g: SudokuGame, elapsedMs: Long): GameSnapshot =
+        GameSnapshot(
                 givens = g.puzzle.toLine(),
                 solution = g.puzzle.solution.joinToString("") { it.toString() },
                 level = g.puzzle.level,
                 edits = g.exportHistory().map { GameSnapshot.encodeEdit(it) },
                 applied = g.appliedCount,
-                elapsedMs = if (_timer.value.running) elapsedNow() else accumulatedMs,
+                elapsedMs = elapsedMs,
                 hintsUsed = hintsUsed,
                 aidsUsed = !aidsCleanRun,
                 counted = countedSolved,
                 branchAt = g.branchStart,
                 mistakes = mistakes.count,
-            )
+                ruledOut = g.ruledOut.withIndex().filter { it.value != 0 }
+                    .joinToString(",") { "${it.index}:${it.value}" },
         )
-    }
 
     private fun publish() {
         val g = game
@@ -621,6 +740,8 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
                 conflicts = shown,
                 noteConflicts = shownNoteConflicts,
                 trial = trial,
+                trialRoot = g.branchRoot(),
+                struck = g.ruledOut.copyOf(),
                 selected = selected,
                 highlightDigit = highlight,
                 highlightPeers = settings.highlightPeers,
@@ -655,6 +776,8 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             hintsUsed = hintsUsed,
             aidsCleanRun = aidsCleanRun,
             fullButWrong = full && !solved,
+            canAnalyze = ended?.lives == false,
+            gameRunning = countedStart && !solved && !mistakes.lost,
         )
     }
 

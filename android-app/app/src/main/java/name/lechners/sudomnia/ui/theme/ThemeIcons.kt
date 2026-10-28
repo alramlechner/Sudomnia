@@ -72,6 +72,11 @@ val StatsIcon: ImageVector = icon("Stats") {
 }
 
 /** A circular arrow: start over. */
+val HomeIcon: ImageVector = icon("Home") {
+    stroked("M3 11l9-8 9 8")
+    stroked("M5 10v10h5v-6h4v6h5V10")
+}
+
 val NewGameIcon: ImageVector = icon("NewGame") {
     stroked("M20 12a8 8 0 1 1-2.34-5.66")
     stroked("M18.5 3v4.2h-4.2")

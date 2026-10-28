@@ -10,6 +10,12 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import name.lechners.sudomnia.ui.analysis.AnalysisScreen
+import name.lechners.sudomnia.ui.home.HomeScreen
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
 import name.lechners.sudomnia.diag.DiagnosticsLog
@@ -25,6 +31,8 @@ import name.lechners.sudomnia.ui.theme.SudomniaTheme
  * same hand-written enum navigation Chessomnia uses; there is nothing to gain from
  * navigation-compose at this size.
  */
+private enum class Screen { HOME, GAME, ANALYSIS }
+
 class MainActivity : ComponentActivity() {
 
     /**
@@ -59,7 +67,47 @@ class MainActivity : ComponentActivity() {
                 var update: UpdateState? = null
                 if (updateController != null) update = updateController.state.collectAsState().value
 
-                GameScreen(
+                var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
+                val analysis by vm.analysis.collectAsState()
+                androidx.compose.runtime.LaunchedEffect(screen) { vm.onBoardShown(screen == Screen.GAME) }
+                // A saved ANALYSIS screen has no model after process death: fall back to home.
+                if (screen == Screen.ANALYSIS && analysis == null) screen = Screen.HOME
+                androidx.activity.compose.BackHandler(enabled = screen != Screen.HOME) {
+                    if (screen == Screen.ANALYSIS) vm.closeAnalysis()
+                    screen = Screen.HOME
+                }
+                val inset = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars)
+                val versionName = remember {
+                    runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull() ?: ""
+                }
+
+                when (screen) {
+                Screen.HOME -> HomeScreen(
+                    state = state,
+                    elapsed = timer.format(),
+                    versionName = versionName,
+                    update = update,
+                    onResume = { screen = Screen.GAME },
+                    onNewGame = { level -> vm.newGame(level); screen = Screen.GAME },
+                    onAnalyze = { if (vm.openAnalysis()) screen = Screen.ANALYSIS },
+                    onSettingsChange = vm::updateSettings,
+                    onResetStats = vm::resetStats,
+                    onInstallUpdate = { updateController?.install() },
+                    onCheckUpdate = { updateController?.checkNow() },
+                    modifier = inset,
+                )
+                Screen.ANALYSIS -> analysis?.let { a ->
+                    AnalysisScreen(
+                        ui = a,
+                        onStep = vm::analysisStep,
+                        onGoTo = vm::analysisGoTo,
+                        onPreviousError = vm::analysisPreviousError,
+                        onNextError = vm::analysisNextError,
+                        onHome = { vm.closeAnalysis(); screen = Screen.HOME },
+                        modifier = inset,
+                    )
+                }
+                Screen.GAME -> GameScreen(
                     state = state,
                     timer = timer,
                     update = update,
@@ -76,18 +124,19 @@ class MainActivity : ComponentActivity() {
                     onResume = vm::onResume,
                     onBeginBranch = vm::onBeginBranch,
                     onCommitBranch = vm::onCommitBranch,
-                    onDiscardBranch = vm::onDiscardBranch,
-                    onNewGame = vm::newGame,
+                    onDiscardBranch = { vm.onDiscardBranch() },
+                    onDeadEndBranch = { vm.onDiscardBranch(deadEnd = true) },
+                    onHome = { screen = Screen.HOME },
+                    onGiveUp = { vm.giveUp(); screen = Screen.HOME },
                     onSettingsChange = vm::updateSettings,
                     onHint = vm::onHint,
                     onDismissHint = vm::onDismissHint,
                     onResetStats = vm::resetStats,
                     onInstallUpdate = { updateController?.install() },
                     onCheckUpdate = { updateController?.checkNow() },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(WindowInsets.systemBars),
+                    modifier = inset,
                 )
+                }
             }
         }
     }

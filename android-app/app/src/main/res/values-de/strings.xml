@@ -58,6 +58,7 @@
         <item quantity="other">Zweig · %1$d Felder auf Probe</item>
     </plurals>
     <string name="branch_discard">Verwerfen</string>
+    <string name="branch_dead_end">Sackgasse</string>
     <string name="branch_commit">Übernehmen</string>
 
     <!-- Tipp. Je eine Zeile pro Sprosse der Leiter: der Tipp erklaert die Technik, die
@@ -182,4 +183,24 @@
     <string name="settings_github">Quellcode auf GitHub</string>
     <string name="settings_licenses">Open-Source-Lizenzen</string>
     <string name="licenses_body">Diese App verwendet die folgenden Open-Source-Bibliotheken, alle unter der Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0):\n\n• Kotlin und Kotlin-Standardbibliothek (JetBrains)\n• AndroidX Core KTX\n• AndroidX Activity Compose\n• AndroidX Lifecycle ViewModel Compose\n• Jetpack Compose (UI, Graphics, Material3)\n\nCopyright The Android Open Source Project und JetBrains s.r.o. Bereitgestellt \"wie besehen\", ohne jegliche Gewährleistung.</string>
+    <string name="home_tagline">Sudoku, durchdacht</string>
+    <string name="home_resume">Fortsetzen</string>
+    <string name="home_running">%1$s · %2$s</string>
+    <string name="home_analyze">Letzte Partie analysieren</string>
+    <string name="home_give_up">Aufgeben</string>
+    <string name="home_give_up_title">Partie aufgeben?</string>
+    <string name="home_give_up_body">Die Partie zählt als abgebrochen.</string>
+    <string name="home_give_up_body_analyze">Die Partie zählt als abgebrochen. Danach kannst du ansehen, wo eine falsche Zahl gesetzt wurde.</string>
+    <string name="home_new_confirm_title">Neues Spiel starten?</string>
+    <string name="home_version">Version %1$s</string>
+    <string name="home_back">Zum Start</string>
+    <string name="analysis_title">Partie-Analyse</string>
+    <string name="analysis_no_error">In dieser Partie wurde keine falsche Zahl gesetzt.</string>
+    <string name="analysis_wrong_move">Zug %1$d von %2$d: In Zeile %3$d, Spalte %4$d wurde eine %5$d gesetzt. Richtig wäre die %6$d.</string>
+    <string name="analysis_start">Ausgangsstellung</string>
+    <string name="analysis_move">Zug %1$d von %2$d</string>
+    <string name="analysis_error_count">Falsche Zahlen in dieser Partie: %1$d</string>
+    <string name="analysis_prev_error">◀ Fehler</string>
+    <string name="analysis_next_error">Fehler ▶</string>
+    <string name="analysis_legend">Grün: richtige Zahl · Rot: falsche Zahl</string>
 </resources>

@@ -37,7 +37,7 @@ import name.lechners.sudomnia.rules.Level
 import name.lechners.sudomnia.ui.theme.AidsIcon
 import name.lechners.sudomnia.ui.theme.EraseIcon
 import name.lechners.sudomnia.ui.theme.HintIcon
-import name.lechners.sudomnia.ui.theme.NewGameIcon
+import name.lechners.sudomnia.ui.theme.HomeIcon
 import name.lechners.sudomnia.ui.theme.PauseIcon
 import name.lechners.sudomnia.ui.theme.StatsIcon
 import name.lechners.sudomnia.ui.theme.LogoBlue
@@ -66,7 +66,7 @@ fun TopBar(
     settings: Settings,
     canPause: Boolean,
     onPause: () -> Unit,
-    onNewGame: () -> Unit,
+    onHome: () -> Unit,
     onSettings: () -> Unit,
     onStats: () -> Unit,
     onThemeToggle: () -> Unit,
@@ -212,9 +212,9 @@ fun TopBar(
                     modifier = Modifier.size(22.dp),
                 )
             }
-            IconButton(onClick = onNewGame, modifier = Modifier.size(40.dp)) {
+            IconButton(onClick = onHome, modifier = Modifier.size(40.dp)) {
                 Icon(
-                    imageVector = NewGameIcon,
+                    imageVector = HomeIcon,
                     contentDescription = stringResource(R.string.new_game),
                     tint = LogoBlue,
                     modifier = Modifier.size(22.dp),

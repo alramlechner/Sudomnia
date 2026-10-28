@@ -151,6 +151,21 @@ class GameSnapshotTest {
         assertTrue(back.toGame() != null)
     }
 
+    @Test
+    fun struckOutNotesSurviveTheRoundTrip() {
+        val game = SudokuGame(PuzzleFactory().generate(Level.EASY, Random(13)))
+        val cell = (0 until Units.CELLS).first { !game.isGiven(it) }
+        game.beginBranch()
+        game.setDigit(cell, 5)
+        game.discardBranch(deadEnd = true)
+        val back = GameSnapshot.decode(snapshotOf(game).copy(
+            ruledOut = game.ruledOut.withIndex().filter { it.value != 0 }
+                .joinToString(",") { "${it.index}:${it.value}" },
+        ).encode())!!.toGame()!!
+        assertEquals(game.ruledOut[cell], back.ruledOut[cell])
+        assertTrue(back.ruledOut[cell] != 0)
+    }
+
     /** Anything unreadable must be dropped, never thrown -- it runs at app startup. */
     @Test
     fun garbageIsDiscardedRatherThanThrown() {

@@ -200,6 +200,14 @@ Three rules follow from this:
   to build, but "which branch am I discarding right now?" is a question the UI would then
   have to answer — and the case this is about is one assumption and its consequences.
 
+The first digit entered in a branch is its *root* (`branchRoot()`), drawn with a frame
+and corner flag while the branch is open. When the branch is ended as a *dead end* (a third exit next to keep and plain
+discard), that digit is
+recorded in `ruledOut` (per cell, a note mask) and drawn as a struck-out pencil mark: the
+attempt failed, and the player keeps what they learned. `ruledOut` is deliberately not in
+the edit history (it is knowledge, not a move) and is saved as its own snapshot field
+(version 4). Tapping a struck mark in pencil mode removes the strike.
+
 `trialCells()` returns the cells whose **digit** has changed since the marker — that is
 what turns yellow. Notes deliberately don't count: setting a digit clears it from the
 notes of up to 20 neighbours, and colouring all of those would spread the attempt over a
