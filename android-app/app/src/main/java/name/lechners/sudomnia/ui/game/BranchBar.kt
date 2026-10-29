@@ -44,6 +44,7 @@ fun BranchBar(
     onDiscard: () -> Unit,
     onDeadEnd: () -> Unit,
     modifier: Modifier = Modifier,
+    trailing: @Composable () -> Unit = {},
 ) {
     if (!inBranch) {
         Row(
@@ -53,6 +54,7 @@ fun BranchBar(
             TextButton(onClick = onBegin, enabled = enabled) {
                 Text(stringResource(R.string.branch_start))
             }
+            trailing()
         }
         return
     }

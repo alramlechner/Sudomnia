@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -107,6 +108,7 @@ fun GameScreen(
             canHint = !state.generating && !state.finished && !state.paused,
             onErase = onErase,
             onHint = onHint,
+            mistakes = state.mistakes,
             onUndo = onUndo,
             onRedo = onRedo,
             onThemeToggle = {
@@ -114,36 +116,25 @@ fun GameScreen(
             },
         )
 
-        UpdateBanner(state = update, onInstall = onInstallUpdate)
-
-        HintCard(
-            state = state.hint,
-            deadEnd = state.hintDeadEnd,
-            onAdvance = onHint,
-            onDismiss = onDismissHint,
-        )
-
-        // The wrong-entry warning, and only while the entry is still the last
-        // thing that happened. It counts the strikes out loud: a warning that did
-        // not say what it costs would spring the third one as a surprise.
-        if (state.wrongCell >= 0 && !state.lost) {
-            val left = MistakeTally.LIMIT - state.mistakes
-            Text(
-                text = pluralStringResource(R.plurals.wrong_entry, left, left),
-                color = InkConflict,
-                fontSize = 14.sp,
-            )
-        }
-
-        // Only ever visible with conflict marking off. Says that something is
-        // wrong without saying where -- otherwise finishing a grid incorrectly
-        // is met with nothing at all, which reads as a broken app.
-        if (state.fullButWrong) {
-            Text(
-                text = stringResource(R.string.full_but_wrong),
-                color = InkConflict,
-                fontSize = 14.sp,
-            )
+        // A fixed slot, always there: a message that appears must not push the board
+        // down, so the space is reserved whether or not there is anything to say.
+        Box(modifier = Modifier.fillMaxWidth().height(36.dp), contentAlignment = Alignment.CenterStart) {
+            if (state.wrongCell >= 0 && !state.lost) {
+                val left = MistakeTally.LIMIT - state.mistakes
+                Text(
+                    text = pluralStringResource(R.plurals.wrong_entry, left, left),
+                    color = InkConflict,
+                    fontSize = 14.sp,
+                    maxLines = 2,
+                )
+            } else if (state.fullButWrong) {
+                Text(
+                    text = stringResource(R.string.full_but_wrong),
+                    color = InkConflict,
+                    fontSize = 14.sp,
+                    maxLines = 2,
+                )
+            }
         }
         }
 
@@ -157,6 +148,13 @@ fun GameScreen(
             onCommit = onCommitBranch,
             onDiscard = onDiscardBranch,
             onDeadEnd = onDeadEndBranch,
+            trailing = {
+                if (state.gameRunning && !state.paused) {
+                    TextButton(onClick = { confirmGiveUp = true }) {
+                        Text(stringResource(R.string.home_give_up), color = TextSecondary)
+                    }
+                }
+            },
         )
 
         // Two permanent rows, no mode switch: pick a cell, then decide. The
@@ -190,12 +188,6 @@ fun GameScreen(
             onLongPress = onNoteLongPress,
             modeEnabled = !state.generating && !state.finished && !state.paused,
         )
-
-        if (state.gameRunning && !state.paused) {
-            TextButton(onClick = { confirmGiveUp = true }) {
-                Text(stringResource(R.string.home_give_up), color = TextSecondary)
-            }
-        }
         }
 
             // The board side used to be min(width, height) inside a
@@ -279,6 +271,22 @@ fun GameScreen(
                 )
                 controls()
             }
+        }
+
+        // The hint floats over the lower part of the screen instead of taking a row of its
+        // own, so asking for one never moves the board or the keypad.
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .fillMaxWidth(if (landscape) 0.4f else 1f)
+                .padding(8.dp),
+        ) {
+            HintCard(
+                state = state.hint,
+                deadEnd = state.hintDeadEnd,
+                onAdvance = onHint,
+                onDismiss = onDismissHint,
+            )
         }
 
         // Above everything, including the dialogs' trigger buttons: while it is up,

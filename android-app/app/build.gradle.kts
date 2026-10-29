@@ -10,7 +10,9 @@ plugins {
 // The version lives in version.properties at the repository root, so that a
 // release only ever has to touch one file.
 val versionProps = Properties().apply {
-    file("../../version.properties").inputStream().use { load(it) }
+    // providers.fileContents registers the file as a configuration-cache input; a plain
+    // stream read does not, and a cached configuration kept stamping the old version.
+    load(providers.fileContents(rootProject.layout.projectDirectory.file("../version.properties")).asText.get().reader())
 }
 
 // The update host name is a per-deployment setting, not something that belongs in the

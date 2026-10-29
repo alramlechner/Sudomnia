@@ -38,6 +38,10 @@ import name.lechners.sudomnia.ui.theme.AidsIcon
 import name.lechners.sudomnia.ui.theme.EraseIcon
 import name.lechners.sudomnia.ui.theme.HintIcon
 import name.lechners.sudomnia.ui.theme.HomeIcon
+import name.lechners.sudomnia.ui.theme.LifeIcon
+import name.lechners.sudomnia.ui.theme.LifeLostIcon
+import name.lechners.sudomnia.ui.theme.InkConflict
+import name.lechners.sudomnia.game.MistakeTally
 import name.lechners.sudomnia.ui.theme.PauseIcon
 import name.lechners.sudomnia.ui.theme.StatsIcon
 import name.lechners.sudomnia.ui.theme.LogoBlue
@@ -78,6 +82,7 @@ fun TopBar(
     canHint: Boolean,
     onErase: () -> Unit,
     onHint: () -> Unit,
+    mistakes: Int = 0,
     modifier: Modifier = Modifier,
 ) {
     // FlowRow, not Row: long translations (Spanish especially) don't fit on one line at
@@ -89,12 +94,29 @@ fun TopBar(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Column(modifier = Modifier.align(Alignment.CenterVertically)) {
-            Text(
-                text = levelLabel(level),
-                color = TextPrimary,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = levelLabel(level),
+                    color = TextPrimary,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                // The lives of "report wrong entries": one heart each, struck through
+                // as it is lost. Only there when the rule is on.
+                if (settings.warnOnWrong) {
+                    Row(modifier = Modifier.padding(start = 10.dp)) {
+                        repeat(MistakeTally.LIMIT) { i ->
+                            val lost = i < mistakes
+                            Icon(
+                                imageVector = if (lost) LifeLostIcon else LifeIcon,
+                                contentDescription = null,
+                                tint = if (lost) TextSecondary.copy(alpha = 0.6f) else InkConflict,
+                                modifier = Modifier.padding(end = 2.dp).size(18.dp),
+                            )
+                        }
+                    }
+                }
+            }
             // The level is measured, not intended: it names the hardest technique the
             // puzzle actually needs (see Level). Until 0.5.0 this line said
             // "provisional", because the bands came from a singles-only stand-in.

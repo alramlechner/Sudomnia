@@ -72,6 +72,18 @@ val StatsIcon: ImageVector = icon("Stats") {
 }
 
 /** A circular arrow: start over. */
+private const val HEART =
+    "M12 20.5s-7.3-4.5-9.2-9C1.6 8.6 3.3 5.2 6.6 5.2c2.1 0 3.5 1.1 5.4 3.2 1.9-2.1 3.3-3.2 5.4-3.2 3.3 0 5 3.4 3.8 6.3-1.9 4.5-9.2 9-9.2 9z"
+
+/** A life still in hand. */
+val LifeIcon: ImageVector = icon("Life") { filled(HEART) }
+
+/** A life lost: the outline, struck through. */
+val LifeLostIcon: ImageVector = icon("LifeLost") {
+    stroked(HEART)
+    stroked("M3.5 3.5l17 17")
+}
+
 val HomeIcon: ImageVector = icon("Home") {
     stroked("M3 11l9-8 9 8")
     stroked("M5 10v10h5v-6h4v6h5V10")

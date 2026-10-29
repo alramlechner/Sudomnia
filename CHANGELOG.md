@@ -3,6 +3,26 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning based on [SemVer](https://semver.org/).
 
+## [1.4.9] – 2026-10-28
+
+### Added
+- With "report wrong entries" on, the toolbar shows the three lives as hearts next
+  to the level; each lost life is struck through.
+
+## [1.4.8] – 2026-10-28
+
+### Changed
+- "Start branch" and "Give up" share one row.
+- Messages no longer shove the board down: the wrong-entry / full-but-wrong notice
+  has a reserved line under the toolbar, hints float over the lower screen, and the
+  update banner is shown on the start screen only.
+
+## [1.4.7] – 2026-10-28
+
+### Fixed
+- The build kept stamping the previous version name (1.4.6 showed as 1.4.5): the
+  Gradle configuration cache did not notice version.properties had changed.
+
 ## [1.4.6] – 2026-10-28
 
 ### Added
