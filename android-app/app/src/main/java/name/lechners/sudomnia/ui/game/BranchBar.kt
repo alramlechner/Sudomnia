@@ -3,6 +3,7 @@ package name.lechners.sudomnia.ui.game
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -59,14 +60,13 @@ fun BranchBar(
         return
     }
 
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .background(InkTrial.copy(alpha = 0.14f))
             .border(1.dp, InkTrial.copy(alpha = 0.55f), RoundedCornerShape(8.dp))
             .padding(start = 10.dp, end = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = if (cells == 0) stringResource(R.string.branch_empty)
@@ -74,16 +74,22 @@ fun BranchBar(
             color = if (cells == 0) TextSecondary else InkTrial,
             fontSize = 13.sp,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f).padding(vertical = 4.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
         )
-        TextButton(onClick = onDeadEnd) {
-            Text(stringResource(R.string.branch_dead_end))
-        }
-        TextButton(onClick = onDiscard) {
-            Text(stringResource(R.string.branch_discard))
-        }
-        TextButton(onClick = onCommit) {
-            Text(stringResource(R.string.branch_commit), fontWeight = FontWeight.SemiBold)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = onDeadEnd) {
+                Text(stringResource(R.string.branch_dead_end), maxLines = 1)
+            }
+            TextButton(onClick = onDiscard) {
+                Text(stringResource(R.string.branch_discard), maxLines = 1)
+            }
+            TextButton(onClick = onCommit) {
+                Text(stringResource(R.string.branch_commit), fontWeight = FontWeight.SemiBold, maxLines = 1)
+            }
         }
     }
 }
