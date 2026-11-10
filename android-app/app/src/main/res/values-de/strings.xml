@@ -147,7 +147,7 @@
 
     <!-- Diagnose -->
     <string name="diag_title">Fehlerbericht</string>
-    <string name="diag_hint">Protokoll und Absturzberichte weitergeben, wenn etwas klemmt</string>
+    <string name="diag_hint">ZIP mit Protokoll, Zügen und Screenshot weitergeben, wenn etwas klemmt</string>
     <string name="diag_share">Teilen</string>
 
 

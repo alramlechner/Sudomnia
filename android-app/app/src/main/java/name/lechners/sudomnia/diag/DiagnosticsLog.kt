@@ -1,11 +1,18 @@
 package name.lechners.sudomnia.diag
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.content.Intent
 import android.os.Build
 import androidx.core.content.FileProvider
 import name.lechners.sudomnia.BuildConfig
+import name.lechners.sudomnia.data.SudomniaPrefs
 import java.io.File
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.text.SimpleDateFormat
@@ -29,7 +36,7 @@ import java.util.Locale
 object DiagnosticsLog {
 
     private const val FILE_NAME = "sudomnia-log.txt"
-    private const val REPORT_NAME = "sudomnia-report.txt"
+    private const val REPORT_NAME = "sudomnia-report.zip"
 
     /** Only a hint the receiving mail app may prefill -- see [shareIntent]. */
     private const val REPORT_EMAIL = "sudomnia@lechners.name"
@@ -88,19 +95,38 @@ object DiagnosticsLog {
     fun hasEntries(): Boolean = (file?.length() ?: 0L) > 0L
 
     /**
-     * Writes the report to the cache and returns a share intent for it.
+     * Writes the report ZIP to the cache and returns a share intent for it.
      *
-     * The text goes into the file *and* into EXTRA_TEXT: some targets take the
-     * attachment, some only the body, and which one the player picks is not knowable here.
+     * The ZIP holds the log (`report.txt`), the running game as its encoded snapshot
+     * (`game.txt`: givens, solution and every move) and a screenshot of the app window
+     * (`screenshot.png`). The window is captured without the settings dialog, which is
+     * a window of its own -- so what is in the picture is the board as it was.
+     * The log text also goes into EXTRA_TEXT: some targets take only the body.
      */
     fun shareIntent(context: Context): Intent {
         val body = report()
         val out = File(context.cacheDir, REPORT_NAME)
-        out.writeText(body)
+        val screenshot = runCatching { screenshotPng(context) }.getOrNull()
+        val game = runCatching { SudomniaPrefs(context).loadGame()?.encode() }.getOrNull()
+        ZipOutputStream(out.outputStream().buffered()).use { zip ->
+            zip.putNextEntry(ZipEntry("report.txt"))
+            zip.write(body.toByteArray())
+            zip.closeEntry()
+            if (game != null) {
+                zip.putNextEntry(ZipEntry("game.txt"))
+                zip.write(game.toByteArray())
+                zip.closeEntry()
+            }
+            if (screenshot != null) {
+                zip.putNextEntry(ZipEntry("screenshot.png"))
+                zip.write(screenshot)
+                zip.closeEntry()
+            }
+        }
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", out)
 
         val send = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
+            type = "application/zip"
             putExtra(Intent.EXTRA_EMAIL, arrayOf(REPORT_EMAIL))
             putExtra(Intent.EXTRA_SUBJECT, "Sudomnia ${BuildConfig.VERSION_NAME} — Error report")
             putExtra(Intent.EXTRA_STREAM, uri)
@@ -109,6 +135,20 @@ object DiagnosticsLog {
         }
         return Intent.createChooser(send, "Share error report")
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    /** Must run on the main thread; null if there is no activity window to draw. */
+    private fun screenshotPng(context: Context): ByteArray? {
+        var c = context
+        while (c is ContextWrapper && c !is Activity) c = c.baseContext
+        val view = (c as? Activity)?.window?.decorView ?: return null
+        if (view.width <= 0 || view.height <= 0) return null
+        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        view.draw(Canvas(bitmap))
+        return java.io.ByteArrayOutputStream().also {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+            bitmap.recycle()
+        }.toByteArray()
     }
 
     private fun report(): String = buildString {

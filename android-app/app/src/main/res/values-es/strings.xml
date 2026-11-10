@@ -151,7 +151,7 @@
 
     <!-- Diagnóstico -->
     <string name="diag_title">Informe de error</string>
-    <string name="diag_hint">Comparte el registro y los informes de fallos cuando algo se atasque</string>
+    <string name="diag_hint">Comparte un ZIP con registro, jugadas y captura de pantalla cuando algo se atasque</string>
     <string name="diag_share">Compartir</string>
 
 

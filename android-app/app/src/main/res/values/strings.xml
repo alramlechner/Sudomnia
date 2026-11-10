@@ -148,7 +148,7 @@
 
     <!-- Diagnostics -->
     <string name="diag_title">Error report</string>
-    <string name="diag_hint">Pass on the log and crash reports when something is stuck</string>
+    <string name="diag_hint">Pass on a ZIP with log, moves and screenshot when something is stuck</string>
     <string name="diag_share">Share</string>
 
 
