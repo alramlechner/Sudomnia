@@ -51,7 +51,7 @@
     <string name="paused_resume">Resume</string>
 
     <!-- Branch: a trial run for when no cell is forced any more -->
-    <string name="branch_start">Start branch</string>
+    <string name="branch_start">Try it out</string>
     <string name="branch_empty">Branch open – enter your attempt</string>
     <plurals name="branch_cells">
         <item quantity="one">Branch · %1$d cell on trial</item>

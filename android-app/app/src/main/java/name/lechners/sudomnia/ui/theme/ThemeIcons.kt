@@ -57,6 +57,13 @@ val UndoIcon: ImageVector = icon("Undo") {
     stroked("M4 9h10.5a5.5 5.5 0 0 1 0 11H11")
 }
 
+/** A path that forks: try a branch. */
+val BranchIcon: ImageVector = icon("Branch") {
+    stroked("M12 21V12")
+    stroked("M12 12C12 8 7 9 7 4")
+    stroked("M12 12C12 8 17 9 17 4")
+}
+
 val BackIcon: ImageVector = icon("Back") {
     stroked("M19 12H5M11 6l-6 6l6 6")
 }

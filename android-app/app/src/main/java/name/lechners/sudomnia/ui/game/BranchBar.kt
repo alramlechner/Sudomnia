@@ -39,26 +39,12 @@ import name.lechners.sudomnia.ui.theme.TextSecondary
 fun BranchBar(
     inBranch: Boolean,
     cells: Int,
-    enabled: Boolean,
-    onBegin: () -> Unit,
     onCommit: () -> Unit,
     onDiscard: () -> Unit,
     onDeadEnd: () -> Unit,
     modifier: Modifier = Modifier,
-    trailing: @Composable () -> Unit = {},
 ) {
-    if (!inBranch) {
-        Row(
-            modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            TextButton(onClick = onBegin, enabled = enabled) {
-                Text(stringResource(R.string.branch_start))
-            }
-            trailing()
-        }
-        return
-    }
+    if (!inBranch) return
 
     Column(
         modifier = modifier

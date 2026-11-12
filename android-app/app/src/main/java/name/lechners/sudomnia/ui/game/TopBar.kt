@@ -42,6 +42,7 @@ import name.lechners.sudomnia.ui.theme.InkConflict
 import name.lechners.sudomnia.game.MistakeTally
 import name.lechners.sudomnia.ui.theme.PauseIcon
 import name.lechners.sudomnia.ui.theme.FlagIcon
+import name.lechners.sudomnia.ui.theme.BranchIcon
 import name.lechners.sudomnia.ui.theme.LogoBlue
 import name.lechners.sudomnia.ui.theme.UndoIcon
 import name.lechners.sudomnia.ui.theme.TextPrimary
@@ -68,6 +69,8 @@ fun TopBar(
     onPause: () -> Unit,
     onHome: () -> Unit,
     onSettings: () -> Unit,
+    canBranch: Boolean,
+    onBranch: () -> Unit,
     canGiveUp: Boolean,
     onGiveUp: () -> Unit,
     canUndo: Boolean,
@@ -179,6 +182,14 @@ fun TopBar(
                     imageVector = AidsIcon,
                     contentDescription = stringResource(R.string.settings),
                     tint = LogoBlue,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
+            IconButton(onClick = onBranch, enabled = canBranch, modifier = Modifier.size(40.dp)) {
+                Icon(
+                    imageVector = BranchIcon,
+                    contentDescription = stringResource(R.string.branch_start),
+                    tint = if (canBranch) LogoBlue else TextSecondary.copy(alpha = 0.4f),
                     modifier = Modifier.size(22.dp),
                 )
             }

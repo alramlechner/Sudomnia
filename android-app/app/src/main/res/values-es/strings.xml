@@ -53,7 +53,7 @@
     <string name="paused_resume">Continuar</string>
 
     <!-- Rama: un intento de prueba para cuando ninguna celda está ya forzada -->
-    <string name="branch_start">Iniciar rama</string>
+    <string name="branch_start">Probar</string>
     <string name="branch_empty">Rama abierta: introduce tu intento</string>
     <plurals name="branch_cells">
         <item quantity="one">Rama · %1$d celda de prueba</item>

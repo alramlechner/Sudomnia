@@ -99,6 +99,8 @@ fun GameScreen(
             onPause = onPause,
             onHome = onHome,
             onSettings = { showSettings = true },
+            canBranch = !state.inBranch && !state.generating && !state.finished && !state.paused,
+            onBranch = onBeginBranch,
             canGiveUp = !state.generating && !state.finished && !state.paused,
             onGiveUp = { confirmGiveUp = true },
             canUndo = state.canUndo && !state.lost,
@@ -137,8 +139,6 @@ fun GameScreen(
         BranchBar(
             inBranch = state.inBranch,
             cells = state.branchCells,
-            enabled = !state.generating && !state.finished && !state.paused,
-            onBegin = onBeginBranch,
             onCommit = onCommitBranch,
             onDiscard = onDiscardBranch,
             onDeadEnd = onDeadEndBranch,
