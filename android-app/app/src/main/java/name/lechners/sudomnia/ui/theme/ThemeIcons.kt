@@ -3,6 +3,7 @@ package name.lechners.sudomnia.ui.theme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.unit.dp
@@ -18,6 +19,7 @@ private fun ImageVector.Builder.stroked(path: String) = addPath(
     stroke = ink,
     strokeLineWidth = 2f,
     strokeLineCap = StrokeCap.Round,
+    strokeLineJoin = StrokeJoin.Round,
 )
 
 private fun ImageVector.Builder.filled(path: String) =
@@ -57,11 +59,14 @@ val UndoIcon: ImageVector = icon("Undo") {
     stroked("M4 9h10.5a5.5 5.5 0 0 1 0 11H11")
 }
 
-/** A path that forks: try a branch. */
+/** Two diverging arrows around a question mark: try something and see. */
 val BranchIcon: ImageVector = icon("Branch") {
-    stroked("M12 21V12")
-    stroked("M12 12C12 8 7 9 7 4")
-    stroked("M12 12C12 8 17 9 17 4")
+    stroked("M12 22v-5C12 13 6 12 4 7")
+    stroked("M3.5 11.5L4 7l4.5 .5")
+    stroked("M12 17c0-4 6-5 8-10")
+    stroked("M20.5 11.5L20 7l-4.5 .5")
+    stroked("M10.6 3.8a1.5 1.5 0 1 1 2.4 1.2c-.6.4-1 .7-1 1.4")
+    stroked("M12 9.2v.1")
 }
 
 val BackIcon: ImageVector = icon("Back") {
