@@ -1,5 +1,11 @@
 package name.lechners.sudomnia
 
+import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.unit.dp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -46,6 +52,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // Before anything else: from here on crashes land in a file the player can share.
         DiagnosticsLog.init(applicationContext)
+        DiagnosticsLog.log("nav", "onCreate, restoredState=${savedInstanceState != null}")
         enableEdgeToEdge()
         // The grid is stared at for minutes without a touch; letting the screen
         // blank mid-puzzle would be the single most annoying possible bug.
@@ -69,7 +76,10 @@ class MainActivity : ComponentActivity() {
 
                 var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
                 val analysis by vm.analysis.collectAsState()
-                androidx.compose.runtime.LaunchedEffect(screen) { vm.onBoardShown(screen == Screen.GAME) }
+                androidx.compose.runtime.LaunchedEffect(screen) {
+                    DiagnosticsLog.log("nav", "screen=$screen")
+                    vm.onBoardShown(screen == Screen.GAME)
+                }
                 // A saved ANALYSIS screen has no model after process death: fall back to home.
                 if (screen == Screen.ANALYSIS && analysis == null) screen = Screen.HOME
                 androidx.activity.compose.BackHandler(enabled = screen != Screen.HOME) {
@@ -81,33 +91,8 @@ class MainActivity : ComponentActivity() {
                     runCatching { packageManager.getPackageInfo(packageName, 0).versionName }.getOrNull() ?: ""
                 }
 
-                when (screen) {
-                Screen.HOME -> HomeScreen(
-                    state = state,
-                    elapsed = timer.format(),
-                    versionName = versionName,
-                    update = update,
-                    onResume = { screen = Screen.GAME },
-                    onNewGame = { level -> vm.newGame(level); screen = Screen.GAME },
-                    onAnalyze = { if (vm.openAnalysis()) screen = Screen.ANALYSIS },
-                    onSettingsChange = vm::updateSettings,
-                    onResetStats = vm::resetStats,
-                    onInstallUpdate = { updateController?.install() },
-                    onCheckUpdate = { updateController?.checkNow() },
-                    modifier = inset,
-                )
-                Screen.ANALYSIS -> analysis?.let { a ->
-                    AnalysisScreen(
-                        ui = a,
-                        onStep = vm::analysisStep,
-                        onGoTo = vm::analysisGoTo,
-                        onPreviousError = vm::analysisPreviousError,
-                        onNextError = vm::analysisNextError,
-                        onHome = { vm.closeAnalysis(); screen = Screen.HOME },
-                        modifier = inset,
-                    )
-                }
-                Screen.GAME -> GameScreen(
+                val gameScreen: @Composable (Modifier) -> Unit = {
+GameScreen(
                     state = state,
                     timer = timer,
                     update = update,
@@ -133,8 +118,40 @@ class MainActivity : ComponentActivity() {
                     onResetStats = vm::resetStats,
                     onInstallUpdate = { updateController?.install() },
                     onCheckUpdate = { updateController?.checkNow() },
+                    modifier = it,
+                )
+                }
+
+                when (screen) {
+                Screen.HOME -> HomeScreen(
+                    state = state,
+                    elapsed = timer.format(),
+                    versionName = versionName,
+                    update = update,
+                    onResume = {
+                        DiagnosticsLog.log("nav", "tap Resume on home")
+                        screen = Screen.GAME
+                    },
+                    onNewGame = { level -> vm.newGame(level); screen = Screen.GAME },
+                    onAnalyze = { if (vm.openAnalysis()) screen = Screen.ANALYSIS },
+                    onSettingsChange = vm::updateSettings,
+                    onResetStats = vm::resetStats,
+                    onInstallUpdate = { updateController?.install() },
+                    onCheckUpdate = { updateController?.checkNow() },
                     modifier = inset,
                 )
+                Screen.ANALYSIS -> analysis?.let { a ->
+                    AnalysisScreen(
+                        ui = a,
+                        onStep = vm::analysisStep,
+                        onGoTo = vm::analysisGoTo,
+                        onPreviousError = vm::analysisPreviousError,
+                        onNextError = vm::analysisNextError,
+                        onHome = { vm.closeAnalysis(); screen = Screen.HOME },
+                        modifier = inset,
+                    )
+                }
+                Screen.GAME -> gameScreen(inset)
                 }
             }
         }
@@ -146,10 +163,12 @@ class MainActivity : ComponentActivity() {
     // dialog or a half-visible split-screen window.
     override fun onStart() {
         super.onStart()
+        DiagnosticsLog.log("nav", "onStart")
         vm.onVisibilityChanged(true)
     }
 
     override fun onStop() {
+        DiagnosticsLog.log("nav", "onStop")
         vm.onVisibilityChanged(false)
         super.onStop()
     }
