@@ -45,7 +45,6 @@ import name.lechners.sudomnia.game.MistakeTally
 import name.lechners.sudomnia.ui.theme.PauseIcon
 import name.lechners.sudomnia.ui.theme.StatsIcon
 import name.lechners.sudomnia.ui.theme.LogoBlue
-import name.lechners.sudomnia.ui.theme.RedoIcon
 import name.lechners.sudomnia.ui.theme.UndoIcon
 import name.lechners.sudomnia.ui.theme.TextPrimary
 import name.lechners.sudomnia.ui.theme.TextSecondary
@@ -75,9 +74,7 @@ fun TopBar(
     onStats: () -> Unit,
     onThemeToggle: () -> Unit,
     canUndo: Boolean,
-    canRedo: Boolean,
     onUndo: () -> Unit,
-    onRedo: () -> Unit,
     canErase: Boolean,
     canHint: Boolean,
     onErase: () -> Unit,
@@ -181,14 +178,6 @@ fun TopBar(
                     imageVector = UndoIcon,
                     contentDescription = stringResource(R.string.undo),
                     tint = if (canUndo) LogoBlue else TextSecondary.copy(alpha = 0.4f),
-                    modifier = Modifier.size(22.dp),
-                )
-            }
-            IconButton(onClick = onRedo, enabled = canRedo, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    imageVector = RedoIcon,
-                    contentDescription = stringResource(R.string.redo),
-                    tint = if (canRedo) LogoBlue else TextSecondary.copy(alpha = 0.4f),
                     modifier = Modifier.size(22.dp),
                 )
             }

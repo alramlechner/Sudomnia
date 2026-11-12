@@ -119,7 +119,6 @@ class MainActivity : ComponentActivity() {
                     onNote = vm::onNote,
                     onErase = vm::onErase,
                     onUndo = { vm.onUndo() },
-                    onRedo = { vm.onRedo() },
                     onPause = vm::onPause,
                     onResume = vm::onResume,
                     onBeginBranch = vm::onBeginBranch,

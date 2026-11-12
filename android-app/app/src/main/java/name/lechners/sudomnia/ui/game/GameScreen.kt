@@ -61,7 +61,6 @@ fun GameScreen(
     onNote: (Int) -> Unit,
     onErase: () -> Unit,
     onUndo: () -> Unit,
-    onRedo: () -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
     onBeginBranch: () -> Unit,
@@ -103,14 +102,12 @@ fun GameScreen(
             onSettings = { showSettings = true },
             onStats = { showStats = true },
             canUndo = state.canUndo && !state.lost,
-            canRedo = state.canRedo && !state.lost,
             canErase = state.selectionEditable && !state.generating && !state.finished && !state.paused,
             canHint = !state.generating && !state.finished && !state.paused,
             onErase = onErase,
             onHint = onHint,
             mistakes = state.mistakes,
             onUndo = onUndo,
-            onRedo = onRedo,
             onThemeToggle = {
                 onSettingsChange(state.settings.copy(themeMode = state.settings.themeMode.next()))
             },
