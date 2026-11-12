@@ -157,6 +157,20 @@ GameScreen(
         }
     }
 
+    // Cold-start tap bug: tells apart "the touch never reached the window" from "it
+    // reached the window but not the button". Only the DOWN of each gesture is logged.
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        if (ev.actionMasked == android.view.MotionEvent.ACTION_DOWN) {
+            DiagnosticsLog.log("touch", "down at ${ev.x.toInt()},${ev.y.toInt()}")
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        DiagnosticsLog.log("nav", "windowFocus=$hasFocus")
+    }
+
     // The clock must not run while nobody is looking at the board. onStart/onStop is
     // the right pair for that: it covers the screen going off, the app switcher and
     // the home button alike, and unlike onPause/onResume it does not fire for a
