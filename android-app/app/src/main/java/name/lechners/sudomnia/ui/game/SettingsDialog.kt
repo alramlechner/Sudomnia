@@ -21,7 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import name.lechners.sudomnia.data.ThemeMode
-import name.lechners.sudomnia.ui.theme.HomeIcon
+import name.lechners.sudomnia.ui.theme.BackIcon
+import androidx.compose.foundation.layout.Spacer
 import name.lechners.sudomnia.ui.theme.LogoBlue
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -95,13 +96,20 @@ fun SettingsDialog(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconButton(onClick = onDismiss) {
+                    TextButton(onClick = onDismiss) {
                         Icon(
-                            HomeIcon,
-                            contentDescription = stringResource(R.string.settings_done),
+                            BackIcon,
+                            contentDescription = null,
                             tint = LogoBlue,
+                            modifier = Modifier.size(22.dp),
+                        )
+                        Text(
+                            stringResource(R.string.back),
+                            modifier = Modifier.padding(start = 4.dp),
+                            fontSize = 16.sp,
                         )
                     }
+                    Spacer(Modifier.weight(1f))
                     Text(
                         stringResource(R.string.settings),
                         color = TextPrimary,

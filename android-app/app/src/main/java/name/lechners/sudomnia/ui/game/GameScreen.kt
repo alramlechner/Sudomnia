@@ -99,7 +99,7 @@ fun GameScreen(
             onPause = onPause,
             onHome = onHome,
             onSettings = { showSettings = true },
-            canGiveUp = state.gameRunning && !state.paused,
+            canGiveUp = !state.generating && !state.finished && !state.paused,
             onGiveUp = { confirmGiveUp = true },
             canUndo = state.canUndo && !state.lost,
             canErase = state.selectionEditable && !state.generating && !state.finished && !state.paused,

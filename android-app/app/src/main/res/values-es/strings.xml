@@ -214,4 +214,5 @@
     <string name="settings_theme_auto">Automático</string>
     <string name="settings_theme_light">Claro</string>
     <string name="settings_theme_dark">Oscuro</string>
+    <string name="back">Atrás</string>
 </resources>

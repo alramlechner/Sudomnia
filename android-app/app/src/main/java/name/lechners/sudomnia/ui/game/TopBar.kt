@@ -2,7 +2,6 @@ package name.lechners.sudomnia.ui.game
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -80,13 +79,15 @@ fun TopBar(
     mistakes: Int = 0,
     modifier: Modifier = Modifier,
 ) {
-    // FlowRow, not Row: long translations (Spanish especially) don't fit on one line at
-    // phone width. A plain Row would let the last child run off the edge instead of
-    // wrapping -- this happened for real with "Nueva partida" before this was a FlowRow.
-    FlowRow(
+    // Two fixed lines: title and clock above, the icons below. A FlowRow let the icons
+    // climb into the title line whenever the hearts were off, which looked crowded.
+    Column(
         modifier = modifier.fillMaxWidth().padding(horizontal = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column(modifier = Modifier.align(Alignment.CenterVertically)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -144,8 +145,9 @@ fun TopBar(
                 )
             }
         }
+    }
         Row(
-            modifier = Modifier.align(Alignment.CenterVertically),
+            modifier = Modifier.align(Alignment.End),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onErase, enabled = canErase, modifier = Modifier.size(40.dp)) {
@@ -180,15 +182,13 @@ fun TopBar(
                     modifier = Modifier.size(22.dp),
                 )
             }
-            if (canGiveUp) {
-                IconButton(onClick = onGiveUp, modifier = Modifier.size(40.dp)) {
-                    Icon(
-                        imageVector = FlagIcon,
-                        contentDescription = stringResource(R.string.home_give_up),
-                        tint = LogoBlue,
-                        modifier = Modifier.size(22.dp),
-                    )
-                }
+            IconButton(onClick = onGiveUp, enabled = canGiveUp, modifier = Modifier.size(40.dp)) {
+                Icon(
+                    imageVector = FlagIcon,
+                    contentDescription = stringResource(R.string.home_give_up),
+                    tint = if (canGiveUp) LogoBlue else TextSecondary.copy(alpha = 0.4f),
+                    modifier = Modifier.size(22.dp),
+                )
             }
             IconButton(onClick = onHome, modifier = Modifier.size(40.dp)) {
                 Icon(
