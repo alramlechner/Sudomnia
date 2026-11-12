@@ -105,6 +105,17 @@ fun DigitPad(
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(2.dp),
                 )
+                val left = remaining.getOrElse(d) { 0 }
+                if (dimCompleted && left > 0) {
+                    Text(
+                        text = left.toString(),
+                        color = if (set) TextPrimary.copy(alpha = 0.8f) else TextSecondary,
+                        fontSize = 11.sp,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 3.dp),
+                    )
+                }
             }
         }
     }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 (API 30): the only file that is backed up is the preferences file with
+     statistics, history, settings and the running game. Everything else, notably the
+     diagnostics log in filesDir, which belongs to one device - stays out. -->
+<full-backup-content>
+    <include domain="sharedpref" path="sudomnia.xml" />
+</full-backup-content>
