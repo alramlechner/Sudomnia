@@ -207,4 +207,11 @@
     <string name="analysis_prev_error">◀ Error</string>
     <string name="analysis_next_error">Error ▶</string>
     <string name="analysis_legend">Verde: número correcto · rojo: número equivocado</string>
+    <string name="settings_section_display">Pantalla</string>
+    <string name="settings_section_aids">Ayudas</string>
+    <string name="settings_section_app">App</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_auto">Automático</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Oscuro</string>
 </resources>

@@ -203,4 +203,11 @@
     <string name="analysis_prev_error">◀ Fehler</string>
     <string name="analysis_next_error">Fehler ▶</string>
     <string name="analysis_legend">Grün: richtige Zahl · Rot: falsche Zahl</string>
+    <string name="settings_section_display">Darstellung</string>
+    <string name="settings_section_aids">Hilfen</string>
+    <string name="settings_section_app">App</string>
+    <string name="settings_theme">Design</string>
+    <string name="settings_theme_auto">Automatisch</string>
+    <string name="settings_theme_light">Hell</string>
+    <string name="settings_theme_dark">Dunkel</string>
 </resources>

@@ -79,7 +79,6 @@ fun GameScreen(
 ) {
     var confirmGiveUp by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
-    var showStats by remember { mutableStateOf(false) }
 
     // fontScale only scales sp, never the dp width a reader's screen actually has --
     // so someone who turned the system font up past the "Larger" step gets the
@@ -100,7 +99,8 @@ fun GameScreen(
             onPause = onPause,
             onHome = onHome,
             onSettings = { showSettings = true },
-            onStats = { showStats = true },
+            canGiveUp = state.gameRunning && !state.paused,
+            onGiveUp = { confirmGiveUp = true },
             canUndo = state.canUndo && !state.lost,
             canErase = state.selectionEditable && !state.generating && !state.finished && !state.paused,
             canHint = !state.generating && !state.finished && !state.paused,
@@ -108,9 +108,6 @@ fun GameScreen(
             onHint = onHint,
             mistakes = state.mistakes,
             onUndo = onUndo,
-            onThemeToggle = {
-                onSettingsChange(state.settings.copy(themeMode = state.settings.themeMode.next()))
-            },
         )
 
         // A fixed slot, always there: a message that appears must not push the board
@@ -145,13 +142,6 @@ fun GameScreen(
             onCommit = onCommitBranch,
             onDiscard = onDiscardBranch,
             onDeadEnd = onDeadEndBranch,
-            trailing = {
-                if (state.gameRunning && !state.paused) {
-                    TextButton(onClick = { confirmGiveUp = true }) {
-                        Text(stringResource(R.string.home_give_up), color = TextSecondary)
-                    }
-                }
-            },
         )
 
         // Two permanent rows, no mode switch: pick a cell, then decide. The
@@ -345,13 +335,5 @@ fun GameScreen(
             )
         }
 
-        if (showStats) {
-            StatsDialog(
-                stats = state.stats,
-                history = state.history,
-                onReset = onResetStats,
-                onDismiss = { showStats = false },
-            )
-        }
     }
 }

@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import name.lechners.sudomnia.R
 import name.lechners.sudomnia.data.Settings
-import name.lechners.sudomnia.data.ThemeMode
 import name.lechners.sudomnia.rules.Level
 import name.lechners.sudomnia.ui.theme.AidsIcon
 import name.lechners.sudomnia.ui.theme.EraseIcon
@@ -43,12 +42,11 @@ import name.lechners.sudomnia.ui.theme.LifeLostIcon
 import name.lechners.sudomnia.ui.theme.InkConflict
 import name.lechners.sudomnia.game.MistakeTally
 import name.lechners.sudomnia.ui.theme.PauseIcon
-import name.lechners.sudomnia.ui.theme.StatsIcon
+import name.lechners.sudomnia.ui.theme.FlagIcon
 import name.lechners.sudomnia.ui.theme.LogoBlue
 import name.lechners.sudomnia.ui.theme.UndoIcon
 import name.lechners.sudomnia.ui.theme.TextPrimary
 import name.lechners.sudomnia.ui.theme.TextSecondary
-import name.lechners.sudomnia.ui.theme.icon
 
 @Composable
 fun levelLabel(level: Level): String = stringResource(
@@ -71,8 +69,8 @@ fun TopBar(
     onPause: () -> Unit,
     onHome: () -> Unit,
     onSettings: () -> Unit,
-    onStats: () -> Unit,
-    onThemeToggle: () -> Unit,
+    canGiveUp: Boolean,
+    onGiveUp: () -> Unit,
     canUndo: Boolean,
     onUndo: () -> Unit,
     canErase: Boolean,
@@ -150,13 +148,6 @@ fun TopBar(
             modifier = Modifier.align(Alignment.CenterVertically),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val themeLabel = stringResource(
-                when (settings.themeMode) {
-                    ThemeMode.SYSTEM -> R.string.theme_auto
-                    ThemeMode.LIGHT -> R.string.theme_light
-                    ThemeMode.DARK -> R.string.theme_dark
-                }
-            )
             IconButton(onClick = onErase, enabled = canErase, modifier = Modifier.size(40.dp)) {
                 Icon(
                     imageVector = EraseIcon,
@@ -181,40 +172,6 @@ fun TopBar(
                     modifier = Modifier.size(22.dp),
                 )
             }
-            val hint = rememberTooltipState()
-            var firstMode by remember { mutableStateOf(true) }
-            LaunchedEffect(settings.themeMode) {
-                if (firstMode) firstMode = false
-                else if (settings.themeMode == ThemeMode.SYSTEM) {
-                    hint.show()
-                    delay(3000)
-                    hint.dismiss()
-                }
-            }
-            TooltipBox(
-                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
-                    TooltipAnchorPosition.Below
-                ),
-                tooltip = { PlainTooltip { Text(stringResource(R.string.theme_auto_hint)) } },
-                state = hint,
-            ) {
-                IconButton(onClick = onThemeToggle, modifier = Modifier.size(40.dp)) {
-                    Icon(
-                        imageVector = settings.themeMode.icon,
-                        contentDescription = themeLabel,
-                        tint = LogoBlue,
-                        modifier = Modifier.size(22.dp),
-                    )
-                }
-            }
-            IconButton(onClick = onStats, modifier = Modifier.size(40.dp)) {
-                Icon(
-                    imageVector = StatsIcon,
-                    contentDescription = stringResource(R.string.stats),
-                    tint = LogoBlue,
-                    modifier = Modifier.size(22.dp),
-                )
-            }
             IconButton(onClick = onSettings, modifier = Modifier.size(40.dp)) {
                 Icon(
                     imageVector = AidsIcon,
@@ -222,6 +179,16 @@ fun TopBar(
                     tint = LogoBlue,
                     modifier = Modifier.size(22.dp),
                 )
+            }
+            if (canGiveUp) {
+                IconButton(onClick = onGiveUp, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        imageVector = FlagIcon,
+                        contentDescription = stringResource(R.string.home_give_up),
+                        tint = LogoBlue,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
             }
             IconButton(onClick = onHome, modifier = Modifier.size(40.dp)) {
                 Icon(

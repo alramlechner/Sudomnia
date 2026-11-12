@@ -57,10 +57,10 @@ val UndoIcon: ImageVector = icon("Undo") {
     stroked("M4 9h10.5a5.5 5.5 0 0 1 0 11H11")
 }
 
-/** A curved arrow forward. */
-val RedoIcon: ImageVector = icon("Redo") {
-    stroked("M15 14l5-5l-5-5")
-    stroked("M20 9H9.5a5.5 5.5 0 0 0 0 11H13")
+/** A flag on a pole: surrender. */
+val FlagIcon: ImageVector = icon("Flag") {
+    stroked("M6 21V3")
+    stroked("M6 4h12l-3 4.5l3 4.5H6")
 }
 
 val PauseIcon: ImageVector = icon("Pause") {

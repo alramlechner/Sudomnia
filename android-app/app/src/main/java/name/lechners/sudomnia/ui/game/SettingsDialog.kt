@@ -9,6 +9,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import name.lechners.sudomnia.data.ThemeMode
+import name.lechners.sudomnia.ui.theme.HomeIcon
+import name.lechners.sudomnia.ui.theme.LogoBlue
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.getValue
@@ -71,86 +85,142 @@ fun SettingsDialog(
             },
         )
     }
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings)) },
-        text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                Text(
-                    text = stringResource(R.string.settings_intro),
-                    color = TextSecondary,
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
-                AidSwitch(
-                    title = stringResource(R.string.setting_conflicts),
-                    hint = stringResource(R.string.setting_conflicts_hint),
-                    checked = settings.showConflicts,
-                    onChange = { onChange(settings.copy(showConflicts = it)) },
-                )
-                AidSwitch(
-                    title = stringResource(R.string.setting_same_digit),
-                    hint = stringResource(R.string.setting_same_digit_hint),
-                    checked = settings.highlightSameDigit,
-                    onChange = { onChange(settings.copy(highlightSameDigit = it)) },
-                )
-                AidSwitch(
-                    title = stringResource(R.string.setting_peers),
-                    hint = stringResource(R.string.setting_peers_hint),
-                    checked = settings.highlightPeers,
-                    onChange = { onChange(settings.copy(highlightPeers = it)) },
-                )
-                AidSwitch(
-                    title = stringResource(R.string.setting_dim_digits),
-                    hint = stringResource(R.string.setting_dim_digits_hint),
-                    checked = settings.dimCompletedDigits,
-                    onChange = { onChange(settings.copy(dimCompletedDigits = it)) },
-                )
-                // Last, and behind a rule of its own: the four above comment on the
-                // rules, this one reads the answer. The hint has to say what it costs,
-                // because switching it on is what makes the game losable.
-                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
-                AidSwitch(
-                    title = stringResource(R.string.setting_warn_wrong),
-                    hint = stringResource(
-                        R.string.setting_warn_wrong_hint,
-                        MistakeTally.LIMIT,
-                    ),
-                    checked = settings.warnOnWrong,
-                    onChange = { onChange(settings.copy(warnOnWrong = it)) },
-                )
-                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
-                UpdateRow(
-                    update = update,
-                    onInstall = onInstallUpdate,
-                    onCheck = onCheckUpdate,
-                )
-                DiagnosticsRow()
-                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
-                val context = LocalContext.current
-                TextButton(onClick = {
-                    runCatching {
-                        context.startActivity(
-                            Intent(Intent.ACTION_VIEW, Uri.parse(REPO_URL))
-                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            Column(modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            HomeIcon,
+                            contentDescription = stringResource(R.string.settings_done),
+                            tint = LogoBlue,
                         )
                     }
-                }) {
-                    Icon(GithubIcon, contentDescription = null, modifier = Modifier.size(18.dp))
                     Text(
-                        stringResource(R.string.settings_github),
-                        modifier = Modifier.padding(start = 8.dp),
+                        stringResource(R.string.settings),
+                        color = TextPrimary,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
-                TextButton(onClick = { showLicenses = true }) {
-                    Text(stringResource(R.string.settings_licenses))
+                Column(
+                    modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp),
+                ) {
+                    SectionTitle(stringResource(R.string.settings_section_display))
+                    ThemeChoice(settings.themeMode) { onChange(settings.copy(themeMode = it)) }
+                    AidSwitch(
+                        title = stringResource(R.string.setting_same_digit),
+                        hint = stringResource(R.string.setting_same_digit_hint),
+                        checked = settings.highlightSameDigit,
+                        onChange = { onChange(settings.copy(highlightSameDigit = it)) },
+                    )
+                    AidSwitch(
+                        title = stringResource(R.string.setting_peers),
+                        hint = stringResource(R.string.setting_peers_hint),
+                        checked = settings.highlightPeers,
+                        onChange = { onChange(settings.copy(highlightPeers = it)) },
+                    )
+                    AidSwitch(
+                        title = stringResource(R.string.setting_dim_digits),
+                        hint = stringResource(R.string.setting_dim_digits_hint),
+                        checked = settings.dimCompletedDigits,
+                        onChange = { onChange(settings.copy(dimCompletedDigits = it)) },
+                    )
+                    SectionTitle(stringResource(R.string.settings_section_aids))
+                    Text(
+                        text = stringResource(R.string.settings_intro),
+                        color = TextSecondary,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(bottom = 4.dp),
+                    )
+                    AidSwitch(
+                        title = stringResource(R.string.setting_conflicts),
+                        hint = stringResource(R.string.setting_conflicts_hint),
+                        checked = settings.showConflicts,
+                        onChange = { onChange(settings.copy(showConflicts = it)) },
+                    )
+                    // Behind a rule of its own: the others comment on the rules, this
+                    // one reads the answer, and switching it on makes the game losable.
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    AidSwitch(
+                        title = stringResource(R.string.setting_warn_wrong),
+                        hint = stringResource(R.string.setting_warn_wrong_hint, MistakeTally.LIMIT),
+                        checked = settings.warnOnWrong,
+                        onChange = { onChange(settings.copy(warnOnWrong = it)) },
+                    )
+                    SectionTitle(stringResource(R.string.settings_section_app))
+                    UpdateRow(update = update, onInstall = onInstallUpdate, onCheck = onCheckUpdate)
+                    DiagnosticsRow()
+                    val context = LocalContext.current
+                    TextButton(onClick = {
+                        runCatching {
+                            context.startActivity(
+                                Intent(Intent.ACTION_VIEW, Uri.parse(REPO_URL))
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            )
+                        }
+                    }) {
+                        Icon(GithubIcon, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(
+                            stringResource(R.string.settings_github),
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
+                    TextButton(onClick = { showLicenses = true }) {
+                        Text(stringResource(R.string.settings_licenses))
+                    }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.settings_done)) }
-        },
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        color = LogoBlue,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.padding(top = 20.dp, bottom = 4.dp),
     )
+}
+
+@Composable
+private fun ThemeChoice(current: ThemeMode, onPick: (ThemeMode) -> Unit) {
+    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        Text(stringResource(R.string.settings_theme), color = TextPrimary, fontSize = 16.sp)
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            ThemeMode.entries.forEach { mode ->
+                FilterChip(
+                    selected = mode == current,
+                    onClick = { onPick(mode) },
+                    label = {
+                        Text(
+                            stringResource(
+                                when (mode) {
+                                    ThemeMode.SYSTEM -> R.string.settings_theme_auto
+                                    ThemeMode.LIGHT -> R.string.settings_theme_light
+                                    ThemeMode.DARK -> R.string.settings_theme_dark
+                                }
+                            ),
+                            maxLines = 1,
+                        )
+                    },
+                )
+            }
+        }
+    }
 }
 
 /** The whole row is the target, not just the switch -- it is a tablet, not a mouse. */
