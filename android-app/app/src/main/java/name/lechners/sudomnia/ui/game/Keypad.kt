@@ -110,10 +110,10 @@ fun DigitPad(
                     Text(
                         text = left.toString(),
                         color = if (set) TextPrimary.copy(alpha = 0.8f) else TextSecondary,
-                        fontSize = 11.sp,
+                        fontSize = 10.sp,
                         modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 3.dp),
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 4.dp, bottom = 2.dp),
                     )
                 }
             }
