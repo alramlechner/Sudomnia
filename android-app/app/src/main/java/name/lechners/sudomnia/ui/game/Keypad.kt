@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -61,9 +62,9 @@ fun DigitPad(
     modeEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val fontScale = LocalDensity.current.fontScale
-    val big = fontScale > 1.15f
-    val keyAspect = if (big) 0.78f / fontScale.coerceAtMost(1.6f) else 0.78f
+    val textPressure = textPressure()
+    val big = textPressure > 1.15f
+    val keyAspect = if (big) 0.78f / textPressure.coerceAtMost(1.6f) else 0.78f
     Column(modifier = modifier.fillMaxWidth()) {
     Text(
         text = if (armed != 0) stringResource(R.string.pad_digits_armed, armed)
@@ -158,7 +159,7 @@ fun NotePad(
     modeEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val noteScale = LocalDensity.current.fontScale
+    val noteScale = textPressure()
     val noteHeight = if (noteScale > 1.15f) 34.dp * noteScale.coerceAtMost(1.6f) else 34.dp
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
@@ -225,3 +226,14 @@ private fun Modifier.dashedFrame(show: Boolean, radius: androidx.compose.ui.unit
             ),
         )
     }
+
+/**
+ * How much bigger text is relative to the keys than on a standard phone: font scale
+ * times how much narrower the screen is in dp than the 411 dp reference. Both the
+ * "font size" and the "display size" setting make digits crowd their keys.
+ */
+@Composable
+private fun textPressure(): Float {
+    val widthDp = LocalConfiguration.current.screenWidthDp.coerceAtLeast(1)
+    return LocalDensity.current.fontScale * (411f / widthDp).coerceAtLeast(1f)
+}
