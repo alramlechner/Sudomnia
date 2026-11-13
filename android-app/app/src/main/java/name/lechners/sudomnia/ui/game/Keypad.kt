@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -60,6 +61,9 @@ fun DigitPad(
     modeEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val fontScale = LocalDensity.current.fontScale
+    val big = fontScale > 1.15f
+    val keyAspect = if (big) 0.78f / fontScale.coerceAtMost(1.6f) else 0.78f
     Column(modifier = modifier.fillMaxWidth()) {
     Text(
         text = if (armed != 0) stringResource(R.string.pad_digits_armed, armed)
@@ -82,7 +86,7 @@ fun DigitPad(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .aspectRatio(0.78f)
+                    .aspectRatio(keyAspect)
                     .clip(RoundedCornerShape(10.dp))
                     .background(if (set) LogoBlue else AppSurface)
                     .border(
@@ -98,23 +102,35 @@ fun DigitPad(
                     ),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = d.toString(),
-                    color = if (active) TextPrimary else TextSecondary.copy(alpha = 0.35f),
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(2.dp),
-                )
                 val left = remaining.getOrElse(d) { 0 }
-                if (dimCompleted && left > 0) {
+                val countText = if (dimCompleted && left > 0) left.toString() else "\u00A0"
+                val countColor = if (set) TextPrimary.copy(alpha = 0.8f) else TextSecondary
+                val digit: @Composable () -> Unit = {
                     Text(
-                        text = left.toString(),
-                        color = if (set) TextPrimary.copy(alpha = 0.8f) else TextSecondary,
-                        fontSize = 10.sp,
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(end = 4.dp, bottom = 2.dp),
+                        text = d.toString(),
+                        color = if (active) TextPrimary else TextSecondary.copy(alpha = 0.35f),
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(2.dp),
                     )
+                }
+                if (big) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        digit()
+                        Text(text = countText, color = countColor, fontSize = 12.sp)
+                    }
+                } else {
+                    digit()
+                    if (dimCompleted && left > 0) {
+                        Text(
+                            text = countText,
+                            color = countColor,
+                            fontSize = 10.sp,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(end = 4.dp, bottom = 2.dp),
+                        )
+                    }
                 }
             }
         }
@@ -142,6 +158,8 @@ fun NotePad(
     modeEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val noteScale = LocalDensity.current.fontScale
+    val noteHeight = if (noteScale > 1.15f) 34.dp * noteScale.coerceAtMost(1.6f) else 34.dp
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = if (armed != 0) stringResource(R.string.pad_notes_armed, armed)
@@ -157,7 +175,7 @@ fun NotePad(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(34.dp)
+                        .height(noteHeight)
                         .clip(RoundedCornerShape(8.dp))
                         .background(if (on) LogoBlue else AppSurfaceHigh)
                         .border(
