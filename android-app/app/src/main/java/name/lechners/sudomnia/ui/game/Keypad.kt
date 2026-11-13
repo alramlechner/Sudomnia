@@ -64,7 +64,7 @@ fun DigitPad(
 ) {
     val textPressure = textPressure()
     val big = textPressure > 1.15f
-    val keyAspect = if (big) 0.78f / textPressure.coerceAtMost(1.6f) else 0.78f
+    val keyAspect = if (big) 0.78f / (textPressure * 1.2f).coerceAtMost(1.9f) else 0.78f
     Column(modifier = modifier.fillMaxWidth()) {
     Text(
         text = if (armed != 0) stringResource(R.string.pad_digits_armed, armed)
@@ -111,14 +111,15 @@ fun DigitPad(
                         text = d.toString(),
                         color = if (active) TextPrimary else TextSecondary.copy(alpha = 0.35f),
                         fontSize = 26.sp,
+                        lineHeight = 30.sp,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(2.dp),
+                        modifier = Modifier.padding(horizontal = 2.dp),
                     )
                 }
                 if (big) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         digit()
-                        Text(text = countText, color = countColor, fontSize = 12.sp)
+                        Text(text = countText, color = countColor, fontSize = 12.sp, lineHeight = 14.sp)
                     }
                 } else {
                     digit()
