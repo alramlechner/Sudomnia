@@ -681,8 +681,6 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             return
         }
         val values = IntArray(Units.CELLS) { g.valueAt(it) }
-        val highlight =
-            if (settings.highlightSameDigit && selected >= 0) values[selected] else 0
         val editable = selected >= 0 && !g.isGiven(selected)
 
         // The single gate. Conflicts are computed either way -- solved detection
@@ -704,6 +702,15 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         if (armedDigit != 0 && settings.dimCompletedDigits &&
             g.remaining().getOrElse(armedDigit) { 0 } <= 0
         ) armedDigit = 0
+
+        // An armed "Zahl setzen" digit lights all its twins on the board, and it
+        // outranks the selected cell's digit: it is what the next tap will place.
+        val highlight = when {
+            !settings.highlightSameDigit -> 0
+            armedDigit != 0 -> armedDigit
+            selected >= 0 -> values[selected]
+            else -> 0
+        }
 
         val full = g.isFull()
         val solved = g.isSolved()
