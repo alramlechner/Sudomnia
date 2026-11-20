@@ -67,7 +67,7 @@ class SolverTest {
     fun theReportedSolutionAlwaysAgreesWithTheGivens() {
         val rnd = Random(4711)
         val factory = PuzzleFactory()
-        for (level in Level.entries) {
+        for (level in Level.classic) {
             val puzzle = factory.generate(level, rnd)
             val solved = solver.solveUnique(puzzle.givens)!!
             assertTrue(Grid.isValidSolution(solved))

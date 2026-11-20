@@ -1,5 +1,7 @@
 package name.lechners.sudomnia.ui.board
 
+import name.lechners.sudomnia.rules.Units
+
 /**
  * Everything the grid needs to draw itself, as flat arrays.
  *
@@ -33,7 +35,7 @@ class BoardState(
     /** Cells the current hint's pattern is made of; empty when no hint is shown. */
     val hintCells: BooleanArray,
     /**
-     * The units that justify the hint, as a bit per unit -- 27 units, 32 bits, so the
+     * The units that justify the hint, as a bit per unit -- at most 27 units, 32 bits, so the
      * whole set is one Int and comparing two board states stays a single comparison.
      */
     val hintUnits: Int,
@@ -50,6 +52,8 @@ class BoardState(
     val flashNote: Int = 0,
     /** Changes with every write, so the same cell written twice replays the effect. */
     val flashId: Int = 0,
+    /** The board geometry -- 9x9 or the children's 6x6. */
+    val units: Units = Units.NINE,
 ) {
     /**
      * `conflicts` is already all-false when the player has switched conflict
@@ -60,7 +64,8 @@ class BoardState(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is BoardState) return false
-        return selected == other.selected &&
+        return units === other.units &&
+            selected == other.selected &&
             trialRoot == other.trialRoot &&
             struck.contentEquals(other.struck) &&
             flashCell == other.flashCell &&

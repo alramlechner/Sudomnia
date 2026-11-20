@@ -29,10 +29,10 @@ import name.lechners.sudomnia.ui.theme.TextSecondary
 
 /** "row 4" / "column 7" / "box 5" -- units are numbered from 1 for the player. */
 @Composable
-fun unitLabel(unit: Int): String = when {
-    unit < 9 -> stringResource(R.string.unit_row, unit + 1)
-    unit < 18 -> stringResource(R.string.unit_col, unit - 9 + 1)
-    else -> stringResource(R.string.unit_box, unit - 18 + 1)
+fun unitLabel(unit: Int, size: Int = 9): String = when {
+    unit < size -> stringResource(R.string.unit_row, unit + 1)
+    unit < 2 * size -> stringResource(R.string.unit_col, unit - size + 1)
+    else -> stringResource(R.string.unit_box, unit - 2 * size + 1)
 }
 
 @Composable
@@ -59,6 +59,8 @@ fun HintCard(
     onAdvance: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Side length of the board the hint is about, for numbering rows, columns and boxes. */
+    size: Int = 9,
 ) {
     if (state == null && !deadEnd) return
 
@@ -92,7 +94,7 @@ fun HintCard(
                 modifier = Modifier.padding(bottom = 2.dp),
             )
         }
-        Text(text = hintText(state), color = TextPrimary, fontSize = 15.sp)
+        Text(text = hintText(state, size), color = TextPrimary, fontSize = 15.sp)
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -122,14 +124,14 @@ fun HintCard(
  * answer, so stage one has to stop at "this cell is decidable".
  */
 @Composable
-private fun hintText(state: HintState): String = when (val h = state.hint) {
+private fun hintText(state: HintState, size: Int): String = when (val h = state.hint) {
     is Hint.Deduce -> {
         val step = state.step ?: h.last
         when (state.stage) {
             HintStage.LOCATE ->
                 if (step.technique.places) stringResource(R.string.hint_locate_place)
                 else stringResource(R.string.hint_locate_strike)
-            HintStage.REVEAL -> whyText(step)
+            HintStage.REVEAL -> whyText(step, size)
         }
     }
 
@@ -145,25 +147,25 @@ private fun hintText(state: HintState): String = when (val h = state.hint) {
 
 /** One sentence per rung. The wording is the whole point of the ladder. */
 @Composable
-private fun whyText(step: Step): String = when (step.technique) {
+private fun whyText(step: Step, size: Int): String = when (step.technique) {
     Technique.HIDDEN_SINGLE ->
-        stringResource(R.string.why_hidden_single, unitLabel(step.units[0]), step.digit)
+        stringResource(R.string.why_hidden_single, unitLabel(step.units[0], size), step.digit)
 
     Technique.NAKED_SINGLE ->
         stringResource(R.string.why_naked_single, step.digit)
 
     Technique.LOCKED_CANDIDATES -> stringResource(
         R.string.why_locked_candidates,
-        unitLabel(step.units[0]),
+        unitLabel(step.units[0], size),
         step.digit,
-        unitLabel(step.units[1]),
+        unitLabel(step.units[1], size),
     )
 
     Technique.NAKED_PAIR, Technique.NAKED_TRIPLE ->
-        stringResource(R.string.why_naked_subset, unitLabel(step.units[0]), digitList(step.digitMask))
+        stringResource(R.string.why_naked_subset, unitLabel(step.units[0], size), digitList(step.digitMask))
 
     Technique.HIDDEN_PAIR, Technique.HIDDEN_TRIPLE ->
-        stringResource(R.string.why_hidden_subset, unitLabel(step.units[0]), digitList(step.digitMask))
+        stringResource(R.string.why_hidden_subset, unitLabel(step.units[0], size), digitList(step.digitMask))
 
     Technique.X_WING, Technique.SWORDFISH ->
         stringResource(R.string.why_fish, step.digit)

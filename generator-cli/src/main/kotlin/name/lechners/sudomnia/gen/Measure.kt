@@ -16,8 +16,8 @@ import kotlin.system.measureTimeMillis
  * after touching Digger, Technique or HumanSolver, and put the new numbers there.
  */
 internal fun grade(count: Int) {
-    val solver = HumanSolver()
     for (level in Level.entries) {
+        val solver = HumanSolver(level.units)
         val factory = PuzzleFactory()
         val rnd = Random(1234)
         val hardest = HashMap<Technique?, Int>()

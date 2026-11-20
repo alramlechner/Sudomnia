@@ -62,14 +62,14 @@ sealed interface Hint {
  *
  * Not thread-safe -- one instance per thread, called off the main thread.
  */
-class HintFinder {
+class HintFinder(units: Units = Units.NINE) {
 
-    private val grid = Grid()
-    private val solver = Solver()
-    private val human = HumanSolver()
+    private val grid = Grid(units)
+    private val solver = Solver(units)
+    private val human = HumanSolver(units)
 
     /**
-     * @param board 81 cells, givens and player entries together, 0 for empty
+     * @param board one entry per cell, givens and player entries together, 0 for empty
      * @param solution the puzzle's unique solution
      */
     fun find(board: IntArray, solution: IntArray): Hint {

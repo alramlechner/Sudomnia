@@ -19,9 +19,9 @@ package name.lechners.sudomnia.rules
  *
  * Not thread-safe: one instance is a reusable scratchpad. Use one per thread.
  */
-class Solver {
+class Solver(private val units: Units = Units.NINE) {
 
-    private val grid = Grid()
+    private val grid = Grid(units)
     private var found = 0
     private var limit = 1
     private var out: IntArray? = null
@@ -31,7 +31,7 @@ class Solver {
         private set
 
     /**
-     * @param givens 81 cells, 0 for empty
+     * @param givens one entry per cell, 0 for empty
      * @param limit stop as soon as this many solutions are found
      * @param out if given, receives the first solution
      * @return the number of solutions found, capped at [limit]
@@ -48,14 +48,14 @@ class Solver {
 
     /** Convenience: the unique solution, or null if there is none or more than one. */
     fun solveUnique(givens: IntArray): IntArray? {
-        val solution = IntArray(Units.CELLS)
+        val solution = IntArray(units.cells)
         return if (countSolutions(givens, limit = 2, out = solution) == 1) solution else null
     }
 
     private fun search() {
         if (!grid.propagate(useHidden = true)) return
 
-        if (grid.filled == Units.CELLS) {
+        if (grid.filled == units.cells) {
             if (found == 0) out?.let { grid.copyDigitsInto(it) }
             found++
             return

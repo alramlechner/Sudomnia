@@ -62,6 +62,8 @@ fun HomeScreen(
 ) {
     var showLevelPicker by remember { mutableStateOf(false) }
     var confirmNew by remember { mutableStateOf(false) }
+    // The children's game was asked for while another one is running: ask first, then start it.
+    var confirmKids by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
     var showStats by remember { mutableStateOf(false) }
 
@@ -112,6 +114,15 @@ fun HomeScreen(
             }
         }
 
+        // Not tucked away in the settings: the children's 6x6 game has its own button.
+        Spacer(Modifier.height(14.dp))
+        OutlinedButton(
+            onClick = { if (running) confirmKids = true else onNewGame(Level.KIDS) },
+            modifier = width.height(56.dp),
+        ) {
+            Text(stringResource(R.string.home_kids))
+        }
+
         if (state.canAnalyze) {
             Spacer(Modifier.height(14.dp))
             OutlinedButton(onClick = onAnalyze, modifier = width.height(56.dp)) {
@@ -149,6 +160,22 @@ fun HomeScreen(
             },
             dismissButton = {
                 TextButton(onClick = { confirmNew = false }) { Text(stringResource(R.string.cancel)) }
+            },
+        )
+    }
+
+    if (confirmKids) {
+        AlertDialog(
+            onDismissRequest = { confirmKids = false },
+            title = { Text(stringResource(R.string.home_kids_confirm_title)) },
+            text = { Text(stringResource(R.string.home_give_up_body)) },
+            confirmButton = {
+                TextButton(onClick = { confirmKids = false; onNewGame(Level.KIDS) }) {
+                    Text(stringResource(R.string.home_kids))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmKids = false }) { Text(stringResource(R.string.cancel)) }
             },
         )
     }

@@ -2,7 +2,6 @@ package name.lechners.sudomnia.game
 
 import name.lechners.sudomnia.rules.Bits
 import name.lechners.sudomnia.rules.Puzzle
-import name.lechners.sudomnia.rules.Units
 
 /**
  * A puzzle being played: the player's digits, their pencil marks, and the undo
@@ -37,18 +36,20 @@ import name.lechners.sudomnia.rules.Units
  */
 class SudokuGame(val puzzle: Puzzle) {
 
-    /** Player-entered digits; always 0 where the puzzle has a clue. */
-    val entries = IntArray(Units.CELLS)
+    private val units = puzzle.units
 
-    /** Pencil marks as 9-bit masks. */
-    val notes = IntArray(Units.CELLS)
+    /** Player-entered digits; always 0 where the puzzle has a clue. */
+    val entries = IntArray(units.cells)
+
+    /** Pencil marks as bit masks. */
+    val notes = IntArray(units.cells)
 
     /**
      * Per cell, the digits that an abandoned branch proved impossible there: the
      * first digit of every discarded attempt. Shown as struck-out pencil marks.
      * Not part of the edit history -- it is knowledge gained, not a move.
      */
-    val ruledOut = IntArray(Units.CELLS)
+    val ruledOut = IntArray(units.cells)
 
     private val history = ArrayList<Edit>()
     private var applied = 0
@@ -95,7 +96,7 @@ class SudokuGame(val puzzle: Puzzle) {
         for (row in rows) {
             if (row.isEmpty()) return false
             val changes = row.map {
-                if (it.size != 5 || it[0] !in 0 until Units.CELLS) return false
+                if (it.size != 5 || it[0] !in 0 until units.cells) return false
                 CellChange(it[0], it[1], it[2], it[3], it[4])
             }
             history += Edit(changes)
@@ -116,12 +117,12 @@ class SudokuGame(val puzzle: Puzzle) {
     fun setDigit(cell: Int, digit: Int) {
         if (isGiven(cell)) return
         val target = if (entries[cell] == digit) 0 else digit
-        val changes = ArrayList<CellChange>(21)
+        val changes = ArrayList<CellChange>(units.peers[cell].size + 1)
         changes += CellChange(cell, entries[cell], target, notes[cell], 0)
 
         if (target != 0) {
             val bit = Bits.of(target)
-            for (p in Units.peers[cell]) {
+            for (p in units.peers[cell]) {
                 if (notes[p] and bit != 0) {
                     changes += CellChange(p, entries[p], entries[p], notes[p], notes[p] and bit.inv())
                 }
@@ -223,17 +224,17 @@ class SudokuGame(val puzzle: Puzzle) {
      * unmarks the cell, because then nothing of the attempt is left in it.
      */
     fun trialCells(): BooleanArray {
-        val mark = BooleanArray(Units.CELLS)
+        val mark = BooleanArray(units.cells)
         if (branchAt < 0) return mark
-        val before = IntArray(Units.CELLS) { -1 }
-        val after = IntArray(Units.CELLS) { -1 }
+        val before = IntArray(units.cells) { -1 }
+        val after = IntArray(units.cells) { -1 }
         for (i in branchAt until applied) {
             for (c in history[i].changes) {
                 if (before[c.cell] < 0) before[c.cell] = c.digitBefore
                 after[c.cell] = c.digitAfter
             }
         }
-        for (cell in 0 until Units.CELLS) {
+        for (cell in 0 until units.cells) {
             if (before[cell] >= 0 && before[cell] != after[cell]) mark[cell] = true
         }
         return mark
@@ -261,9 +262,9 @@ class SudokuGame(val puzzle: Puzzle) {
 
     /** Cells whose digit repeats within one of their units. */
     fun conflicts(): BooleanArray {
-        val bad = BooleanArray(Units.CELLS)
-        for (u in 0 until Units.UNITS) {
-            val cells = Units.cellsOfUnit[u]
+        val bad = BooleanArray(units.cells)
+        for (u in 0 until units.unitCount) {
+            val cells = units.cellsOfUnit[u]
             for (i in cells.indices) {
                 val a = valueAt(cells[i])
                 if (a == 0) continue
@@ -296,12 +297,12 @@ class SudokuGame(val puzzle: Puzzle) {
      * contains one. Which is exactly the moment the player wants to be told.
      */
     fun noteConflicts(): IntArray {
-        val bad = IntArray(Units.CELLS)
-        for (c in 0 until Units.CELLS) {
+        val bad = IntArray(units.cells)
+        for (c in 0 until units.cells) {
             val marks = notes[c]
             if (marks == 0 || valueAt(c) != 0) continue
             var taken = 0
-            for (p in Units.peers[c]) {
+            for (p in units.peers[c]) {
                 val v = valueAt(p)
                 if (v != 0) taken = taken or Bits.of(v)
             }
@@ -311,13 +312,13 @@ class SudokuGame(val puzzle: Puzzle) {
     }
 
     /**
-     * How often each digit 1..9 still has to be placed; index 0 is unused.
+     * How often each digit 1..size still has to be placed; index 0 is unused.
      * Drives the "this digit is done" state of the keypad.
      */
     fun remaining(): IntArray {
-        val left = IntArray(10) { 9 }
+        val left = IntArray(units.size + 1) { units.size }
         left[0] = 0
-        for (c in 0 until Units.CELLS) {
+        for (c in 0 until units.cells) {
             val v = valueAt(c)
             if (v != 0) left[v]--
         }
@@ -326,7 +327,7 @@ class SudokuGame(val puzzle: Puzzle) {
 
     /** Every cell carries a digit -- says nothing about whether they are the right ones. */
     fun isFull(): Boolean {
-        for (c in 0 until Units.CELLS) if (valueAt(c) == 0) return false
+        for (c in 0 until units.cells) if (valueAt(c) == 0) return false
         return true
     }
 

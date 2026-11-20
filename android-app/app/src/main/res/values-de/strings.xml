@@ -17,6 +17,7 @@
     <string name="level_medium">Mittel</string>
     <string name="level_hard">Schwer</string>
     <string name="level_expert">Experte</string>
+    <string name="level_kids">Kinder</string>
 
     <plurals name="clue_count">
         <item quantity="one">%1$d Vorgabe</item>
@@ -192,6 +193,8 @@
     <string name="home_give_up_body">Die Partie zählt als abgebrochen.</string>
     <string name="home_give_up_body_analyze">Die Partie zählt als abgebrochen. Danach kannst du ansehen, wo eine falsche Zahl gesetzt wurde.</string>
     <string name="home_new_confirm_title">Neues Spiel starten?</string>
+    <string name="home_kids">Kindersudoku starten</string>
+    <string name="home_kids_confirm_title">Kindersudoku starten?</string>
     <string name="home_version">Version %1$s</string>
     <string name="home_back">Zum Start</string>
     <string name="analysis_title">Partie-Analyse</string>

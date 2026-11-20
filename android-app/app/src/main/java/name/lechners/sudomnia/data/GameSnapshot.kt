@@ -3,7 +3,6 @@ package name.lechners.sudomnia.data
 import name.lechners.sudomnia.rules.Grid
 import name.lechners.sudomnia.rules.Level
 import name.lechners.sudomnia.rules.Puzzle
-import name.lechners.sudomnia.rules.Units
 
 /**
  * A game in progress, as plain data.
@@ -53,12 +52,13 @@ data class GameSnapshot(
 
     /** Rebuilds a playable game, or null if anything about the data is off. */
     fun toGame(): SudokuGameRestore? {
-        val g = Puzzle.parseOrNull(givens) ?: return null
-        val s = Puzzle.parseOrNull(solution) ?: return null
-        if (!Grid.isValidSolution(s)) return null
+        val units = level.units
+        val g = Puzzle.parseOrNull(givens, units) ?: return null
+        val s = Puzzle.parseOrNull(solution, units) ?: return null
+        if (!Grid.isValidSolution(s, units)) return null
         // The givens must actually be part of that solution, or the two halves of the
         // snapshot came from different games.
-        for (c in 0 until Units.CELLS) if (g[c] != 0 && g[c] != s[c]) return null
+        for (c in 0 until units.cells) if (g[c] != 0 && g[c] != s[c]) return null
         val rows = edits.map { row ->
             row.split(CHANGE_SEP).map { change ->
                 val parts = change.split(":", ">")
@@ -67,15 +67,15 @@ data class GameSnapshot(
             }
         }
         if (branchAt > applied) return null
-        val struck = IntArray(Units.CELLS)
+        val struck = IntArray(units.cells)
         if (ruledOut.isNotEmpty()) {
             for (pair in ruledOut.split(CHANGE_SEP)) {
                 val kv = pair.split(":")
                 if (kv.size != 2) return null
                 val cell = kv[0].toIntOrNull() ?: return null
                 val mask = kv[1].toIntOrNull() ?: return null
-                if (cell !in 0 until Units.CELLS) return null
-                struck[cell] = mask and 0x1FF
+                if (cell !in 0 until units.cells) return null
+                struck[cell] = mask and units.allMask
             }
         }
         return SudokuGameRestore(Puzzle(g, s, level), rows, applied, branchAt, struck)
@@ -133,5 +133,5 @@ class SudokuGameRestore(
     val history: List<List<IntArray>>,
     val applied: Int,
     val branchAt: Int,
-    val ruledOut: IntArray = IntArray(Units.CELLS),
+    val ruledOut: IntArray = IntArray(puzzle.units.cells),
 )

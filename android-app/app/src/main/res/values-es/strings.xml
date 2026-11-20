@@ -17,6 +17,7 @@
     <string name="level_medium">Medio</string>
     <string name="level_hard">Difícil</string>
     <string name="level_expert">Experto</string>
+    <string name="level_kids">Niños</string>
 
     <plurals name="clue_count">
         <item quantity="one">%1$d dato inicial</item>
@@ -196,6 +197,8 @@
     <string name="home_give_up_body">La partida cuenta como abandonada.</string>
     <string name="home_give_up_body_analyze">La partida cuenta como abandonada. Después podrás ver dónde se puso un número equivocado.</string>
     <string name="home_new_confirm_title">¿Empezar una partida nueva?</string>
+    <string name="home_kids">Empezar Sudoku para niños</string>
+    <string name="home_kids_confirm_title">¿Empezar un Sudoku para niños?</string>
     <string name="home_version">Versión %1$s</string>
     <string name="home_back">Al inicio</string>
     <string name="analysis_title">Análisis de la partida</string>

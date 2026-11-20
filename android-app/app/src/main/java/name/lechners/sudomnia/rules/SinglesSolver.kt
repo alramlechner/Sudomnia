@@ -15,9 +15,9 @@ package name.lechners.sudomnia.rules
  *
  * Not thread-safe -- one instance per thread.
  */
-class SinglesSolver {
+class SinglesSolver(private val units: Units = Units.NINE) {
 
-    private val grid = Grid()
+    private val grid = Grid(units)
 
     /**
      * @param useHidden false = naked singles only (a cell with one candidate left);
@@ -27,6 +27,6 @@ class SinglesSolver {
     fun solves(givens: IntArray, useHidden: Boolean): Boolean {
         if (!grid.load(givens)) return false
         if (!grid.propagate(useHidden)) return false
-        return grid.filled == Units.CELLS
+        return grid.filled == units.cells
     }
 }

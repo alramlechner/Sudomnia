@@ -1,1 +1,1 @@
-Kleine Verbesserung: Nach dem Eintragen einer Zahl in ein markiertes Feld wird die Markierung entfernt, sodass du direkt mit dem nächsten Feld weitermachen kannst.
+Neu: Kindersudoku — ein 6×6-Gitter mit eigenem Knopf auf dem Startbildschirm. Jedes Rätsel ist ohne Raten lösbar, nur mit „hier passt nur diese Ziffer hin".

@@ -1,1 +1,1 @@
-Pequeña mejora: tras introducir un número en una casilla seleccionada, se quita la selección para que puedas pasar directamente a la siguiente.
+Novedad: Sudoku para niños — un tablero de 6×6 con su propio botón en la pantalla de inicio. Cada puzle se resuelve sin adivinar, solo con «aquí solo cabe esta cifra».

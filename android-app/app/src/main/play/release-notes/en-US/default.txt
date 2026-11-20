@@ -1,1 +1,1 @@
-Small improvement: after you enter a digit into a selected cell, the cell is deselected so you can move straight on to the next one.
+New: Kids' Sudoku — a 6×6 grid with its own button on the start screen. Every puzzle is solvable without guessing, using only "only this digit fits here".

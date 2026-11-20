@@ -50,6 +50,8 @@ import name.lechners.sudomnia.ui.theme.TextSecondary
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DigitPad(
+    /** How many digits the board uses: 9, or 6 for the children's board. */
+    size: Int,
     remaining: List<Int>,
     /** The digit in the selected cell, 0 if empty -- its key reads as pressed. */
     selectedDigit: Int,
@@ -77,7 +79,7 @@ fun DigitPad(
     Row(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        for (d in 1..9) {
+        for (d in 1..size) {
             // With the aid off the key stays fully lit and usable: counting the
             // nines is then the player's job, and a ninth 5 must still be typeable.
             val done = dimCompleted && remaining.getOrElse(d) { 0 } <= 0
@@ -150,7 +152,8 @@ fun DigitPad(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NotePad(
-    /** The selected cell's pencil marks as a 9-bit mask. */
+    size: Int,
+    /** The selected cell's pencil marks as a bit mask. */
     notes: Int,
     /** The digit armed for board taps (no cell selected), 0 if none. */
     armed: Int,
@@ -172,7 +175,7 @@ fun NotePad(
             modifier = Modifier.padding(start = 2.dp, bottom = 3.dp),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            for (d in 1..9) {
+            for (d in 1..size) {
                 val on = enabled && Bits.contains(notes, d)
                 Box(
                     modifier = Modifier

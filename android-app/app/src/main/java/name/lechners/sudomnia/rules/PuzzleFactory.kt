@@ -14,12 +14,20 @@ import kotlin.random.Random
  * Not thread-safe. Call from a background dispatcher; on a tablet one puzzle takes
  * roughly 50-150 ms.
  */
-class PuzzleFactory(
-    private val generator: GridGenerator = GridGenerator(),
-    private val digger: Digger = Digger(),
-) {
+class PuzzleFactory {
+
+    private val generators = HashMap<Units, GridGenerator>()
+    private val diggers = HashMap<Units, Digger>()
 
     fun generate(level: Level, rnd: Random = Random.Default): Puzzle {
+        val units = level.units
+        val generator = generators.getOrPut(units) { GridGenerator(units) }
+        val digger = diggers.getOrPut(units) { Digger(units) }
+        if (level == Level.KIDS) {
+            // One band only: there is nothing to retry for.
+            val solution = generator.fullGrid(rnd)
+            return Puzzle(digger.dig(solution, level, rnd), solution, level)
+        }
         var last: Puzzle? = null
         repeat(MAX_ATTEMPTS) {
             val solution = generator.fullGrid(rnd)

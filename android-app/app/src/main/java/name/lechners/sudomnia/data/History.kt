@@ -41,13 +41,16 @@ data class GameRecord(
     val clean: Boolean get() = outcome == Outcome.SOLVED && aidsClean && hints == 0 && mistakes == 0
 
     /**
+     * Children's games are never rated (null): their score is a 6x6 board's and would
+     * drag the 9x9 rating around.
+     *
      * Rating this one game is worth. Solved: reasoning per minute, on a log scale so
      * that doubling the pace is always the same number of points, minus a penalty for
      * every crutch. A lost game is worth a fixed low value, and an abandoned one only
      * counts once it had lasted long enough to be a real attempt -- otherwise
      * abandoning a bad start would be free.
      */
-    val rated: Double? get() = when (outcome) {
+    val rated: Double? get() = if (level == Level.KIDS) null else when (outcome) {
         Outcome.SOLVED -> {
             val minutes = (durationMs / 60_000.0).coerceAtLeast(0.5)
             var perf = score / minutes

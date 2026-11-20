@@ -41,7 +41,7 @@ class GeneratorTest {
     fun everyGeneratedPuzzleHasExactlyOneSolution() {
         val factory = PuzzleFactory()
         val rnd = Random(3)
-        for (level in Level.entries) {
+        for (level in Level.classic) {
             repeat(perLevel) {
                 val puzzle = factory.generate(level, rnd)
                 assertEquals(
@@ -67,7 +67,7 @@ class GeneratorTest {
         val factory = PuzzleFactory()
         val grader = Grader()
         val rnd = Random(4711)
-        for (level in Level.entries) {
+        for (level in Level.classic) {
             repeat(perLevel) {
                 val puzzle = factory.generate(level, rnd)
                 val grade = grader.grade(puzzle.givens)
@@ -128,7 +128,7 @@ class GeneratorTest {
     fun theReportedLevelIsTheMeasuredLevel() {
         val factory = PuzzleFactory()
         val rnd = Random(6)
-        for (level in Level.entries) {
+        for (level in Level.classic) {
             repeat(perLevel) {
                 val puzzle = factory.generate(level, rnd)
                 assertEquals(puzzle.level, digger.classify(puzzle.givens))
@@ -151,7 +151,7 @@ class GeneratorTest {
         val factory = PuzzleFactory()
         val rnd = Random(7)
         val counts = mutableMapOf<Level, MutableList<Int>>()
-        for (level in Level.entries) {
+        for (level in Level.classic) {
             counts[level] = mutableListOf()
             repeat(perLevel) { counts[level]!! += factory.generate(level, rnd).clueCount }
         }
@@ -167,7 +167,7 @@ class GeneratorTest {
     fun dumpSamplesForExternalCrossCheck() {
         val factory = PuzzleFactory()
         val rnd = Random(99)
-        for (level in Level.entries) {
+        for (level in Level.classic) {
             repeat(3) { println("SAMPLE $level " + factory.generate(level, rnd).toLine()) }
         }
     }

@@ -17,6 +17,7 @@
     <string name="level_medium">Medium</string>
     <string name="level_hard">Hard</string>
     <string name="level_expert">Expert</string>
+    <string name="level_kids">Kids</string>
 
     <plurals name="clue_count">
         <item quantity="one">%1$d clue</item>
@@ -193,6 +194,8 @@
     <string name="home_give_up_body">The game counts as abandoned.</string>
     <string name="home_give_up_body_analyze">The game counts as abandoned. Afterwards you can look back at where a wrong digit went in.</string>
     <string name="home_new_confirm_title">Start a new game?</string>
+    <string name="home_kids">Start kids\' Sudoku</string>
+    <string name="home_kids_confirm_title">Start kids\' Sudoku?</string>
     <string name="home_version">Version %1$s</string>
     <string name="home_back">To start</string>
     <string name="analysis_title">Game analysis</string>

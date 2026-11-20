@@ -1,8 +1,5 @@
 package name.lechners.sudomnia.rules
 
-import name.lechners.sudomnia.rules.Units.CELLS
-import name.lechners.sudomnia.rules.Units.UNITS
-
 /**
  * A mutable working grid: digits, candidate masks, and per-unit "digits already
  * placed" masks, kept consistent at all times.
@@ -12,16 +9,18 @@ import name.lechners.sudomnia.rules.Units.UNITS
  * *not* thread-safe and *not* a value object: it is a scratchpad that gets reset
  * and reused, so that generating a puzzle allocates nothing after warm-up.
  */
-class Grid {
+class Grid(val units: Units = Units.NINE) {
 
-    /** 0 = empty, 1..9 = placed. */
-    val digits = IntArray(CELLS)
+    private val maxDepth = units.cells
 
-    /** 9-bit candidate mask per cell; always 0 for a filled cell. */
-    val cand = IntArray(CELLS)
+    /** 0 = empty, 1..size = placed. */
+    val digits = IntArray(units.cells)
+
+    /** `size`-bit candidate mask per cell; always 0 for a filled cell. */
+    val cand = IntArray(units.cells)
 
     /** Per unit, the mask of digits already placed in it. */
-    val unitMask = IntArray(UNITS)
+    val unitMask = IntArray(units.unitCount)
 
     var filled = 0
         private set
@@ -30,15 +29,15 @@ class Grid {
     // trail of individual changes. Copying 189 ints costs well under a microsecond,
     // and the stack is allocated once, so search stays allocation-free -- while the
     // undo logic stays impossible to get subtly wrong.
-    private val stackDigits = Array(MAX_DEPTH) { IntArray(CELLS) }
-    private val stackCand = Array(MAX_DEPTH) { IntArray(CELLS) }
-    private val stackUnit = Array(MAX_DEPTH) { IntArray(UNITS) }
-    private val stackFilled = IntArray(MAX_DEPTH)
+    private val stackDigits = Array(maxDepth) { IntArray(units.cells) }
+    private val stackCand = Array(maxDepth) { IntArray(units.cells) }
+    private val stackUnit = Array(maxDepth) { IntArray(units.unitCount) }
+    private val stackFilled = IntArray(maxDepth)
     private var top = 0
 
     fun clear() {
         digits.fill(0)
-        cand.fill(Bits.ALL)
+        cand.fill(units.allMask)
         unitMask.fill(0)
         filled = 0
         top = 0
@@ -46,7 +45,7 @@ class Grid {
 
     /** Saves the current state so that a failed branch can be taken back. */
     fun push() {
-        check(top < MAX_DEPTH) { "search deeper than $MAX_DEPTH -- impossible on a 9x9 grid" }
+        check(top < maxDepth) { "search deeper than $maxDepth -- impossible on this grid" }
         digits.copyInto(stackDigits[top])
         cand.copyInto(stackCand[top])
         unitMask.copyInto(stackUnit[top])
@@ -74,8 +73,8 @@ class Grid {
         digits[cell] = digit
         cand[cell] = 0
         filled++
-        for (u in Units.unitsOfCell[cell]) unitMask[u] = unitMask[u] or bit
-        for (p in Units.peers[cell]) {
+        for (u in units.unitsOfCell[cell]) unitMask[u] = unitMask[u] or bit
+        for (p in units.peers[cell]) {
             if (cand[p] and bit != 0) {
                 cand[p] = cand[p] and bit.inv()
                 if (cand[p] == 0 && digits[p] == 0) return false
@@ -109,7 +108,7 @@ class Grid {
      */
     fun load(givens: IntArray): Boolean {
         clear()
-        for (c in 0 until CELLS) {
+        for (c in 0 until units.cells) {
             val d = givens[c]
             if (d != 0) {
                 if (!canPlace(c, d)) return false
@@ -131,7 +130,7 @@ class Grid {
         while (progress) {
             progress = false
 
-            for (c in 0 until CELLS) {
+            for (c in 0 until units.cells) {
                 if (digits[c] != 0) continue
                 val m = cand[c]
                 if (m == 0) return false
@@ -142,9 +141,9 @@ class Grid {
             }
             if (progress || !useHidden) continue
 
-            for (u in 0 until UNITS) {
-                val cells = Units.cellsOfUnit[u]
-                val missing = Bits.ALL and unitMask[u].inv()
+            for (u in 0 until units.unitCount) {
+                val cells = units.cellsOfUnit[u]
+                val missing = units.allMask and unitMask[u].inv()
                 var m = missing
                 while (m != 0) {
                     val bit = m and (-m)
@@ -172,8 +171,8 @@ class Grid {
     /** The empty cell with the fewest candidates, or -1 if the grid is full. */
     fun bestBranchCell(): Int {
         var best = -1
-        var bestCount = 10
-        for (c in 0 until CELLS) {
+        var bestCount = units.size + 1
+        for (c in 0 until units.cells) {
             if (digits[c] != 0) continue
             val n = Bits.count(cand[c])
             if (n < bestCount) {
@@ -188,17 +187,14 @@ class Grid {
     fun copyDigitsInto(out: IntArray) = digits.copyInto(out)
 
     companion object {
-        /** A 9x9 search can never branch more than 81 times. */
-        const val MAX_DEPTH = 81
-
         /** True if [digits] is a complete, rule-conforming solution. */
-        fun isValidSolution(digits: IntArray): Boolean {
-            if (digits.size != CELLS) return false
-            for (u in 0 until UNITS) {
+        fun isValidSolution(digits: IntArray, units: Units = Units.NINE): Boolean {
+            if (digits.size != units.cells) return false
+            for (u in 0 until units.unitCount) {
                 var seen = 0
-                for (c in Units.cellsOfUnit[u]) {
+                for (c in units.cellsOfUnit[u]) {
                     val d = digits[c]
-                    if (d !in 1..9) return false
+                    if (d !in 1..units.size) return false
                     val bit = Bits.of(d)
                     if (seen and bit != 0) return false
                     seen = seen or bit

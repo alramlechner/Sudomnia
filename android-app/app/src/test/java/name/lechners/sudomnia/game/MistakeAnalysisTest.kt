@@ -12,7 +12,7 @@ import kotlin.random.Random
 class MistakeAnalysisTest {
 
     private val puzzle = PuzzleFactory().generate(Level.EASY, Random(3))
-    private val empties = (0 until Units.CELLS).filter { !SudokuGame(puzzle).isGiven(it) }
+    private val empties = (0 until Units.NINE.cells).filter { !SudokuGame(puzzle).isGiven(it) }
 
     private fun wrongDigit(cell: Int) = if (puzzle.solution[cell] == 9) 1 else puzzle.solution[cell] + 1
 

@@ -36,7 +36,7 @@ class HumanSolverTest {
         val rnd = Random(4)
         var checked = 0
 
-        for (level in Level.entries) {
+        for (level in Level.classic) {
             repeat(rounds(20)) {
                 val puzzle = factory.generate(level, rnd)
                 solver.solve(puzzle.givens) { step ->
@@ -168,7 +168,7 @@ class HumanSolverTest {
         for (case in ReferencePuzzles.all) {
             val givens = Puzzle.parse(case.givens)
             val solution = Puzzle.parse(case.solution)
-            val placed = IntArray(Units.CELLS)
+            val placed = IntArray(Units.NINE.cells)
 
             val result = solver.solve(givens) { step ->
                 if (step.technique.places) placed[step.cell] = step.digit
@@ -179,7 +179,7 @@ class HumanSolverTest {
                     )
                 }
             }
-            for (c in 0 until Units.CELLS) {
+            for (c in 0 until Units.NINE.cells) {
                 if (placed[c] != 0) assertEquals("${case.name}, cell $c", solution[c], placed[c])
             }
             if (result.solved) solved++

@@ -63,20 +63,20 @@ fun SudokuBoard(
         modifier = modifier.pointerInput(Unit) {
             detectTapGestures(
                 onLongPress = { offset ->
-                    val cell = BoardGeometry(size.width.toFloat()).cellAt(offset.x, offset.y)
+                    val cell = BoardGeometry(size.width.toFloat(), state.units.size).cellAt(offset.x, offset.y)
                     if (cell >= 0) onCellLongPress(cell)
                 },
                 onTap = { offset ->
-                    val cell = BoardGeometry(size.width.toFloat()).cellAt(offset.x, offset.y)
+                    val cell = BoardGeometry(size.width.toFloat(), state.units.size).cellAt(offset.x, offset.y)
                     if (cell >= 0) onCellTap(cell)
                 },
             )
         },
     ) {
-        val geo = BoardGeometry(size.minDimension)
+        val geo = BoardGeometry(size.minDimension, state.units.size)
         drawCellBackgrounds(geo, state, pal)
         drawGlyphs(geo, state, paints, pal)
-        drawGridLines(geo, pal)
+        drawGridLines(geo, state.units, pal)
         drawTrialRoot(geo, state, pal)
         drawSelectionFrame(geo, state)
         if (state.flashCell >= 0) drawFlash(geo, state, pal, flash.value)
@@ -85,12 +85,20 @@ fun SudokuBoard(
 
 private const val FLASH_MS = 2500
 
+/** Centre of pencil mark [d] inside [cell]: a grid shaped like a box (3x3, or 3x2 for six). */
+private fun noteX(geo: BoardGeometry, units: Units, cell: Int, d: Int): Float =
+    geo.left(units.colOf[cell]) + ((d - 1) % units.noteCols + 0.5f) * (geo.cellSize / units.noteCols)
+
+private fun noteY(geo: BoardGeometry, units: Units, cell: Int, d: Int): Float =
+    geo.top(units.rowOf[cell]) + ((d - 1) / units.noteCols + 0.5f) * (geo.cellSize / units.noteRows)
+
 /** Marks the first digit of the open branch: a solid frame plus a corner flag. */
 private fun DrawScope.drawTrialRoot(geo: BoardGeometry, state: BoardState, pal: Palette) {
+    val units = state.units
     val c = state.trialRoot
     if (c < 0) return
-    val x = geo.left(Units.colOf[c])
-    val y = geo.top(Units.rowOf[c])
+    val x = geo.left(units.colOf[c])
+    val y = geo.top(units.rowOf[c])
     val w = geo.cellSize * 0.06f
     val ink = pal.inkTrial.copy(alpha = 1f)
     drawRect(
@@ -111,13 +119,14 @@ private fun DrawScope.drawTrialRoot(geo: BoardGeometry, state: BoardState, pal: 
 
 /** Dashed frame on the selected cell: says "this one" without touching the fill. */
 private fun DrawScope.drawSelectionFrame(geo: BoardGeometry, state: BoardState) {
+    val units = state.units
     val c = state.selected
     if (c < 0) return
     val w = geo.cellSize * 0.055f
     val inset = w * 1.2f
     drawRoundRect(
         color = LogoBlue,
-        topLeft = Offset(geo.left(Units.colOf[c]) + inset, geo.top(Units.rowOf[c]) + inset),
+        topLeft = Offset(geo.left(units.colOf[c]) + inset, geo.top(units.rowOf[c]) + inset),
         size = Size(geo.cellSize - 2 * inset, geo.cellSize - 2 * inset),
         cornerRadius = CornerRadius(geo.cellSize * 0.1f),
         style = Stroke(
@@ -133,13 +142,14 @@ private fun DrawScope.drawSelectionFrame(geo: BoardGeometry, state: BoardState) 
  * big enough to be seen around a fingertip.
  */
 private fun DrawScope.drawFlash(geo: BoardGeometry, state: BoardState, pal: Palette, t: Float) {
+    val units = state.units
     if (t >= 1f) return
     val c = state.flashCell
     val fade = if (t < 0.6f) 1f else (1f - t) / 0.4f
     val pop = (1f - (t / 0.12f).coerceAtMost(1f))
     val amber = pal.inkTrial.copy(alpha = 1f)
-    val col = Units.colOf[c]
-    val row = Units.rowOf[c]
+    val col = units.colOf[c]
+    val row = units.rowOf[c]
     val note = state.flashNote
     if (note == 0) {
         val grow = geo.cellSize * 0.12f * pop
@@ -158,8 +168,8 @@ private fun DrawScope.drawFlash(geo: BoardGeometry, state: BoardState, pal: Pale
         )
     } else {
         val step = geo.cellSize / 3f
-        val cx = geo.left(col) + ((note - 1) % 3 + 0.5f) * step
-        val cy = geo.top(row) + ((note - 1) / 3 + 0.5f) * step
+        val cx = noteX(geo, units, c, note)
+        val cy = noteY(geo, units, c, note)
         val r = step * (0.52f + 0.35f * pop)
         drawCircle(amber.copy(alpha = 0.35f * fade), radius = r, center = Offset(cx, cy))
         drawCircle(amber.copy(alpha = fade), radius = r, center = Offset(cx, cy),
@@ -189,16 +199,17 @@ private class BoardPaints {
 }
 
 private fun DrawScope.drawCellBackgrounds(geo: BoardGeometry, state: BoardState, pal: Palette) {
+    val units = state.units
     drawRect(pal.paperBase, size = Size(geo.sizePx, geo.sizePx))
 
     val peersLit = state.highlightPeers && state.selected >= 0
-    val selRow = if (peersLit) Units.rowOf[state.selected] else -1
-    val selCol = if (peersLit) Units.colOf[state.selected] else -1
-    val selBox = if (peersLit) Units.boxOf[state.selected] else -1
+    val selRow = if (peersLit) units.rowOf[state.selected] else -1
+    val selCol = if (peersLit) units.colOf[state.selected] else -1
+    val selBox = if (peersLit) units.boxOf[state.selected] else -1
 
-    for (cell in 0 until Units.CELLS) {
-        val row = Units.rowOf[cell]
-        val col = Units.colOf[cell]
+    for (cell in 0 until units.cells) {
+        val row = units.rowOf[cell]
+        val col = units.colOf[cell]
 
         // Earlier entries win. A conflict outranks everything -- a hard error beats a
         // voluntary hint. The hint outranks the selection, because it is the answer to
@@ -212,8 +223,8 @@ private fun DrawScope.drawCellBackgrounds(geo: BoardGeometry, state: BoardState,
             cell == state.selected -> pal.paperSelected
             state.trial[cell] -> pal.paperTrial
             state.highlightDigit != 0 && state.values[cell] == state.highlightDigit -> pal.paperSameDigit
-            Units.unitsOfCell[cell].any { state.hintUnits and (1 shl it) != 0 } -> pal.paperHintUnit
-            row == selRow || col == selCol || Units.boxOf[cell] == selBox -> pal.paperPeer
+            units.unitsOfCell[cell].any { state.hintUnits and (1 shl it) != 0 } -> pal.paperHintUnit
+            row == selRow || col == selCol || units.boxOf[cell] == selBox -> pal.paperPeer
             state.givens[cell] -> pal.paperGivenCell
             else -> null
         }
@@ -228,6 +239,7 @@ private fun DrawScope.drawCellBackgrounds(geo: BoardGeometry, state: BoardState,
 }
 
 private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: BoardPaints, pal: Palette) {
+    val units = state.units
     val canvas = drawContext.canvas.nativeCanvas
     paints.digit.textSize = geo.cellSize * 0.62f
     paints.given.textSize = geo.cellSize * 0.62f
@@ -246,9 +258,8 @@ private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: 
         val cell = packed / 16
         val d = packed % 16
         if (state.values[cell] != 0) continue
-        val step = geo.cellSize / 3f
-        val nx = geo.left(Units.colOf[cell]) + ((d - 1) % 3 + 0.5f) * step
-        val ny = geo.top(Units.rowOf[cell]) + ((d - 1) / 3 + 0.5f) * step -
+        val nx = noteX(geo, units, cell, d)
+        val ny = noteY(geo, units, cell, d) -
             (paints.noteStruck.descent() + paints.noteStruck.ascent()) / 2f
         canvas.drawText(d.toString(), nx, ny, paints.noteStruck)
         val half = paints.noteStruck.measureText(d.toString()) * 0.75f
@@ -258,12 +269,11 @@ private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: 
 
     paints.noteRuledOut.textSize = geo.cellSize * 0.24f
     paints.noteRuledOut.color = pal.inkNote.copy(alpha = 0.75f).toArgb()
-    for (cell in 0 until Units.CELLS) {
+    for (cell in 0 until units.cells) {
         if (state.values[cell] != 0 || state.struck[cell] == 0) continue
-        val step = geo.cellSize / 3f
         Bits.forEach(state.struck[cell]) { d ->
-            val nx = geo.left(Units.colOf[cell]) + ((d - 1) % 3 + 0.5f) * step
-            val ny = geo.top(Units.rowOf[cell]) + ((d - 1) / 3 + 0.5f) * step -
+            val nx = noteX(geo, units, cell, d)
+            val ny = noteY(geo, units, cell, d) -
                 (paints.noteRuledOut.descent() + paints.noteRuledOut.ascent()) / 2f
             canvas.drawText(d.toString(), nx, ny, paints.noteRuledOut)
             val half = paints.noteRuledOut.measureText(d.toString()) * 0.75f
@@ -272,9 +282,9 @@ private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: 
         }
     }
 
-    for (cell in 0 until Units.CELLS) {
-        val row = Units.rowOf[cell]
-        val col = Units.colOf[cell]
+    for (cell in 0 until units.cells) {
+        val row = units.rowOf[cell]
+        val col = units.colOf[cell]
         val cx = geo.centerX(col)
         val value = state.values[cell]
 
@@ -292,7 +302,6 @@ private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: 
             val baseline = geo.centerY(row) - (paint.descent() + paint.ascent()) / 2f
             canvas.drawText(value.toString(), cx, baseline, paint)
         } else if (state.notes[cell] != 0) {
-            val step = geo.cellSize / 3f
             Bits.forEach(state.notes[cell]) { d ->
                 // Skip what the hint has already drawn struck out in this very slot.
                 if (state.hintStrikes.any { it == cell * 16 + d }) return@forEach
@@ -308,10 +317,8 @@ private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: 
                     d == state.highlightDigit -> paints.noteHighlight
                     else -> paints.note
                 }
-                val nCol = (d - 1) % 3
-                val nRow = (d - 1) / 3
-                val nx = geo.left(col) + (nCol + 0.5f) * step
-                val ny = geo.top(row) + (nRow + 0.5f) * step -
+                val nx = noteX(geo, units, cell, d)
+                val ny = noteY(geo, units, cell, d) -
                     (paint.descent() + paint.ascent()) / 2f
                 canvas.drawText(d.toString(), nx, ny, paint)
             }
@@ -319,18 +326,27 @@ private fun DrawScope.drawGlyphs(geo: BoardGeometry, state: BoardState, paints: 
     }
 }
 
-private fun DrawScope.drawGridLines(geo: BoardGeometry, pal: Palette) {
+private fun DrawScope.drawGridLines(geo: BoardGeometry, units: Units, pal: Palette) {
     val thin = geo.sizePx * 0.0022f
     val thick = geo.sizePx * 0.0075f
 
-    for (i in 0..9) {
-        val strong = i % 3 == 0
-        val w = if (strong) thick else thin
-        val color = if (strong) pal.gridLineStrong else pal.gridLine
+    val n = units.size
+    for (i in 0..n) {
         val p = i * geo.cellSize
-        // Nudge the outer lines inwards so they are not half-clipped by the edge.
-        val v = p.coerceIn(w / 2f, geo.sizePx - w / 2f)
-        drawLine(color, Offset(v, 0f), Offset(v, geo.sizePx), strokeWidth = w)
-        drawLine(color, Offset(0f, v), Offset(geo.sizePx, v), strokeWidth = w)
+        // Vertical lines are strong at box-column borders, horizontal ones at box-row
+        // borders -- for the 2x3 boxes of the 6x6 board those differ.
+        drawLineAt(geo, pal, p, i % units.boxCols == 0, thin, thick, vertical = true)
+        drawLineAt(geo, pal, p, i % units.boxRows == 0, thin, thick, vertical = false)
     }
+}
+
+private fun DrawScope.drawLineAt(
+    geo: BoardGeometry, pal: Palette, p: Float, strong: Boolean, thin: Float, thick: Float, vertical: Boolean,
+) {
+    val w = if (strong) thick else thin
+    val color = if (strong) pal.gridLineStrong else pal.gridLine
+    // Nudge the outer lines inwards so they are not half-clipped by the edge.
+    val v = p.coerceIn(w / 2f, geo.sizePx - w / 2f)
+    if (vertical) drawLine(color, Offset(v, 0f), Offset(v, geo.sizePx), strokeWidth = w)
+    else drawLine(color, Offset(0f, v), Offset(geo.sizePx, v), strokeWidth = w)
 }

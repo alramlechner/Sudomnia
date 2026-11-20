@@ -74,6 +74,11 @@ Two permanent rows under the grid: digits above, pencil marks below. No mode to 
 Pause stops the clock and hides the grid. The clock also stops on its own when the app is not on screen. The running game survives closing the app: digits, pencil marks, the undo stack, an open branch and the time.
 
 
+SUDOKU FOR KIDS
+
+A button of its own on the start screen starts the kids' Sudoku: a small 6×6 grid with the digits 1 to 6 and boxes of 2×3 cells. Every puzzle has exactly one solution and can be solved with nothing but "only this digit fits here" — nothing ever needs guessing. Pencil marks, undo and hints are there too.
+
+
 OPEN SOURCE
 
 Apache-2.0. Read it, build it, fork it:

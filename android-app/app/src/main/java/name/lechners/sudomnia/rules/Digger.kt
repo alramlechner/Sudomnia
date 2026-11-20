@@ -20,20 +20,21 @@ import kotlin.random.Random
  *
  * Not thread-safe -- one instance per thread.
  */
-class Digger {
+class Digger(private val units: Units = Units.NINE) {
 
-    private val solver = Solver()
-    private val singles = SinglesSolver()
-    private val grader = Grader()
-    private val order = IntArray(Units.CELLS) { it }
+    private val solver = Solver(units)
+    private val singles = SinglesSolver(units)
+    private val grader = Grader(units)
+    private val order = IntArray(units.cells) { it }
 
     fun dig(full: IntArray, level: Level, rnd: Random): IntArray {
         val puzzle = full.copyOf()
-        var clues = Units.CELLS
+        var clues = units.cells
         shuffleOrder(rnd)
 
         for (cell in order) {
             if (level == Level.EASY && clues <= EASY_MIN_CLUES) break
+            if (level == Level.KIDS && clues <= KIDS_MIN_CLUES) break
 
             val saved = puzzle[cell]
             puzzle[cell] = 0
@@ -67,7 +68,7 @@ class Digger {
      * to hand out as "hard" could not be finished by any technique at all.
      */
     private fun allows(puzzle: IntArray, level: Level): Boolean = when (level) {
-        Level.EASY, Level.MEDIUM -> singles.solves(puzzle, useHidden = true)
+        Level.EASY, Level.MEDIUM, Level.KIDS -> singles.solves(puzzle, useHidden = true)
         Level.HARD -> grader.solvesWithin(puzzle, Technique.HIDDEN_TRIPLE)
         Level.EXPERT -> grader.solvesWithin(puzzle, Technique.entries.last())
     }
@@ -83,7 +84,7 @@ class Digger {
      * Leaves `puzzle[cell]` empty.
      */
     private fun hasAlternativeSolution(puzzle: IntArray, cell: Int, correct: Int): Boolean {
-        for (d in 1..9) {
+        for (d in 1..units.size) {
             if (d == correct) continue
             puzzle[cell] = d
             val solvable = solver.countSolutions(puzzle, limit = 1) > 0
@@ -100,6 +101,12 @@ class Digger {
          * 36 clues means fewer than half the grid is blank.
          */
         const val EASY_MIN_CLUES = 36
+
+        /**
+         * The children's 6x6 board stops digging here: 18 of 36 cells stay filled, so half
+         * the grid is left to find -- short enough for a child, and every one a single.
+         */
+        const val KIDS_MIN_CLUES = 18
     }
 
     private fun shuffleOrder(rnd: Random) {

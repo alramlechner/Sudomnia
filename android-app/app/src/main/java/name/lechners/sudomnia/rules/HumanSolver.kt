@@ -28,9 +28,9 @@ package name.lechners.sudomnia.rules
  * cheap techniques are tried first and the expensive ones only when nothing else
  * bites.
  */
-class HumanSolver {
+class HumanSolver(private val units: Units = Units.NINE) {
 
-    private val grid = Grid()
+    private val grid = Grid(units)
 
     /**
      * What the ladder made of a puzzle.
@@ -72,7 +72,7 @@ class HumanSolver {
         var score = 0
         var steps = 0
 
-        while (grid.filled < Units.CELLS) {
+        while (grid.filled < units.cells) {
             val step = findStep(allow) ?: return Result(false, hardest, score, steps)
             trace?.invoke(step)
             if (!apply(step)) return Result(false, hardest, score, steps)
@@ -165,9 +165,9 @@ class HumanSolver {
 
     /** A digit with exactly one remaining place in a unit. */
     private fun hiddenSingle(): Step? {
-        for (u in 0 until Units.UNITS) {
-            val cells = Units.cellsOfUnit[u]
-            var m = Bits.ALL and grid.unitMask[u].inv()
+        for (u in 0 until units.unitCount) {
+            val cells = units.cellsOfUnit[u]
+            var m = units.allMask and grid.unitMask[u].inv()
             while (m != 0) {
                 val bit = m and (-m)
                 m = m xor bit
@@ -196,7 +196,7 @@ class HumanSolver {
 
     /** A cell with exactly one candidate left. */
     private fun nakedSingle(): Step? {
-        for (c in 0 until Units.CELLS) {
+        for (c in 0 until units.cells) {
             if (grid.digits[c] != 0) continue
             if (Bits.count(grid.cand[c]) == 1) {
                 return Step(
@@ -221,26 +221,26 @@ class HumanSolver {
      * and a player uses them interchangeably -- hence one rung, not two.
      */
     private fun lockedCandidates(): Step? {
-        for (u in 0 until Units.UNITS) {
-            var m = Bits.ALL and grid.unitMask[u].inv()
+        for (u in 0 until units.unitCount) {
+            var m = units.allMask and grid.unitMask[u].inv()
             while (m != 0) {
                 val bit = m and (-m)
                 m = m xor bit
                 val digit = Integer.numberOfTrailingZeros(bit) + 1
 
-                val spots = ArrayList<Int>(9)
-                for (c in Units.cellsOfUnit[u]) {
+                val spots = ArrayList<Int>(units.size)
+                for (c in units.cellsOfUnit[u]) {
                     if (grid.digits[c] == 0 && grid.cand[c] and bit != 0) spots += c
                 }
                 if (spots.size < 2) continue
 
                 // The other unit that happens to contain all of them.
-                for (other in Units.unitsOfCell[spots[0]]) {
+                for (other in units.unitsOfCell[spots[0]]) {
                     if (other == u) continue
-                    if (spots.any { other !in Units.unitsOfCell[it] }) continue
+                    if (spots.any { other !in units.unitsOfCell[it] }) continue
 
                     val gone = ArrayList<Elimination>(6)
-                    for (c in Units.cellsOfUnit[other]) {
+                    for (c in units.cellsOfUnit[other]) {
                         if (c in spots) continue
                         if (grid.digits[c] == 0 && grid.cand[c] and bit != 0) gone += Elimination(c, digit)
                     }
@@ -263,8 +263,8 @@ class HumanSolver {
      * digits belong to those cells, so they leave the rest of the unit.
      */
     private fun nakedSubset(size: Int, technique: Technique): Step? {
-        for (u in 0 until Units.UNITS) {
-            val open = Units.cellsOfUnit[u].filter { grid.digits[it] == 0 && Bits.count(grid.cand[it]) in 2..size }
+        for (u in 0 until units.unitCount) {
+            val open = units.cellsOfUnit[u].filter { grid.digits[it] == 0 && Bits.count(grid.cand[it]) in 2..size }
             if (open.size < size) continue
 
             forEachCombination(open.size, size) { pick ->
@@ -274,7 +274,7 @@ class HumanSolver {
 
                 val members = IntArray(size) { open[pick[it]] }
                 val gone = ArrayList<Elimination>(9)
-                for (c in Units.cellsOfUnit[u]) {
+                for (c in units.cellsOfUnit[u]) {
                     if (grid.digits[c] != 0 || c in members) continue
                     Bits.forEach(grid.cand[c] and mask) { d -> gone += Elimination(c, d) }
                 }
@@ -299,10 +299,10 @@ class HumanSolver {
      * it sits a rung above at each size.
      */
     private fun hiddenSubset(size: Int, technique: Technique): Step? {
-        for (u in 0 until Units.UNITS) {
-            val cells = Units.cellsOfUnit[u]
-            val missing = ArrayList<Int>(9)
-            Bits.forEach(Bits.ALL and grid.unitMask[u].inv()) { d ->
+        for (u in 0 until units.unitCount) {
+            val cells = units.cellsOfUnit[u]
+            val missing = ArrayList<Int>(units.size)
+            Bits.forEach(units.allMask and grid.unitMask[u].inv()) { d ->
                 val n = cells.count { grid.digits[it] == 0 && Bits.contains(grid.cand[it], d) }
                 if (n in 2..size) missing += d
             }
@@ -340,14 +340,14 @@ class HumanSolver {
      * they are the same argument at two widths.
      */
     private fun fish(size: Int, technique: Technique): Step? {
-        for (digit in 1..9) {
+        for (digit in 1..units.size) {
             val bit = Bits.of(digit)
             for (byRow in booleanArrayOf(true, false)) {
-                val lines = ArrayList<Int>(9)          // line index 0..8
-                val places = ArrayList<IntArray>(9)    // cells of that line holding the digit
-                for (line in 0..8) {
-                    val u = if (byRow) line else 9 + line
-                    val spots = Units.cellsOfUnit[u].filter {
+                val lines = ArrayList<Int>(units.size)          // line index
+                val places = ArrayList<IntArray>(units.size)    // cells of that line holding the digit
+                for (line in 0 until units.size) {
+                    val u = if (byRow) units.rowUnit(line) else units.colUnit(line)
+                    val spots = units.cellsOfUnit[u].filter {
                         grid.digits[it] == 0 && grid.cand[it] and bit != 0
                     }
                     if (spots.size in 2..size) { lines += line; places += spots.toIntArray() }
@@ -357,7 +357,7 @@ class HumanSolver {
                 forEachCombination(lines.size, size) { pick ->
                     var crossMask = 0
                     for (i in pick) for (c in places[i]) {
-                        crossMask = crossMask or (1 shl if (byRow) Units.colOf[c] else Units.rowOf[c])
+                        crossMask = crossMask or (1 shl if (byRow) units.colOf[c] else units.rowOf[c])
                     }
                     if (Integer.bitCount(crossMask) != size) return@forEachCombination null
 
@@ -366,11 +366,11 @@ class HumanSolver {
                     val usedLines = pick.map { lines[it] }
 
                     val gone = ArrayList<Elimination>(9)
-                    for (cross in 0..8) {
+                    for (cross in 0 until units.size) {
                         if (crossMask and (1 shl cross) == 0) continue
-                        val u = if (byRow) 9 + cross else cross
-                        for (c in Units.cellsOfUnit[u]) {
-                            val line = if (byRow) Units.rowOf[c] else Units.colOf[c]
+                        val u = if (byRow) units.colUnit(cross) else units.rowUnit(cross)
+                        for (c in units.cellsOfUnit[u]) {
+                            val line = if (byRow) units.rowOf[c] else units.colOf[c]
                             if (line in usedLines) continue
                             if (grid.digits[c] == 0 && grid.cand[c] and bit != 0) gone += Elimination(c, digit)
                         }
@@ -380,7 +380,7 @@ class HumanSolver {
                         technique = technique,
                         digit = digit,
                         pattern = corners.toIntArray(),
-                        units = usedLines.map { if (byRow) it else 9 + it }.toIntArray(),
+                        units = usedLines.map { if (byRow) units.rowUnit(it) else units.colUnit(it) }.toIntArray(),
                         eliminations = gone,
                     )
                 }?.let { return it }
@@ -398,7 +398,7 @@ class HumanSolver {
      * pattern, and the last one this app is willing to explain in one sentence.
      */
     private fun xyWing(): Step? {
-        val bivalue = (0 until Units.CELLS).filter { grid.digits[it] == 0 && Bits.count(grid.cand[it]) == 2 }
+        val bivalue = (0 until units.cells).filter { grid.digits[it] == 0 && Bits.count(grid.cand[it]) == 2 }
         for (pivot in bivalue) {
             val pm = grid.cand[pivot]
             for (a in bivalue) {
@@ -416,7 +416,7 @@ class HumanSolver {
 
                     val digit = Bits.lowest(zMask)
                     val gone = ArrayList<Elimination>(8)
-                    for (c in 0 until Units.CELLS) {
+                    for (c in 0 until units.cells) {
                         if (c == a || c == b || c == pivot) continue
                         if (grid.digits[c] != 0 || grid.cand[c] and zMask == 0) continue
                         if (sees(c, a) && sees(c, b)) gone += Elimination(c, digit)
@@ -443,11 +443,11 @@ class HumanSolver {
      * that can see both colours cannot hold the digit at all.
      */
     private fun simpleColouring(): Step? {
-        for (digit in 1..9) {
+        for (digit in 1..units.size) {
             val bit = Bits.of(digit)
-            val colour = IntArray(Units.CELLS) { 0 }      // 0 = unpainted, 1/-1 = the two colours
+            val colour = IntArray(units.cells) { 0 }      // 0 = unpainted, 1/-1 = the two colours
 
-            for (start in 0 until Units.CELLS) {
+            for (start in 0 until units.cells) {
                 if (colour[start] != 0) continue
                 if (grid.digits[start] != 0 || grid.cand[start] and bit == 0) continue
                 if (!hasConjugate(start, bit)) continue
@@ -458,7 +458,7 @@ class HumanSolver {
                 var i = 0
                 while (i < chain.size) {
                     val c = chain[i++]
-                    for (u in Units.unitsOfCell[c]) {
+                    for (u in units.unitsOfCell[c]) {
                         val partner = conjugatePartner(c, u, bit) ?: continue
                         if (colour[partner] != 0) continue
                         colour[partner] = -colour[c]
@@ -482,7 +482,7 @@ class HumanSolver {
 
                 // Rule 4: an outside cell that sees both colours cannot hold the digit.
                 val gone = ArrayList<Elimination>(8)
-                for (c in 0 until Units.CELLS) {
+                for (c in 0 until units.cells) {
                     if (colour[c] != 0 || grid.digits[c] != 0 || grid.cand[c] and bit == 0) continue
                     val seesPlus = chain.any { colour[it] == 1 && sees(c, it) }
                     val seesMinus = chain.any { colour[it] == -1 && sees(c, it) }
@@ -504,18 +504,18 @@ class HumanSolver {
     // --- Kleinkram -----------------------------------------------------------
 
     private fun sees(a: Int, b: Int): Boolean =
-        a != b && (Units.rowOf[a] == Units.rowOf[b] ||
-            Units.colOf[a] == Units.colOf[b] ||
-            Units.boxOf[a] == Units.boxOf[b])
+        a != b && (units.rowOf[a] == units.rowOf[b] ||
+            units.colOf[a] == units.colOf[b] ||
+            units.boxOf[a] == units.boxOf[b])
 
     private fun hasConjugate(cell: Int, bit: Int): Boolean =
-        Units.unitsOfCell[cell].any { conjugatePartner(cell, it, bit) != null }
+        units.unitsOfCell[cell].any { conjugatePartner(cell, it, bit) != null }
 
     /** The other cell, if [cell]'s unit [u] has exactly two places left for the digit. */
     private fun conjugatePartner(cell: Int, u: Int, bit: Int): Int? {
         var partner = -1
         var n = 0
-        for (c in Units.cellsOfUnit[u]) {
+        for (c in units.cellsOfUnit[u]) {
             if (grid.digits[c] != 0 || grid.cand[c] and bit == 0) continue
             n++
             if (n > 2) return null

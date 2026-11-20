@@ -16,12 +16,12 @@ class SudokuGameTest {
     private fun newGame(level: Level = Level.EASY, seed: Int = 42) =
         SudokuGame(PuzzleFactory().generate(level, Random(seed)))
 
-    private fun firstEmpty(game: SudokuGame) = (0 until Units.CELLS).first { !game.isGiven(it) }
+    private fun firstEmpty(game: SudokuGame) = (0 until Units.NINE.cells).first { !game.isGiven(it) }
 
     @Test
     fun cluesCannotBeOverwritten() {
         val game = newGame()
-        val clue = (0 until Units.CELLS).first { game.isGiven(it) }
+        val clue = (0 until Units.NINE.cells).first { game.isGiven(it) }
         val before = game.valueAt(clue)
         game.setDigit(clue, if (before == 9) 1 else 9)
         assertEquals(before, game.valueAt(clue))
@@ -42,7 +42,7 @@ class SudokuGameTest {
     fun placingADigitRemovesItFromPeerNotes() {
         val game = newGame()
         val cell = firstEmpty(game)
-        val peer = Units.peers[cell].first { !game.isGiven(it) && it != cell }
+        val peer = Units.NINE.peers[cell].first { !game.isGiven(it) && it != cell }
 
         game.toggleNote(peer, 7)
         game.toggleNote(peer, 3)
@@ -58,7 +58,7 @@ class SudokuGameTest {
     fun undoRestoresDigitsAndNotesExactly() {
         val game = newGame()
         val rnd = Random(7)
-        val empties = (0 until Units.CELLS).filter { !game.isGiven(it) }
+        val empties = (0 until Units.NINE.cells).filter { !game.isGiven(it) }
 
         repeat(40) {
             val cell = empties.random(rnd)
@@ -98,7 +98,7 @@ class SudokuGameTest {
     fun discardingABranchRestoresDigitsAndNotesExactly() {
         val game = newGame()
         val rnd = Random(3)
-        val empties = (0 until Units.CELLS).filter { !game.isGiven(it) }
+        val empties = (0 until Units.NINE.cells).filter { !game.isGiven(it) }
         repeat(15) {
             val cell = empties.random(rnd)
             if (rnd.nextBoolean()) game.setDigit(cell, rnd.nextInt(1, 10))
@@ -127,7 +127,7 @@ class SudokuGameTest {
     @Test
     fun theFirstDigitOfABranchIsItsRootAndSurvivesAsAStruckNoteWhenDiscarded() {
         val game = newGame()
-        val empties = (0 until Units.CELLS).filter { !game.isGiven(it) }
+        val empties = (0 until Units.NINE.cells).filter { !game.isGiven(it) }
         val first = empties[0]
         val second = empties[1]
         assertEquals(-1, game.branchRoot())
@@ -174,7 +174,7 @@ class SudokuGameTest {
     fun undoStopsAtTheBranchStart() {
         val game = newGame()
         val a = firstEmpty(game)
-        val b = (0 until Units.CELLS).first { !game.isGiven(it) && it != a }
+        val b = (0 until Units.NINE.cells).first { !game.isGiven(it) && it != a }
         game.setDigit(a, 1)
         game.beginBranch()
         game.setDigit(b, 2)
@@ -191,7 +191,7 @@ class SudokuGameTest {
     @Test
     fun trialCellsAreTheOnesWhoseDigitChangedInTheBranch() {
         val game = newGame()
-        val empties = (0 until Units.CELLS).filter { !game.isGiven(it) }
+        val empties = (0 until Units.NINE.cells).filter { !game.isGiven(it) }
         val kept = empties[0]
         val tried = empties[1]
         val takenBack = empties[2]
@@ -219,7 +219,7 @@ class SudokuGameTest {
     fun aBranchDoesNotNest() {
         val game = newGame()
         val a = firstEmpty(game)
-        val b = (0 until Units.CELLS).first { !game.isGiven(it) && it != a }
+        val b = (0 until Units.NINE.cells).first { !game.isGiven(it) && it != a }
         game.beginBranch()
         game.setDigit(a, 1)
         game.beginBranch()                 // has no effect
@@ -234,7 +234,7 @@ class SudokuGameTest {
     fun conflictsAreDetectedInRowColumnAndBox() {
         val game = newGame()
         val cell = firstEmpty(game)
-        val peer = Units.peers[cell].first { !game.isGiven(it) }
+        val peer = Units.NINE.peers[cell].first { !game.isGiven(it) }
         game.setDigit(cell, 4)
         game.setDigit(peer, 4)
 
@@ -255,13 +255,13 @@ class SudokuGameTest {
     fun aNoteThatClashesWithAPlacedDigitIsReported() {
         val game = newGame()
         val cell = firstEmpty(game)
-        val peer = Units.peers[cell].first { !game.isGiven(it) && it != cell }
+        val peer = Units.NINE.peers[cell].first { !game.isGiven(it) && it != cell }
 
         game.setDigit(cell, 6)
         game.toggleNote(peer, 6)
         // A digit that is really still free in the cell's neighbourhood --
         // otherwise the second half of the test only checks the puzzle's givens.
-        val free = (1..9).first { d -> d != 6 && Units.peers[peer].none { game.valueAt(it) == d } }
+        val free = (1..9).first { d -> d != 6 && Units.NINE.peers[peer].none { game.valueAt(it) == d } }
         game.toggleNote(peer, free)
 
         val bad = game.noteConflicts()
@@ -273,12 +273,12 @@ class SudokuGameTest {
     @Test
     fun twoNotesOfTheSameDigitInAUnitAreNotAConflict() {
         val game = newGame()
-        val cells = (0 until Units.CELLS).filter { !game.isGiven(it) }
+        val cells = (0 until Units.NINE.cells).filter { !game.isGiven(it) }
         val a = cells.first()
-        val b = Units.peers[a].first { !game.isGiven(it) }
+        val b = Units.NINE.peers[a].first { !game.isGiven(it) }
         // A digit that is not yet placed anywhere near either cell.
         val digit = (1..9).first { d ->
-            Units.peers[a].none { game.valueAt(it) == d } && Units.peers[b].none { game.valueAt(it) == d }
+            Units.NINE.peers[a].none { game.valueAt(it) == d } && Units.NINE.peers[b].none { game.valueAt(it) == d }
         }
         game.toggleNote(a, digit)
         game.toggleNote(b, digit)
@@ -292,8 +292,8 @@ class SudokuGameTest {
     @Test
     fun aNoteThatClashesWithAGivenIsReported() {
         val game = newGame()
-        val clue = (0 until Units.CELLS).first { game.isGiven(it) }
-        val empty = Units.peers[clue].first { !game.isGiven(it) }
+        val clue = (0 until Units.NINE.cells).first { game.isGiven(it) }
+        val empty = Units.NINE.peers[clue].first { !game.isGiven(it) }
         game.toggleNote(empty, game.valueAt(clue))
         assertTrue(Bits.contains(game.noteConflicts()[empty], game.valueAt(clue)))
     }
@@ -303,7 +303,7 @@ class SudokuGameTest {
     fun theNoteConflictDisappearsWithTheNote() {
         val game = newGame()
         val cell = firstEmpty(game)
-        val peer = Units.peers[cell].first { !game.isGiven(it) && it != cell }
+        val peer = Units.NINE.peers[cell].first { !game.isGiven(it) && it != cell }
         game.setDigit(cell, 3)
         game.toggleNote(peer, 3)
         assertTrue(game.noteConflicts()[peer] != 0)
@@ -326,7 +326,7 @@ class SudokuGameTest {
         val puzzle = PuzzleFactory().generate(Level.MEDIUM, Random(11))
         val game = SudokuGame(puzzle)
         assertFalse(game.isSolved())
-        for (c in 0 until Units.CELLS) {
+        for (c in 0 until Units.NINE.cells) {
             if (!game.isGiven(c)) game.setDigit(c, puzzle.solution[c])
         }
         assertTrue(game.isSolved())
@@ -337,7 +337,7 @@ class SudokuGameTest {
     fun aFullButWrongGridIsNotSolved() {
         val puzzle = PuzzleFactory().generate(Level.EASY, Random(12))
         val game = SudokuGame(puzzle)
-        val empties = (0 until Units.CELLS).filter { !game.isGiven(it) }
+        val empties = (0 until Units.NINE.cells).filter { !game.isGiven(it) }
         for (c in empties) game.setDigit(c, puzzle.solution[c])
         // Swap two of the player's own digits: the grid stays full, but breaks the rules.
         val a = empties[0]

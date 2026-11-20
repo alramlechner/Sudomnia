@@ -10,7 +10,8 @@ for the update check (see "Updates").
 ## Status
 
 Playable: grid, digit pad, notes (pencil candidates), undo/redo, branches (trial
-attempts), timer with pause, solved detection, four measured difficulty levels, app
+attempts), timer with pause, solved detection, four measured difficulty levels, a 6x6 kids' variant
+(own start-screen button), app
 icon, signed release build, auto-update.
 
 **Input: the cell first, then the decision.** Below the board are two rows — the large

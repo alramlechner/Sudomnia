@@ -127,6 +127,33 @@ Measured over 100 puzzles each with `generator-cli --mode grade` on a Raspberry 
 tool is why there are numbers here instead of guesses — after any change to `Digger`,
 `Technique` or `HumanSolver` it should be run again.
 
+### Kids' Sudoku: the 6x6 board (1.5.0)
+
+`Units` is a class, not an object: `Units.NINE` (3x3 boxes) and `Units.SIX` (boxes two
+rows high, three columns wide). `Grid`, `Solver`, `SinglesSolver`, `Digger`,
+`GridGenerator`, `HumanSolver`, `Grader` and `HintFinder` take one; the default is
+`NINE`, so nothing that only knows the classic game had to change. Cell indices, the
+candidate masks (`units.allMask`), the unit numbering (rows, then columns, then boxes)
+and the 3x2 pencil-mark layout all derive from it.
+
+The variant is `Level.KIDS`, **not** a second field on `Puzzle`. Statistics, the play
+history and the save format are all keyed by `Level`, so they cover it with no parallel
+structure; `Level.units` gives the board, and `Level.classic` is what the difficulty
+picker lists. The prices of that choice: the stats chips list it, and `GameRecord.rated`
+returns null for it so a 6x6 score never reaches the 9x9 rating.
+
+One band only, no retries: `Digger` digs against singles and stops at
+`KIDS_MIN_CLUES = 18` (half the board). Measured over 100 puzzles with
+`generator-cli --mode grade`: 18.0 clues, 18.0 steps, **every step a hidden single**,
+0 puzzles needing a technique above that, 0.13 ms per puzzle. The full ladder runs on
+the small board too (the tests check it), but a kids' puzzle never reaches past the first
+rung -- which is the point: nothing in it can need guessing or a technique a child has
+not met.
+
+The 9x9 `GridGenerator` shortcut (three independent diagonal boxes) generalises to "the
+boxes that share no row and no column", picked greedily, which is boxes 1, 5, 9 on the
+big board and two boxes on the small one.
+
 ### What the ladder actually changed
 
 Not the labels — the puzzles. The old "Hard" level meant "singles don't suffice" and

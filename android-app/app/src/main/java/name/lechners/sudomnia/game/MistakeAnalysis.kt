@@ -1,18 +1,18 @@
 package name.lechners.sudomnia.game
 
 import name.lechners.sudomnia.rules.Puzzle
-import name.lechners.sudomnia.rules.Units
 
 /** A digit that was entered and is not the one the solution has in that cell. */
 class WrongMove(
+    private val size: Int,
     /** Number of edits applied once the move is made -- the position right after it. */
     val step: Int,
     val cell: Int,
     val digit: Int,
     val correct: Int,
 ) {
-    val row: Int get() = Units.rowOf[cell] + 1
-    val col: Int get() = Units.colOf[cell] + 1
+    val row: Int get() = cell / size + 1
+    val col: Int get() = cell % size + 1
 }
 
 /**
@@ -34,7 +34,7 @@ class MistakeAnalysis(
             for (c in rows[i]) {
                 val digit = c[2]
                 if (digit != 0 && digit != c[1] && digit != puzzle.solution[c[0]]) {
-                    add(WrongMove(i + 1, c[0], digit, puzzle.solution[c[0]]))
+                    add(WrongMove(puzzle.units.size, i + 1, c[0], digit, puzzle.solution[c[0]]))
                     break
                 }
             }

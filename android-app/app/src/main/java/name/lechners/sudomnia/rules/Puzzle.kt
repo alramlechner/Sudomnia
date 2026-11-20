@@ -17,6 +17,9 @@ class Puzzle(
     val solution: IntArray,
     val level: Level,
 ) {
+    /** The board geometry of this puzzle, decided by its level. */
+    val units: Units get() = level.units
+
     val clueCount: Int get() = givens.count { it != 0 }
 
     fun isGiven(cell: Int): Boolean = givens[cell] != 0
@@ -32,8 +35,8 @@ class Puzzle(
     override fun hashCode(): Int =
         31 * (31 * givens.contentHashCode() + solution.contentHashCode()) + level.hashCode()
 
-    /** 81 characters, '.' for an empty cell -- the usual interchange format. */
-    fun toLine(): String = buildString(Units.CELLS) {
+    /** One character per cell, '.' for an empty cell -- the usual interchange format. */
+    fun toLine(): String = buildString(units.cells) {
         for (d in givens) append(if (d == 0) '.' else '0' + d)
     }
 
@@ -44,16 +47,16 @@ class Puzzle(
          * For anything read back from storage: a corrupted saved game must be
          * discarded quietly, not crash the app on startup.
          */
-        fun parseOrNull(line: String): IntArray? =
-            try { parse(line) } catch (e: IllegalArgumentException) { null }
+        fun parseOrNull(line: String, units: Units = Units.NINE): IntArray? =
+            try { parse(line, units) } catch (e: IllegalArgumentException) { null }
 
-        /** Parses the 81-character form; accepts '.', '0' and ' ' as empty. */
-        fun parse(line: String): IntArray {
+        /** Parses the one-character-per-cell form; accepts '.', '0' and ' ' as empty. */
+        fun parse(line: String, units: Units = Units.NINE): IntArray {
             val cells = line.filter { it in "0123456789." || it == ' ' }
-            require(cells.length == Units.CELLS) { "expected 81 cells, got ${cells.length}" }
-            return IntArray(Units.CELLS) { i ->
+            require(cells.length == units.cells) { "expected ${units.cells} cells, got ${cells.length}" }
+            return IntArray(units.cells) { i ->
                 val ch = cells[i]
-                if (ch in '1'..'9') ch - '0' else 0
+                if (ch in '1'..'0' + units.size) ch - '0' else 0
             }
         }
     }

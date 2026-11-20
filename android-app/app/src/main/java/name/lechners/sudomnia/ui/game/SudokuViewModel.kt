@@ -30,14 +30,14 @@ import name.lechners.sudomnia.rules.Hint
 import name.lechners.sudomnia.rules.HintFinder
 import name.lechners.sudomnia.rules.Level
 import name.lechners.sudomnia.rules.PuzzleFactory
-import name.lechners.sudomnia.rules.Units
 import name.lechners.sudomnia.ui.analysis.AnalysisUi
 import name.lechners.sudomnia.ui.board.BoardState
 
 class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
 
     private val factory = PuzzleFactory()
-    private val hintFinder = HintFinder()
+    private val hintFinders = HashMap<Level, HintFinder>()
+    private fun hintFinderFor(level: Level) = hintFinders.getOrPut(level) { HintFinder(level.units) }
     private var game: SudokuGame? = null
 
     // Read synchronously, before the first frame -- see SudomniaPrefs.
@@ -213,24 +213,25 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         val pos = model.positionAt(step) ?: run { _analysis.value = null; return }
         val focus = model.wrongMoveAt(step)
         val solution = model.puzzle.solution
-        val values = IntArray(Units.CELLS) { pos.valueAt(it) }
-        val wrongNow = BooleanArray(Units.CELLS) { values[it] != 0 && values[it] != solution[it] }
+        val values = IntArray(model.puzzle.units.cells) { pos.valueAt(it) }
+        val wrongNow = BooleanArray(model.puzzle.units.cells) { values[it] != 0 && values[it] != solution[it] }
         _analysis.value = AnalysisUi(
             board = BoardState(
                 values = values,
-                givens = BooleanArray(Units.CELLS) { pos.isGiven(it) },
+                givens = BooleanArray(model.puzzle.units.cells) { pos.isGiven(it) },
                 notes = pos.notes.copyOf(),
                 conflicts = wrongNow,
-                noteConflicts = IntArray(Units.CELLS),
-                trial = BooleanArray(Units.CELLS),
+                noteConflicts = IntArray(model.puzzle.units.cells),
+                trial = BooleanArray(model.puzzle.units.cells),
                 trialRoot = -1,
-                struck = IntArray(Units.CELLS),
+                struck = IntArray(model.puzzle.units.cells),
                 selected = focus?.cell ?: -1,
                 highlightDigit = 0,
                 highlightPeers = false,
-                hintCells = BooleanArray(Units.CELLS),
+                hintCells = BooleanArray(model.puzzle.units.cells),
                 hintUnits = 0,
                 hintStrikes = IntArray(0),
+                units = model.puzzle.units,
             ),
             level = model.puzzle.level,
             outcome = e.outcome,
@@ -542,13 +543,13 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
     }
 
     private fun requestHint(g: SudokuGame) {
-        val board = IntArray(Units.CELLS) { g.valueAt(it) }
+        val board = IntArray(g.puzzle.units.cells) { g.valueAt(it) }
         hintPending = true
         viewModelScope.launch {
             // Proving the board dead runs a full solve. It is sub-millisecond, but it
             // happens on a button press and must not risk a dropped frame.
             val hint = withContext(Dispatchers.Default) {
-                hintFinder.find(board, g.puzzle.solution)
+                hintFinderFor(g.puzzle.level).find(board, g.puzzle.solution)
             }
             hintPending = false
             if (game !== g) return@launch          // a new game started meanwhile
@@ -636,7 +637,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         ended = keep
         prefs.saveEnded(keep)
         viewModelScope.launch {
-            val score = withContext(Dispatchers.Default) { Grader().grade(givens).score }
+            val score = withContext(Dispatchers.Default) { Grader(level.units).grade(givens).score }
             val record = GameRecord(at, level, score, duration, mistakesNow, hints, clean, outcome)
             val before = history.rating()
             history = history.plus(record)
@@ -680,7 +681,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             _ui.value = _ui.value.copy(generating = true, board = null)
             return
         }
-        val values = IntArray(Units.CELLS) { g.valueAt(it) }
+        val values = IntArray(g.puzzle.units.cells) { g.valueAt(it) }
         val editable = selected >= 0 && !g.isGiven(selected)
 
         // The single gate. Conflicts are computed either way -- solved detection
@@ -690,12 +691,12 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         // leak the answer.
         val realConflicts = g.conflicts()
         val shown =
-            if (settings.showConflicts) realConflicts else BooleanArray(Units.CELLS)
+            if (settings.showConflicts) realConflicts else BooleanArray(g.puzzle.units.cells)
         // Pencil marks go through the very same gate. They are not computed unless
         // they are shown -- unlike the entries, whose conflicts the solved detection
         // needs either way.
         val shownNoteConflicts =
-            if (settings.showConflicts) g.noteConflicts() else IntArray(Units.CELLS)
+            if (settings.showConflicts) g.noteConflicts() else IntArray(g.puzzle.units.cells)
 
         // A digit whose nine are all placed goes dead on the keypad when the aid dims
         // them -- a mode armed with it could no longer be switched off, so leave it.
@@ -722,7 +723,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         // stage -- that stage *is* "look here" -- while the units and the struck
         // candidates only appear with the reasoning, because they give it away.
         val hint = _ui.value.hint
-        val hintCells = BooleanArray(Units.CELLS)
+        val hintCells = BooleanArray(g.puzzle.units.cells)
         var hintUnits = 0
         var hintStrikes = IntArray(0)
         val hintStep = hint?.step
@@ -742,7 +743,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
         _ui.value = _ui.value.copy(
             board = BoardState(
                 values = values,
-                givens = BooleanArray(Units.CELLS) { g.isGiven(it) },
+                givens = BooleanArray(g.puzzle.units.cells) { g.isGiven(it) },
                 notes = g.notes.copyOf(),
                 conflicts = shown,
                 noteConflicts = shownNoteConflicts,
@@ -755,6 +756,7 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
                 hintCells = hintCells,
                 hintUnits = hintUnits,
                 hintStrikes = hintStrikes,
+                units = g.puzzle.units,
                 flashCell = flashCell,
                 flashNote = flashNote,
                 flashId = flashId,

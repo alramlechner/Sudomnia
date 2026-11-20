@@ -150,6 +150,7 @@ fun GameScreen(
         val canEdit = state.selectionEditable && !state.generating && !state.finished &&
             !state.paused
         DigitPad(
+            size = state.level.units.size,
             remaining = state.remaining,
             selectedDigit = state.selectedDigit,
             armed = state.armedDigit,
@@ -164,6 +165,7 @@ fun GameScreen(
         )
 
         NotePad(
+            size = state.level.units.size,
             notes = state.selectedNotes,
             armed = state.armedNote,
             // A filled cell cannot hold pencil marks; SudokuGame.toggleNote
@@ -273,6 +275,7 @@ fun GameScreen(
                 deadEnd = state.hintDeadEnd,
                 onAdvance = onHint,
                 onDismiss = onDismissHint,
+                size = state.level.units.size,
             )
         }
 

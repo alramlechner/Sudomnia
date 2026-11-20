@@ -29,7 +29,7 @@ fun NewGameDialog(
                     fontSize = 14.sp,
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
-                for (level in Level.entries) {
+                for (level in Level.classic) {
                     TextButton(
                         onClick = { onPick(level) },
                         modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),

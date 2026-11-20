@@ -42,4 +42,22 @@ package name.lechners.sudomnia.rules
  * easy tiers along that line would have labelled the *easier* puzzles harder. The
  * same argument shapes the order of [Technique] itself.
  */
-enum class Level { EASY, MEDIUM, HARD, EXPERT }
+enum class Level {
+    EASY, MEDIUM, HARD, EXPERT,
+
+    /**
+     * The children's variant: a 6x6 board, singles only, started from its own button on
+     * the home screen. It is a level in the enum so that statistics, the game history
+     * and saved games -- all keyed by level -- cover it without a parallel structure.
+     * It is never offered in the difficulty picker; see [classic].
+     */
+    KIDS;
+
+    /** The board this level is played on. */
+    val units: Units get() = if (this == KIDS) Units.SIX else Units.NINE
+
+    companion object {
+        /** The four bands of the 9x9 game -- what the difficulty picker lists. */
+        val classic: List<Level> = listOf(EASY, MEDIUM, HARD, EXPERT)
+    }
+}

@@ -9,9 +9,9 @@ package name.lechners.sudomnia.rules
  *
  * Not thread-safe -- one instance per thread.
  */
-class Grader {
+class Grader(private val units: Units = Units.NINE) {
 
-    private val solver = HumanSolver()
+    private val solver = HumanSolver(units)
 
     /**
      * @param level    the band, or null if the ladder could not finish the puzzle at
@@ -62,7 +62,7 @@ class Grader {
 
         /** The hardest technique a band may need. The digger digs against this. */
         fun ceilingOf(level: Level): Technique = when (level) {
-            Level.EASY, Level.MEDIUM -> Technique.NAKED_SINGLE
+            Level.EASY, Level.MEDIUM, Level.KIDS -> Technique.NAKED_SINGLE
             Level.HARD -> Technique.HIDDEN_TRIPLE
             Level.EXPERT -> Technique.entries.last()
         }

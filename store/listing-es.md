@@ -74,6 +74,11 @@ Dos filas fijas bajo el tablero: arriba las cifras, debajo las notas a lápiz. S
 Pausa detiene el reloj y oculta el tablero. El reloj también se detiene solo en cuanto la app deja de estar en pantalla. La partida en curso sobrevive a cerrar la app: cifras, notas, historial de deshacer, una rama abierta y el tiempo.
 
 
+SUDOKU PARA NIÑOS
+
+Un botón propio en la pantalla de inicio abre el Sudoku para niños: un tablero pequeño de 6×6 con las cifras del 1 al 6 y cajas de 2×3 casillas. Cada puzle tiene exactamente una solución y se resuelve solo con «aquí solo cabe esta cifra»: nunca hace falta adivinar. También hay notas, deshacer y pistas.
+
+
 CÓDIGO ABIERTO
 
 Apache-2.0. Léelo, compílalo, modifícalo:

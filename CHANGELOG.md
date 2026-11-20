@@ -3,6 +3,24 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning based on [SemVer](https://semver.org/).
 
+## [1.5.0] – 2026-11-20
+
+### Added
+- **Kids' Sudoku**: a 6x6 board with 2x3 boxes and the digits 1 to 6, started from its
+  own button on the start screen ("Kindersudoku starten") -- not hidden in the settings.
+  Every puzzle has 18 clues, is unique, and falls to hidden singles alone, so nothing
+  ever needs guessing or a technique a child has not met.
+- Pencil marks, undo, hints, the wrong-entry warning and statistics all work on the
+  small board. Kids' games are counted in the statistics under their own filter and
+  are never rated, so they cannot move the 9x9 rating.
+
+### Changed
+- `rules/` no longer assumes nine: `Units` is a class (`Units.NINE`, `Units.SIX`), and
+  `Grid`, `Solver`, `Digger`, `GridGenerator`, `HumanSolver` and `HintFinder` take it
+  as a parameter. The 9x9 game is unchanged.
+- The difficulty picker lists the four classic bands (`Level.classic`); the kids' game
+  is `Level.KIDS` and has no entry there.
+
 ## [1.4.9] – 2026-10-28
 
 ### Added

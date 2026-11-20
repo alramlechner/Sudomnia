@@ -37,7 +37,7 @@ class GameSnapshotTest {
         val puzzle = PuzzleFactory().generate(Level.MEDIUM, Random(5))
         val game = SudokuGame(puzzle)
         val rnd = Random(9)
-        val empties = (0 until Units.CELLS).filter { !game.isGiven(it) }
+        val empties = (0 until Units.NINE.cells).filter { !game.isGiven(it) }
 
         repeat(30) {
             val cell = empties.random(rnd)
@@ -88,7 +88,7 @@ class GameSnapshotTest {
     fun anOpenBranchSurvivesTheRoundTrip() {
         val puzzle = PuzzleFactory().generate(Level.HARD, Random(8))
         val game = SudokuGame(puzzle)
-        val empties = (0 until Units.CELLS).filter { !game.isGiven(it) }
+        val empties = (0 until Units.NINE.cells).filter { !game.isGiven(it) }
         game.setDigit(empties[0], puzzle.solution[empties[0]])
         game.beginBranch()
         game.setDigit(empties[1], 1)
@@ -112,7 +112,7 @@ class GameSnapshotTest {
     @Test
     fun aVersionOneSnapshotStillLoads() {
         val game = SudokuGame(PuzzleFactory().generate(Level.EASY, Random(10)))
-        game.setDigit((0 until Units.CELLS).first { !game.isGiven(it) }, 7)
+        game.setDigit((0 until Units.NINE.cells).first { !game.isGiven(it) }, 7)
         val v2 = snapshotOf(game).encode().split("|")
         val v1 = (listOf("1") + v2.subList(1, 9) + v2.last()).joinToString("|")
 
@@ -141,7 +141,7 @@ class GameSnapshotTest {
     @Test
     fun aVersionTwoSnapshotStillLoads() {
         val game = SudokuGame(PuzzleFactory().generate(Level.EASY, Random(12)))
-        game.setDigit((0 until Units.CELLS).first { !game.isGiven(it) }, 7)
+        game.setDigit((0 until Units.NINE.cells).first { !game.isGiven(it) }, 7)
         val v3 = snapshotOf(game).encode().split("|")
         val v2 = (listOf("2") + v3.subList(1, 10) + v3.last()).joinToString("|")
 
@@ -154,7 +154,7 @@ class GameSnapshotTest {
     @Test
     fun struckOutNotesSurviveTheRoundTrip() {
         val game = SudokuGame(PuzzleFactory().generate(Level.EASY, Random(13)))
-        val cell = (0 until Units.CELLS).first { !game.isGiven(it) }
+        val cell = (0 until Units.NINE.cells).first { !game.isGiven(it) }
         game.beginBranch()
         game.setDigit(cell, 5)
         game.discardBranch(deadEnd = true)
@@ -179,7 +179,7 @@ class GameSnapshotTest {
     @Test
     fun aMalformedEditRowIsRejected() {
         val game = SudokuGame(PuzzleFactory().generate(Level.EASY, Random(3)))
-        game.setDigit((0 until Units.CELLS).first { !game.isGiven(it) }, 4)
+        game.setDigit((0 until Units.NINE.cells).first { !game.isGiven(it) }, 4)
         val broken = snapshotOf(game).copy(edits = listOf("1:2>3"))   // four fields instead of five
         assertNull(GameSnapshot.decode(broken.encode())!!.toGame())
     }

@@ -15,7 +15,7 @@ class HintTest {
     /** Plays [moves] correct digits from the solution into random empty cells. */
     private fun partiallyPlayed(puzzle: Puzzle, moves: Int, rnd: Random): IntArray {
         val board = puzzle.givens.copyOf()
-        val empties = (0 until Units.CELLS).filter { board[it] == 0 }.shuffled(rnd)
+        val empties = (0 until Units.NINE.cells).filter { board[it] == 0 }.shuffled(rnd)
         for (c in empties.take(moves)) board[c] = puzzle.solution[c]
         return board
     }
@@ -30,10 +30,10 @@ class HintTest {
     fun aHintNeverSaysSomethingFalse() {
         val factory = PuzzleFactory()
         val rnd = Random(20260903)
-        for (level in Level.entries) {
+        for (level in Level.classic) {
             repeat(perLevel) {
                 val puzzle = factory.generate(level, rnd)
-                val blanks = Units.CELLS - puzzle.clueCount
+                val blanks = Units.NINE.cells - puzzle.clueCount
                 // Sample the whole game, from untouched to nearly finished.
                 for (moves in 0 until blanks step maxOf(1, blanks / 8)) {
                     val board = partiallyPlayed(puzzle, moves, rnd)
@@ -87,7 +87,7 @@ class HintTest {
         var longest = 0
         val lengths = HashMap<Int, Int>()
 
-        for (level in Level.entries) {
+        for (level in Level.classic) {
             repeat(perLevel) {
                 val puzzle = factory.generate(level, rnd)
                 val board = puzzle.givens.copyOf()
@@ -151,7 +151,7 @@ class HintTest {
         repeat(perLevel) {
             val puzzle = factory.generate(Level.MEDIUM, rnd)
             val board = puzzle.givens.copyOf()
-            val empty = (0 until Units.CELLS).first { board[it] == 0 }
+            val empty = (0 until Units.NINE.cells).first { board[it] == 0 }
             val right = puzzle.solution[empty]
             val wrong = (1..9).first { it != right }
             board[empty] = wrong
@@ -164,8 +164,8 @@ class HintTest {
     fun aRuleBreakingBoardIsADeadEnd() {
         val puzzle = PuzzleFactory().generate(Level.EASY, Random(17))
         val board = puzzle.givens.copyOf()
-        val given = (0 until Units.CELLS).first { board[it] != 0 }
-        val peer = Units.peers[given].first { board[it] == 0 }
+        val given = (0 until Units.NINE.cells).first { board[it] != 0 }
+        val peer = Units.NINE.peers[given].first { board[it] == 0 }
         board[peer] = board[given]
         assertEquals(Hint.DeadEnd, finder.find(board, puzzle.solution))
     }

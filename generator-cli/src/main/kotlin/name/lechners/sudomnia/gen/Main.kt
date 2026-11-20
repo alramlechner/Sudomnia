@@ -81,7 +81,7 @@ private fun bank(args: Array<String>) {
     manifest.writeText(buildString {
         appendLine("Sudomnia generator-cli -- puzzle stock")
         appendLine("Format per line: givens;solution;level")
-        appendLine("  givens/solution: 81 characters, '.' = empty (compatible with rules/Puzzle.kt toLine()/parse())")
+        appendLine("  givens/solution: 81 characters (36 for the kids level), '.' = empty (compatible with rules/Puzzle.kt toLine()/parse())")
         appendLine("  level: the MEASURED level (Digger.classify), can rarely differ from the targeted level")
         appendLine("Started: $startedAt")
         appendLine("Total target: $totalCount  (${targets.entries.joinToString { "${it.key}=${it.value}" }})")
