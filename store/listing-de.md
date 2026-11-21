@@ -76,7 +76,7 @@ Pause hält die Uhr an und blendet das Gitter aus. Die Uhr hält auch von selbst
 
 SUDOKU FÜR KINDER
 
-Ein eigener Knopf auf dem Startbildschirm startet das Kindersudoku: ein kleines 6×6-Gitter mit den Ziffern 1 bis 6 und Kästchen aus 2×3 Feldern. Jedes Rätsel hat genau eine Lösung und lässt sich allein mit „hier passt nur diese Ziffer hin" lösen — es muss nie geraten werden. Notizen, Rückgängig und Hinweise gibt es auch hier.
+Ein eigener Knopf auf dem Startbildschirm startet das Kindersudoku: ein kleines 6×6-Gitter mit den Ziffern 1 bis 6 und Kästchen aus 2×3 Feldern. Drei Stufen – Leicht, Mittel und Schwer – mit 24 bis hinunter zu 12 vorgegebenen Ziffern. Jedes Rätsel hat genau eine Lösung und lässt sich allein mit „hier passt nur diese Ziffer hin" lösen — es muss nie geraten werden. Notizen, Rückgängig und Hinweise gibt es auch hier.
 
 
 QUELLOFFEN

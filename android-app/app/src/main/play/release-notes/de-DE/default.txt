@@ -1,1 +1,1 @@
-Neu: Kindersudoku — ein 6×6-Gitter mit eigenem Knopf auf dem Startbildschirm. Jedes Rätsel ist ohne Raten lösbar, nur mit „hier passt nur diese Ziffer hin".
+Neu: Das Kindersudoku hat jetzt drei Stufen – Leicht, Mittel und Schwer. Alle bleiben ohne Raten lösbar.

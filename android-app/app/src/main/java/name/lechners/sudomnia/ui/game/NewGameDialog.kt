@@ -18,10 +18,12 @@ import name.lechners.sudomnia.rules.Level
 fun NewGameDialog(
     onPick: (Level) -> Unit,
     onDismiss: () -> Unit,
+    levels: List<Level> = Level.classic,
+    title: String = stringResource(R.string.new_game_title),
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.new_game_title)) },
+        title = { Text(title) },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
@@ -29,7 +31,7 @@ fun NewGameDialog(
                     fontSize = 14.sp,
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
-                for (level in Level.classic) {
+                for (level in levels) {
                     TextButton(
                         onClick = { onPick(level) },
                         modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),

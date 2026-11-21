@@ -51,13 +51,22 @@ enum class Level {
      * and saved games -- all keyed by level -- cover it without a parallel structure.
      * It is never offered in the difficulty picker; see [classic].
      */
-    KIDS;
+    KIDS,
+
+    /** Easier and harder children's games. [KIDS] itself is the middle one -- it kept its name so that saved games and statistics from 1.5.x stay valid. */
+    KIDS_EASY, KIDS_HARD;
+
+    /** One of the three children's levels: a 6x6 board, singles only. */
+    val isKids: Boolean get() = this == KIDS || this == KIDS_EASY || this == KIDS_HARD
 
     /** The board this level is played on. */
-    val units: Units get() = if (this == KIDS) Units.SIX else Units.NINE
+    val units: Units get() = if (isKids) Units.SIX else Units.NINE
 
     companion object {
         /** The four bands of the 9x9 game -- what the difficulty picker lists. */
         val classic: List<Level> = listOf(EASY, MEDIUM, HARD, EXPERT)
+
+        /** The children's levels, easiest first -- what the kids' picker lists. */
+        val kids: List<Level> = listOf(KIDS_EASY, KIDS, KIDS_HARD)
     }
 }

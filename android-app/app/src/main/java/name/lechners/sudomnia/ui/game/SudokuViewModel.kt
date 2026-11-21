@@ -704,11 +704,13 @@ class SudokuViewModel(private val prefs: SudomniaPrefs) : ViewModel() {
             g.remaining().getOrElse(armedDigit) { 0 } <= 0
         ) armedDigit = 0
 
-        // An armed "Zahl setzen" digit lights all its twins on the board, and it
-        // outranks the selected cell's digit: it is what the next tap will place.
+        // An armed digit -- "Zahl setzen" or a note -- lights all its twins on the board
+        // (placed digits and matching pencil marks), and it outranks the selected cell's
+        // digit: it is what the next tap will place or note.
         val highlight = when {
             !settings.highlightSameDigit -> 0
             armedDigit != 0 -> armedDigit
+            armedNote != 0 -> armedNote
             selected >= 0 -> values[selected]
             else -> 0
         }

@@ -142,10 +142,15 @@ structure; `Level.units` gives the board, and `Level.classic` is what the diffic
 picker lists. The prices of that choice: the stats chips list it, and `GameRecord.rated`
 returns null for it so a 6x6 score never reaches the 9x9 rating.
 
-One band only, no retries: `Digger` digs against singles and stops at
-`KIDS_MIN_CLUES = 18` (half the board). Measured over 100 puzzles with
-`generator-cli --mode grade`: 18.0 clues, 18.0 steps, **every step a hidden single**,
-0 puzzles needing a technique above that, 0.13 ms per puzzle. The full ladder runs on
+Three levels, `KIDS_EASY`, `KIDS`, `KIDS_HARD` (`Level.kids`, `Level.isKids`), no retries:
+`Digger` digs against singles and stops at 24, 18 or 12 clues (`Digger.kidsFloor`). `KIDS`
+is the middle one and kept its name so 1.5.x saved games and statistics stay valid.
+**The levels differ in blanks, not in technique**, and that is measured, not assumed: a
+6x6 puzzle dug to the very limit (about 10 clues) still falls to singles in 297 of 300
+cases, and letting the whole ladder in changes nothing -- the board is too small for a
+technique above singles to ever be *needed*. So the clue count, which is a poor signal on
+9x9, is the honest one here. Measured at 18 clues with `generator-cli --mode grade`:
+18.0 steps, **every step a hidden single**, 0.13 ms per puzzle. The full ladder runs on
 the small board too (the tests check it), but a kids' puzzle never reaches past the first
 rung -- which is the point: nothing in it can need guessing or a technique a child has
 not met.

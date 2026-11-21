@@ -66,25 +66,28 @@ class KidsTest {
         val solver = Solver(six)
         val singles = SinglesSolver(six)
         val rnd = Random(2)
-        repeat(rounds) {
-            val p = factory.generate(Level.KIDS, rnd)
-            assertEquals(Level.KIDS, p.level)
+        for (level in Level.kids) repeat(rounds) {
+            val p = factory.generate(level, rnd)
+            assertEquals(level, p.level)
             assertEquals(36, p.givens.size)
-            assertEquals(1, solver.countSolutions(p.givens, limit = 2))
-            assertTrue("needs more than singles: ${p.toLine()}", singles.solves(p.givens, useHidden = true))
+            assertEquals("$level not unique", 1, solver.countSolutions(p.givens, limit = 2))
+            assertTrue("$level needs more than singles: ${p.toLine()}", singles.solves(p.givens, useHidden = true))
             assertTrue(Grid.isValidSolution(p.solution, six))
-            assertTrue("too empty: ${p.clueCount}", p.clueCount >= Digger.KIDS_MIN_CLUES)
+            assertTrue("$level too empty: ${p.clueCount}", p.clueCount >= Digger.kidsFloor(level))
             for (c in 0 until 36) if (p.givens[c] != 0) assertEquals(p.solution[c], p.givens[c])
         }
     }
 
     @Test
-    fun kidsPuzzlesStopAtTheClueFloor() {
+    fun theThreeKidsLevelsKeepTwentyFourEighteenAndTwelveClues() {
         val factory = PuzzleFactory()
         val rnd = Random(3)
-        val counts = List(40) { factory.generate(Level.KIDS, rnd).clueCount }
-        println("kids clue counts: min=${counts.min()} avg=${counts.average()} max=${counts.max()}")
-        assertTrue(counts.all { it >= Digger.KIDS_MIN_CLUES })
+        for ((level, clues) in listOf(Level.KIDS_EASY to 24, Level.KIDS to 18, Level.KIDS_HARD to 12)) {
+            val counts = List(40) { factory.generate(level, rnd).clueCount }
+            println("$level clue counts: min=${counts.min()} avg=${counts.average()} max=${counts.max()}")
+            assertTrue("$level: ${counts.min()} < $clues", counts.all { it >= clues })
+            assertEquals("$level should reach its floor every time", clues.toDouble(), counts.average(), 0.01)
+        }
     }
 
     @Test
@@ -92,8 +95,8 @@ class KidsTest {
         val factory = PuzzleFactory()
         val human = HumanSolver(six)
         val rnd = Random(4)
-        repeat(rounds) {
-            val p = factory.generate(Level.KIDS, rnd)
+        for (level in Level.kids) repeat(rounds / 2) {
+            val p = factory.generate(level, rnd)
             val result = human.solve(p.givens, trace = { step ->
                 if (step.technique.places) {
                     assertEquals(p.solution[step.cell], step.digit)
@@ -130,7 +133,9 @@ class KidsTest {
     @Test
     fun theDifficultyPickerListsOnlyTheClassicBands() {
         assertEquals(listOf(Level.EASY, Level.MEDIUM, Level.HARD, Level.EXPERT), Level.classic)
-        assertTrue(Level.entries.contains(Level.KIDS))
+        assertEquals(listOf(Level.KIDS_EASY, Level.KIDS, Level.KIDS_HARD), Level.kids)
+        assertTrue(Level.kids.all { it.isKids && it.units === Units.SIX })
+        assertTrue(Level.classic.none { it.isKids })
     }
 
     // --- the game layer on the small board ------------------------------------
@@ -194,8 +199,10 @@ class KidsTest {
 
     @Test
     fun kidsGamesAreNeverRated() {
-        val kids = GameRecord(0L, Level.KIDS, 20, 120_000L, 0, 0, true, Outcome.SOLVED)
-        assertEquals(null, kids.rated)
+        for (level in Level.kids) {
+            assertEquals(null, GameRecord(0L, level, 20, 120_000L, 0, 0, true, Outcome.SOLVED).rated)
+        }
+        val kids = GameRecord(0L, Level.KIDS_HARD, 20, 120_000L, 0, 0, true, Outcome.SOLVED)
         val easy = GameRecord(0L, Level.EASY, 20, 120_000L, 0, 0, true, Outcome.SOLVED)
         assertTrue(easy.rated != null)
         val history = History().plus(kids).plus(kids)

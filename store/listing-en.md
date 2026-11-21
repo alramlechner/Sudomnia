@@ -76,7 +76,7 @@ Pause stops the clock and hides the grid. The clock also stops on its own when t
 
 SUDOKU FOR KIDS
 
-A button of its own on the start screen starts the kids' Sudoku: a small 6×6 grid with the digits 1 to 6 and boxes of 2×3 cells. Every puzzle has exactly one solution and can be solved with nothing but "only this digit fits here" — nothing ever needs guessing. Pencil marks, undo and hints are there too.
+A button of its own on the start screen starts the kids' Sudoku: a small 6×6 grid with the digits 1 to 6 and boxes of 2×3 cells. Three levels - Easy, Medium and Hard - from 24 down to 12 clues. Every puzzle has exactly one solution and can be solved with nothing but "only this digit fits here" — nothing ever needs guessing. Pencil marks, undo and hints are there too.
 
 
 OPEN SOURCE

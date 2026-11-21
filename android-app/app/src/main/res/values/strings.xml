@@ -17,7 +17,9 @@
     <string name="level_medium">Medium</string>
     <string name="level_hard">Hard</string>
     <string name="level_expert">Expert</string>
-    <string name="level_kids">Kids</string>
+    <string name="level_kids">Kids · Medium</string>
+    <string name="level_kids_easy">Kids · Easy</string>
+    <string name="level_kids_hard">Kids · Hard</string>
 
     <plurals name="clue_count">
         <item quantity="one">%1$d clue</item>

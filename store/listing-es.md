@@ -76,7 +76,7 @@ Pausa detiene el reloj y oculta el tablero. El reloj también se detiene solo en
 
 SUDOKU PARA NIÑOS
 
-Un botón propio en la pantalla de inicio abre el Sudoku para niños: un tablero pequeño de 6×6 con las cifras del 1 al 6 y cajas de 2×3 casillas. Cada puzle tiene exactamente una solución y se resuelve solo con «aquí solo cabe esta cifra»: nunca hace falta adivinar. También hay notas, deshacer y pistas.
+Un botón propio en la pantalla de inicio abre el Sudoku para niños: un tablero pequeño de 6×6 con las cifras del 1 al 6 y cajas de 2×3 casillas. Tres niveles (Fácil, Medio y Difícil), de 24 a 12 cifras dadas. Cada puzle tiene exactamente una solución y se resuelve solo con «aquí solo cabe esta cifra»: nunca hace falta adivinar. También hay notas, deshacer y pistas.
 
 
 CÓDIGO ABIERTO

@@ -3,6 +3,19 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning based on [SemVer](https://semver.org/).
 
+## [1.6.0] – 2026-11-21
+
+### Added
+- **Three kids' levels.** "Kindersudoku starten" now asks for Easy, Medium or Hard
+  (24, 18 or 12 of 36 clues). All three stay singles-only, so none ever needs guessing.
+  Medium is the level 1.5.x had; saved games and statistics from it carry over.
+
+## [1.5.1] – 2026-11-21
+
+### Changed
+- A digit armed on the note row now lights its twins on the board -- placed digits and
+  matching pencil marks -- exactly as an armed digit on the digit row already did.
+
 ## [1.5.0] – 2026-11-20
 
 ### Added

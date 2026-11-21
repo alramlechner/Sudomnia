@@ -56,6 +56,8 @@ fun levelLabel(level: Level): String = stringResource(
         Level.HARD -> R.string.level_hard
         Level.EXPERT -> R.string.level_expert
         Level.KIDS -> R.string.level_kids
+        Level.KIDS_EASY -> R.string.level_kids_easy
+        Level.KIDS_HARD -> R.string.level_kids_hard
     }
 )
 

@@ -50,7 +50,7 @@ data class GameRecord(
      * counts once it had lasted long enough to be a real attempt -- otherwise
      * abandoning a bad start would be free.
      */
-    val rated: Double? get() = if (level == Level.KIDS) null else when (outcome) {
+    val rated: Double? get() = if (level.isKids) null else when (outcome) {
         Outcome.SOLVED -> {
             val minutes = (durationMs / 60_000.0).coerceAtLeast(0.5)
             var perf = score / minutes

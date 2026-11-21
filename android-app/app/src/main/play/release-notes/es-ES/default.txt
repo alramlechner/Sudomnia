@@ -1,1 +1,1 @@
-Novedad: Sudoku para niños — un tablero de 6×6 con su propio botón en la pantalla de inicio. Cada puzle se resuelve sin adivinar, solo con «aquí solo cabe esta cifra».
+Novedad: el Sudoku para niños ahora tiene tres niveles: Fácil, Medio y Difícil. Todos se resuelven sin adivinar.

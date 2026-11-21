@@ -34,7 +34,7 @@ class Digger(private val units: Units = Units.NINE) {
 
         for (cell in order) {
             if (level == Level.EASY && clues <= EASY_MIN_CLUES) break
-            if (level == Level.KIDS && clues <= KIDS_MIN_CLUES) break
+            if (level.isKids && clues <= kidsFloor(level)) break
 
             val saved = puzzle[cell]
             puzzle[cell] = 0
@@ -68,7 +68,7 @@ class Digger(private val units: Units = Units.NINE) {
      * to hand out as "hard" could not be finished by any technique at all.
      */
     private fun allows(puzzle: IntArray, level: Level): Boolean = when (level) {
-        Level.EASY, Level.MEDIUM, Level.KIDS -> singles.solves(puzzle, useHidden = true)
+        Level.EASY, Level.MEDIUM, Level.KIDS, Level.KIDS_EASY, Level.KIDS_HARD -> singles.solves(puzzle, useHidden = true)
         Level.HARD -> grader.solvesWithin(puzzle, Technique.HIDDEN_TRIPLE)
         Level.EXPERT -> grader.solvesWithin(puzzle, Technique.entries.last())
     }
@@ -107,6 +107,21 @@ class Digger(private val units: Units = Units.NINE) {
          * the grid is left to find -- short enough for a child, and every one a single.
          */
         const val KIDS_MIN_CLUES = 18
+
+        /**
+         * Clues the kids' levels keep: 24, 18 and 12 of 36 cells. Unlike on the 9x9 board
+         * the technique ladder does not separate the levels here -- measured, a 6x6
+         * puzzle dug to the limit (about 10 clues) is still singles-only in 297 of 300
+         * cases -- so the number of blanks is the honest difference.
+         */
+        const val KIDS_EASY_CLUES = 24
+        const val KIDS_HARD_CLUES = 12
+
+        fun kidsFloor(level: Level): Int = when (level) {
+            Level.KIDS_EASY -> KIDS_EASY_CLUES
+            Level.KIDS_HARD -> KIDS_HARD_CLUES
+            else -> KIDS_MIN_CLUES
+        }
     }
 
     private fun shuffleOrder(rnd: Random) {

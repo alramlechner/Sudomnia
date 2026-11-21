@@ -62,7 +62,7 @@ class Grader(private val units: Units = Units.NINE) {
 
         /** The hardest technique a band may need. The digger digs against this. */
         fun ceilingOf(level: Level): Technique = when (level) {
-            Level.EASY, Level.MEDIUM, Level.KIDS -> Technique.NAKED_SINGLE
+            Level.EASY, Level.MEDIUM, Level.KIDS, Level.KIDS_EASY, Level.KIDS_HARD -> Technique.NAKED_SINGLE
             Level.HARD -> Technique.HIDDEN_TRIPLE
             Level.EXPERT -> Technique.entries.last()
         }

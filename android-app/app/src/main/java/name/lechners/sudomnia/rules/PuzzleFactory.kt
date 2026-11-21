@@ -23,7 +23,7 @@ class PuzzleFactory {
         val units = level.units
         val generator = generators.getOrPut(units) { GridGenerator(units) }
         val digger = diggers.getOrPut(units) { Digger(units) }
-        if (level == Level.KIDS) {
+        if (level.isKids) {
             // One band only: there is nothing to retry for.
             val solution = generator.fullGrid(rnd)
             return Puzzle(digger.dig(solution, level, rnd), solution, level)
