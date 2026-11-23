@@ -77,13 +77,13 @@ else
 fi
 
 echo ""
-echo "==> Building APK (Java 17 is mandatory, newer JDKs break the Kotlin compiler)..."
+echo "==> Building APK (JDK 25, Gradle 9.5.0)..."
 cd "$GRADLE_DIR"
 # The selfhosted flavour: only it contains the self-update that this script even
 # delivers. The play flavour has neither the code nor the permissions for it --
 # see app/build.gradle.kts and RELEASING.md.
-JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64 \
-  PATH=/usr/lib/jvm/java-17-openjdk-arm64/bin:$PATH \
+JAVA_HOME=/usr/lib/jvm/zulu-fx-25-arm64 \
+  PATH=/usr/lib/jvm/zulu-fx-25-arm64/bin:$PATH \
   ANDROID_HOME=/home/pi/android-sdk \
   ./gradlew assembleSelfhostedRelease --no-daemon
 

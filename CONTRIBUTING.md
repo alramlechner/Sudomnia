@@ -5,7 +5,7 @@ welcome, but without any promise on pace or acceptance.
 
 ## Building
 
-Java 17 is mandatory; newer JDKs crash the Kotlin compiler.
+Build with JDK 25 and Gradle 9.5.0 (wrapper); JDK 17 also works.
 
 ```bash
 cd android-app

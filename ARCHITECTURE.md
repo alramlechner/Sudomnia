@@ -20,7 +20,7 @@ update/  update check  -- depends on none of the other layers
 diag/    error log -- writable from anywhere, depends on nothing
 ```
 
-One Gradle module, namespace `name.lechners.sudomnia`, minSdk 30 / targetSdk 36, JDK 17.
+One Gradle module, namespace `name.lechners.sudomnia`, minSdk 30 / targetSdk 36, JDK 25 (bytecode target 17).
 Dependencies: core-ktx, Compose BOM, activity-compose, lifecycle-viewmodel-compose, junit.
 No Room, no DI framework, no HTTP library.
 

@@ -1,6 +1,7 @@
 # Google Play requires targetSdk 36 for new apps and updates. AGP below 8.9
 # cannot compile against API 36, which pulls Gradle and Kotlin along with it.
-# Java 17 stays mandatory: AGP 8.13 requires JDK 17.
+# Build JDK: 25 (Zulu on the Pi) with Gradle 9.5.0. Gradle 9.6+ removed an internal API
+# that AGP 8.x uses, so the wrapper must stay on 9.5.x until AGP 9. Bytecode target stays 17.
 [versions]
 agp = "8.13.2"
 kotlin = "2.2.21"

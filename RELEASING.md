@@ -63,7 +63,7 @@ python3 tools/render_store_assets.py     # Play icon 512 and feature graphics
 
 ```bash
 cd android-app
-export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
+export JAVA_HOME=/usr/lib/jvm/zulu-fx-25-arm64
 ./gradlew test                  # the full test suite, both flavours
 ./gradlew test -DsudokuDeep=1   # ~2,500 puzzles, each generated and graded
 ./gradlew lintPlayRelease

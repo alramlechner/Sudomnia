@@ -82,10 +82,10 @@ Not there yet: explanations beyond singles — that would need the technique lad
 
 ## Building
 
-Java 17 is mandatory — newer JDKs crash the Kotlin compiler.
+JDK 25 with Gradle 9.5.0 (the wrapper handles Gradle). AGP 8.13 needs at least JDK 17; Gradle 9.6+ does not work with AGP 8.x.
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
+export JAVA_HOME=/usr/lib/jvm/zulu-fx-25-arm64
 export ANDROID_HOME=$HOME/android-sdk
 cd android-app
 ./gradlew test                     # solver, generator, game logic
