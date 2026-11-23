@@ -1,1 +1,1 @@
-New: Kids' Sudoku now has three levels - Easy, Medium and Hard. All stay solvable without guessing.
+Under the hood: rebuilt with a newer toolchain. No change in behaviour.

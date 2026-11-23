@@ -1,1 +1,1 @@
-Neu: Das Kindersudoku hat jetzt drei Stufen – Leicht, Mittel und Schwer. Alle bleiben ohne Raten lösbar.
+Im Hintergrund: mit neuerer Toolchain neu gebaut. Am Verhalten ändert sich nichts.

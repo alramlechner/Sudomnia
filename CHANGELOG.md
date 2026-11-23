@@ -3,6 +3,11 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning based on [SemVer](https://semver.org/).
 
+## [1.6.1] – 2026-11-23
+
+### Changed
+- Internal: built with JDK 25 and Gradle 9.5.0. No change in behaviour.
+
 ## [1.6.0] – 2026-11-21
 
 ### Added

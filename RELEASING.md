@@ -19,7 +19,7 @@ Play tasks are disabled in `build.gradle.kts`, in addition to this paragraph.
 
 | | |
 |---|---|
-| JDK | **17.** Newer JDKs crash the Kotlin compiler in this project. |
+| JDK | **25** (Zulu) with Gradle 9.5.0 from the wrapper; JDK 17 also works. Gradle 8.x cannot start on 25, Gradle 9.6+ breaks AGP 8.x. |
 | Android SDK | `ANDROID_HOME` set, build-tools 35 present |
 | Signing | `android-app/keystore.properties`, not in the repo — template: `keystore.properties.example` |
 | Play upload | `android-app/play-service-account.json`, not in the repo — template: `play-service-account.json.example`. Only needed for automated upload. |

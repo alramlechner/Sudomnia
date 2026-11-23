@@ -1,1 +1,1 @@
-Novedad: el Sudoku para niños ahora tiene tres niveles: Fácil, Medio y Difícil. Todos se resuelven sin adivinar.
+Por dentro: recompilada con una cadena de herramientas más nueva. El comportamiento no cambia.
