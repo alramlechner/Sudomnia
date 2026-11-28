@@ -3,6 +3,13 @@
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning based on [SemVer](https://semver.org/).
 
+## [1.6.2] – 2026-11-28
+
+### Fixed
+- **Game analysis in landscape.** The board no longer fills the width and pushes the
+  controls far below the fold; on a landscape screen the board now takes the full
+  height, with the move description, slider and buttons beside it.
+
 ## [1.6.1] – 2026-11-23
 
 ### Changed

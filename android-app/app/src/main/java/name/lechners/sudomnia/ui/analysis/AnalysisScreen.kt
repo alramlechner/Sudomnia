@@ -2,7 +2,9 @@ package name.lechners.sudomnia.ui.analysis
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -69,15 +71,56 @@ fun AnalysisScreen(
     onHome: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(AppBackground)
-            .verticalScroll(rememberScrollState())
-            .padding(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize().background(AppBackground)) {
+        val landscape = maxWidth > maxHeight
+        if (landscape) {
+            // Board as tall as the screen allows, everything else beside it — no scrolling.
+            Row(
+                modifier = Modifier.fillMaxSize().padding(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SudokuBoard(
+                    state = ui.board,
+                    onCellTap = {},
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .aspectRatio(1f)
+                        .clip(RoundedCornerShape(6.dp)),
+                )
+                Column(
+                    modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
+                ) {
+                    AnalysisHeader(ui)
+                    AnalysisControls(ui, onStep, onGoTo, onPreviousError, onNextError, onHome)
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                AnalysisHeader(ui)
+                SudokuBoard(
+                    state = ui.board,
+                    onCellTap = {},
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 560.dp)
+                        .aspectRatio(1f)
+                        .clip(RoundedCornerShape(6.dp)),
+                )
+                AnalysisControls(ui, onStep, onGoTo, onPreviousError, onNextError, onHome)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AnalysisHeader(ui: AnalysisUi) {
         Text(
             text = stringResource(R.string.analysis_title),
             color = TextPrimary,
@@ -90,16 +133,17 @@ fun AnalysisScreen(
             fontSize = 14.sp,
         )
 
-        SudokuBoard(
-            state = ui.board,
-            onCellTap = {},
-            modifier = Modifier
-                .fillMaxWidth()
-                .widthIn(max = 560.dp)
-                .aspectRatio(1f)
-                .clip(RoundedCornerShape(6.dp)),
-        )
+}
 
+@Composable
+private fun AnalysisControls(
+    ui: AnalysisUi,
+    onStep: (Int) -> Unit,
+    onGoTo: (Int) -> Unit,
+    onPreviousError: () -> Unit,
+    onNextError: () -> Unit,
+    onHome: () -> Unit,
+) {
         val focus = ui.focus
         if (ui.errorCount == 0) {
             Text(stringResource(R.string.analysis_no_error), color = TextPrimary, fontSize = 15.sp)
@@ -181,5 +225,4 @@ fun AnalysisScreen(
         }
 
         Button(onClick = onHome) { Text(stringResource(R.string.home_back)) }
-    }
 }
